@@ -1,0 +1,38 @@
+{
+  "format": 1,
+  "title": {
+    "en": "Novel Fish plugins",
+    "zh": "小说摸鱼插件源"
+  },
+  "description": {
+    "en": "Publisher-maintained index for Novel Fish. Not an official DSH marketplace.",
+    "zh": "小说摸鱼作者维护的自建索引，不代表 DSH 官方收录或审核。"
+  },
+  "plugins": [
+    {
+      "name": "@gongfpp/dsh-novel-fish",
+      "title": { "en": "Novel Fish", "zh": "小说摸鱼" },
+      "description": {
+        "en": "Read a local novel passage only when you expand a selected real reasoning step. No model requests.",
+        "zh": "主动展开选中的真实思考步骤时阅读一段本地小说；不改会话数据，不发送给模型。"
+      },
+      "icon": "./assets/icon.svg",
+      "author": "gongfpp",
+      "homepage": "https://github.com/gongfpp/dsh-novel-fish#readme",
+      "repository": { "url": "https://github.com/gongfpp/dsh-novel-fish" },
+      "metadata": { "keywords": ["dsh-plugin", "novel", "epub", "local-reading"] },
+      "versions": [
+        {
+          "version": "0.1.0",
+          "publishTimestamp": 1792668400,
+          "engines": { "dsh": "0.2.1-rc.2" },
+          "source": {
+            "type": "git",
+            "url": "https://github.com/gongfpp/dsh-novel-fish",
+            "commit": "cf9c931866b1d557ce9e63497c4aaa2ddc9f3bbe"
+          }
+        }
+      ]
+    }
+  ]
+}
