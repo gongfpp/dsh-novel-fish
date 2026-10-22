@@ -17,6 +17,12 @@ DSH `0.2.1-rc.2` 的市场由用户信任并添加的静态 JSON 索引提供，
 
 索引里的 Git 来源固定为完整提交 SHA，不使用浮动分支或可移动 tag。索引可随发布追加版本，但已有版本的源码提交不会悄悄替换。GitHub 安装不要求 npm scope 所有权，也不需要先发布 npm 包。
 
+## 真实 DSH 显示
+
+已在现有 DSH Web `0.2.1-rc.2` 的「发现」页实际添加本索引，显示版本和作者，安装按钮可用；下图只截取真实插件卡片，不含账号、侧栏和会话。此操作没有安装到日常 profile，也没有改变原有阅读插件状态。安装动作在独立空 profile 中验证。
+
+![真实 DSH 发现页中的小说摸鱼卡片](evidence/live-market.png)
+
 ## 格式与官方依据
 
 本索引采用目标版本的 `format: 1` 契约，而不是把未来 master 的新增规则未经验证套进旧版宿主：
@@ -25,4 +31,4 @@ DSH `0.2.1-rc.2` 的市场由用户信任并添加的静态 JSON 索引提供，
 - [官方索引格式](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.2/docs/defensive-patterns/plugin-market/index-format.md)
 - [官方索引生成器](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.2/apps/plugin-market-generator/README.md)
 
-发布验证见 [发布记录](release.md)。添加索引不代表信任所有第三方代码；插件安装后以宿主权限运行，请先检查来源。此仓库添加 `dsh-plugin` topic 供发现，不向目前不接收外部 PR 的宿主源码仓库提交收录 PR。
+公开 HTTPS 索引已由目标版本的官方解析器验证，其生成的完整 SHA 安装命令已在空 DSH profile 中安装成功，详见 [发布记录](release.md)。添加索引不代表信任所有第三方代码；插件安装后以宿主权限运行，请先检查来源。此仓库添加 `dsh-plugin` topic 供发现，不向目前不接收外部 PR 的宿主源码仓库提交收录 PR。

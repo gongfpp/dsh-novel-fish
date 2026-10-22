@@ -1,0 +1,48 @@
+{
+  "repository": "https://github.com/gongfpp/dsh-novel-fish",
+  "visibility": "public",
+  "tag": "v0.1.0",
+  "sourceCommit": "cf9c931866b1d557ce9e63497c4aaa2ddc9f3bbe",
+  "package": "@gongfpp/dsh-novel-fish",
+  "version": "0.1.0",
+  "testedDsh": "0.2.1-rc.2",
+  "tests": { "passed": 37, "failed": 0, "skipped": 0 },
+  "githubActions": "https://github.com/gongfpp/dsh-novel-fish/actions/runs/39770634304",
+  "isolatedProfileInstalls": {
+    "githubTag": "success",
+    "marketCommitPinnedSpec": "success",
+    "downloadedReleaseTarball": "success"
+  },
+  "market": {
+    "kind": "publisher-maintained custom index, not official listing",
+    "url": "https://raw.githubusercontent.com/gongfpp/dsh-novel-fish/main/index.json",
+    "anonymousHttpStatus": 200,
+    "officialParserVersion": "0.2.1-rc.2",
+    "format": 1,
+    "installSpec": "git+https://github.com/gongfpp/dsh-novel-fish.git#cf9c931866b1d557ce9e63497c4aaa2ddc9f3bbe",
+    "iconHttpStatus": 200,
+    "realDshDiscover": {
+      "sourceAddedThroughUi": true,
+      "entryVisible": true,
+      "installButtonEnabled": true,
+      "browserErrors": [],
+      "screenshot": "live-market.png",
+      "dailyProfilePluginInstallationChanged": false
+    }
+  },
+  "anonymousDownloads": [
+    {
+      "name": "gongfpp-dsh-novel-fish-0.1.0.tgz",
+      "httpStatus": 200,
+      "bytes": 717841,
+      "sha256": "bcafb2aadb9b1b1233c3392886559d47ba1c4a32cf6d19d23b1ab3a687527651"
+    },
+    {
+      "name": "dsh-novel-fish-source-0.1.0.zip",
+      "httpStatus": 200,
+      "bytes": 740396,
+      "sha256": "65822f4b5d8023b4b49257852d2a1cb06af3163f3db76bde7ff6a2a5d464acb7"
+    }
+  ],
+  "scope": "Public identity, artifact distribution, official index parsing and isolated profile installation. Original live reading evidence remains separately documented; no new model requests were made for publication."
+}

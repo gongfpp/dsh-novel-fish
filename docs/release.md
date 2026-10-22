@@ -13,7 +13,17 @@
 
 公开版本已重新运行 `pnpm install --frozen-lockfile --ignore-scripts`、`pnpm verify` 和 `pnpm pack --pack-destination dist`：37 项测试全部通过，第三方声明包含 9 个打包依赖。开发配置显式拒绝三个不需要的依赖构建脚本，安装不要求批准执行它们。
 
-接下来分别核对 GitHub 固定提交安装、Release 下载和官方格式的市场索引。公开网络验证的最终结果在发布完成后补记，不把上传仓库等同于安装成功。
+### 已完成的公开验证
+
+- [v0.1.0 Release](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.1.0) 不是草稿，包含可安装包、固定标签源码 ZIP 和 `SHA256SUMS.txt`。
+- 使用不带 GitHub 凭据的普通 HTTPS 请求下载两个产物及校验文件，均为 HTTP 200，两个产物的 SHA-256 与本地完全一致。
+- 在独立临时 `DSH_HOME` 的三个空 profile 中，分别实际执行 GitHub 标签安装、市场生成的完整 SHA 安装、公开下载 tarball 安装，均成功，未更动日常 `web` profile 的阅读插件状态。
+- 安装后的 `--dump-config` 确认 Host patch 被组合；执行安装后客户端产物，确认注册 `@gongfpp/dsh-novel-fish`，导出工厂和 Host `apply` 完整。
+- 匿名读取公开索引与图标均为 HTTP 200；用**安装版 DSH 0.2.1-rc.2 的官方解析器**校验 `format: 1`、精确宿主要求和完整 SHA，所得安装 spec 与上面实际安装一致。
+- 在本机现有真实 DSH Web 的「发现」页通过 UI 添加了公开索引；卡片显示“小说摸鱼 / 0.1.0 / gongfpp”，安装按钮可用，浏览器无错误。只增加索引源，没有点击日常 profile 的安装按钮，也没有切换阅读插件或书籍。
+- GitHub Actions 的[标签源提交构建](https://github.com/gongfpp/dsh-novel-fish/actions/runs/39770634304)与[索引发布构建](https://github.com/gongfpp/dsh-novel-fish/actions/runs/39770816229)均成功；校验重新构建的浏览器产物、许可声明与提交一致。
+
+源码锁定提交：`cf9c931866b1d557ce9e63497c4aaa2ddc9f3bbe`。摘要见 [公开发布验证结果](evidence/public-release-result.json)。本次不宣称把改名后的包在真实聊天中重新执行了全部 A/B/C；原始交互证据与未覆盖环境依然以原验收记录为准。
 
 ## 公开检查
 
