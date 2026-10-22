@@ -1,7 +1,16 @@
 {
-  "name": "@local/dsh-touch-fish-novel",
+  "name": "@gongfpp/dsh-novel-fish",
   "version": "0.1.0",
-  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gongfpp/dsh-novel-fish.git"
+  },
+  "homepage": "https://github.com/gongfpp/dsh-novel-fish#readme",
+  "bugs": {
+    "url": "https://github.com/gongfpp/dsh-novel-fish/issues"
+  },
+  "keywords": ["dsh", "dsh-plugin", "novel", "epub", "local-reading"],
+  "author": "gongfpp",
   "description": "本地小说只在用户主动展开选中的真实 DSH 思考步骤时展示；不修改会话数据，也不发送给模型。",
   "type": "module",
   "exports": {
@@ -22,6 +31,7 @@
     "locale/*.json",
     "docs/**",
     "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
     "README.md",
     "THIRD-PARTY-NOTICES.txt",
     "LICENSE"

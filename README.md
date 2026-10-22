@@ -8,19 +8,29 @@
 
 ## 安装
 
-交付的压缩包已经包含浏览器构建产物，不需要先装开发依赖。下载到当前目录后：
+已有可运行的 DSH Web `0.2.1-rc.2` 后，在终端安装固定版本：
 
 ```sh
-dsh plugin --profile web add ./local-dsh-touch-fish-novel-0.1.0.tgz
+dsh plugin --profile web add github:gongfpp/dsh-novel-fish#v0.1.0
 ```
 
-也可从此源码目录安装，使用实际绝对路径：
+仓库已包含浏览器构建产物，无需先安装 Node 开发依赖或自行编译。也可从 [v0.1.0 发布页](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.1.0) 下载 `gongfpp-dsh-novel-fish-0.1.0.tgz`，在下载目录执行：
 
 ```sh
-dsh plugin --profile web add /Users/mass/Developer/Playground/dsh-touch-fish-novel
+dsh plugin --profile web add ./gongfpp-dsh-novel-fish-0.1.0.tgz
 ```
 
-本地路径与 tarball 安装命令均已实际执行成功，tarball 已在真实聊天中复测。安装后刷新现有 DSH 页面；若更换已安装版本仍未加载新代码，重启原来的 `dsh web`，不要另开一个服务器。
+`web` 是 DSH profile 名称；使用其他 profile 时替换它。安装后刷新现有 DSH 页面；若更换已安装版本仍未加载新代码，重启原来的 `dsh web`，不要另开一个服务器。公开下载、固定提交安装及索引验证的范围见 [发布记录](docs/release.md)。
+
+### 从 DSH 插件市场安装
+
+DSH 当前没有默认的统一第三方插件目录。本项目提供符合官方格式的**自建索引源**，不代表官方审核或推荐：
+
+```text
+https://raw.githubusercontent.com/gongfpp/dsh-novel-fish/main/index.json
+```
+
+在 DSH 的自定义插件市场「发现」页添加该索引，选择 **小说摸鱼** 后安装。若没有「发现」页，先启用实验性功能中的「自定义插件市场」。索引锁定完整 Git 提交，不随 `main` 的代码自动变化。完整入口、来源说明及验证方式见 [市场接入说明](docs/marketplace.md)。
 
 **先停用其他接管思考渲染的阅读插件。** 此环境原有阅读插件在同一区域发生 `renderSlot is not a function`；隔离验收时只关闭了其启用开关，没有修改旧项目源码或删除数据。不支持同时叠加两个阅读插件。
 
@@ -62,7 +72,7 @@ TXT/MD 保留基本段落、章节；默认每段约 600 个 Unicode 字符，�
 Node.js 24.19.0、pnpm 12.11.2 为此次构建环境：
 
 ```sh
-pnpm install --ignore-scripts
+pnpm install --frozen-lockfile --ignore-scripts
 pnpm verify
 pnpm pack
 ```
@@ -76,4 +86,4 @@ pnpm pack
 
 ## 许可
 
-本项目为 MIT。构建时生成 [第三方依赖许可](THIRD-PARTY-NOTICES.txt)。旧仓库仅作只读行为参考，没有复制其独立阅读、工作区或兼容状态系统。
+本项目为 MIT；书本图标为本项目原创 SVG。构建时生成 [第三方依赖许可](THIRD-PARTY-NOTICES.txt)，包含 JSZip 预打包的子依赖声明。旧仓库仅作只读行为参考，没有复制其独立阅读、工作区或兼容状态系统。

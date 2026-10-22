@@ -1,4 +1,4 @@
 - insert:
-    - id: touch-fish-novel
-      name: '@local/dsh-touch-fish-novel'
+    - id: dsh-novel-fish
+      name: '@gongfpp/dsh-novel-fish'
       config: {}

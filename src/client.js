@@ -5,7 +5,7 @@ import { createSettingsRow } from './settings.js'
 import zh from '../locale/zh.json'
 import en from '../locale/en.json'
 
-const MODULE_ID = '@local/dsh-touch-fish-novel'
+const MODULE_ID = '@gongfpp/dsh-novel-fish'
 const LOCALE = 'novel-fish'
 
 function flatten(value, prefix = '') {

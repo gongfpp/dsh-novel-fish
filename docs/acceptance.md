@@ -28,7 +28,7 @@
 
 ## 安装及环境处理
 
-本地路径安装已用 `dsh plugin --profile web add /Users/mass/Developer/Playground/dsh-touch-fish-novel` 成功执行。随后实际执行 `dsh plugin --profile web add /Users/mass/Developer/Playground/dsh-touch-fish-novel/dist/local-dsh-touch-fish-novel-0.1.0.tgz`，以复制安装的 tarball 版本重新跑通 A/B/C、刷新续读及整包停用，均无浏览器错误。普通用户使用随附 tarball，不需安装解析器或转换 EPUB。
+本地绝对路径安装和 `local-dsh-touch-fish-novel-0.1.0.tgz` 复制安装均已实际执行，并用 tarball 版本重新跑通 A/B/C、刷新续读及整包停用，均无浏览器错误。这些证据来自公开发布前的本地包名 `@local/dsh-touch-fish-novel`；公开包名为 `@gongfpp/dsh-novel-fish`，功能代码不因更名扩展。公开安装与市场索引的独立验证见 [发布记录](release.md)。普通用户无需另装解析器或转换 EPUB。
 
 此环境原有旧阅读插件同时接管思考渲染，触发展开时报 `renderSlot is not a function`。为隔离验收，只临时关闭其启用开关；旧项目源码、依赖安装与旧书库不动。验收后已恢复旧插件原启用状态，新插件保留安装但停用。使用新插件前，请先在插件页关闭旧阅读插件，再开启“小说摸鱼”。
 

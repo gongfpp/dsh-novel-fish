@@ -1,0 +1,5 @@
+# Development tooling uses esbuild's platform package; no dependency scripts are needed.
+allowBuilds:
+  core-js: false
+  es5-ext: false
+  esbuild: false
