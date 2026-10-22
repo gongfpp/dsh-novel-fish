@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "验收 TXT.txt imported through native file input and read in a real reasoning step",
+    "验收 MD.md imported through native file input and read in a real reasoning step",
+    "验收 EPUB.epub imported through native file input and read in a real reasoning step",
+    "broken EPUB reports explicit error instead of creating a book",
+    "8 repeated disclosure clicks generated zero non-GET/network model requests",
+    "disabled reader restores the original native thought body and header"
+  ],
+  "errors": [],
+  "nonGetRequests": []
+}

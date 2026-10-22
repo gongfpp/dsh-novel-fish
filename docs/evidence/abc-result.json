@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "target selection, mount and history load consumed zero passages",
+    "A first expand advances once; repeated A reuses passage 1",
+    "B first expand reads passage 2",
+    "Refresh does not restore old passage mapping; old A now reads C at saved progress"
+  ],
+  "errors": []
+}

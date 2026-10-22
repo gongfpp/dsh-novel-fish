@@ -1,0 +1,7 @@
+{
+  "checks": [
+    "whole bundle disabled: client removed from boot entries; original thought and disclosure operate normally; no decorations remain",
+    "legacy bundle enablement restored; new bundle left installed but disabled to avoid conflict"
+  ],
+  "errors": []
+}

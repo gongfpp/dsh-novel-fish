@@ -1,0 +1,11 @@
+{
+  "characters": 1007000,
+  "segments": 1900,
+  "progress": 1,
+  "renderedCharacters": 528,
+  "checks": [
+    "million-character text imports once; only one <=600-character passage rendered",
+    "12 repeat clicks retain progress 1"
+  ],
+  "errors": []
+}

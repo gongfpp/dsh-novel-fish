@@ -1,0 +1,4 @@
+- insert:
+    - id: touch-fish-novel
+      name: '@local/dsh-touch-fish-novel'
+      config: {}

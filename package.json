@@ -1,0 +1,63 @@
+{
+  "name": "@local/dsh-touch-fish-novel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "本地小说只在用户主动展开选中的真实 DSH 思考步骤时展示；不修改会话数据，也不发送给模型。",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./lib/client.js",
+    "./icon": "./assets/icon.svg",
+    "./locale/*.json": "./locale/*.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "lib/client.js",
+    "src/**",
+    "scripts/**",
+    "test/**",
+    "assets/icon.svg",
+    "locale/*.json",
+    "docs/**",
+    "pnpm-lock.yaml",
+    "README.md",
+    "THIRD-PARTY-NOTICES.txt",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.js",
+    "verify": "pnpm run build && pnpm test",
+    "pack": "pnpm pack"
+  },
+  "devDependencies": {
+    "epubjs": "0.3.93",
+    "@xmldom/xmldom": "^0.9.12",
+    "esbuild": "^0.25.12",
+    "fake-indexeddb": "^6.2.5",
+    "jsdom": "^30.1.3",
+    "jszip": "^3.10.1",
+    "react": "18.3.1",
+    "react-test-renderer": "18.3.1"
+  },
+  "engines": {
+    "node": ">=22",
+    "dsh": "0.2.1-rc.2"
+  },
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-chat",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  }
+}
