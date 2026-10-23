@@ -4,7 +4,7 @@ import { JSDOM } from 'jsdom'
 import React from 'react'
 import TestRenderer, { act } from 'react-test-renderer'
 import { passageSnapshotKey } from '../src/store.js'
-import { registerChatAdapter } from '../src/chat-adapter.js'
+import { listTargets, registerChatAdapter } from '../src/chat-adapter.js'
 
 function thought(key) {
   return `<div data-chat-flow-kind="assistant-step" data-chat-node-key="${key}" data-chat-turn="1"><div data-variant="think"><div data-disclosure-row role="button" aria-expanded="false"><span><svg></svg></span><span>Native title</span></div></div></div>`
@@ -43,12 +43,12 @@ test('native header adaptation is scoped, reversible, and never consumes on DOM 
     header.append(dom.window.document.createTextNode('streaming update'))
     await new Promise(resolve=>setImmediate(resolve))
     assert.equal(claims.length,1,'streaming observer must not claim')
-    ui={picking:true}
-    let stopped=false
-    actions.click({isTrusted:true,type:'click',target:roots[1].querySelector('[data-disclosure-row]'),preventDefault(){},stopPropagation(){stopped=true}})
-    assert.equal(stopped,true)
-    assert.equal(targets[0].nodeKey,'14:assistant-step1:2')
-    assert.equal(claims.length,1,'picking does not consume')
+    const available = listTargets(dom.window.document)
+    assert.equal(available.length, 2)
+    assert.deepEqual(available[1], { sessionId:'session-a', nodeKey:'14:assistant-step1:2', turn:1, step:2 })
+    assert.equal(claims.length,1,'listing dropdown options never consumes')
+    actions.click({isTrusted:true,type:'click',target:roots[1].querySelector('[data-disclosure-row]')})
+    assert.equal(claims.length,1,'non-target steps are untouched')
     settings={...settings,enabled:false};settingsChanged()
     assert.equal(dom.window.document.querySelector('[data-novel-label]'),null)
     assert.equal(header.querySelector('svg')!==null,true,'native icon retained')

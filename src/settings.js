@@ -1,7 +1,5 @@
 const PANEL = {
-  display: 'grid',
-  gap: 14,
-  padding: 14,
+  display: 'grid', gap: 14, padding: 14,
   border: '1px solid var(--dsw-alias-border-l2)',
   borderRadius: 'var(--dsw-radius-md, 10px)',
   color: 'var(--dsw-alias-label-primary)',
@@ -9,40 +7,63 @@ const PANEL = {
 }
 const LABEL = { display: 'grid', gap: 5, color: 'var(--dsw-alias-label-secondary)' }
 const CONTROL = {
-  boxSizing: 'border-box',
-  width: '100%',
-  minWidth: 0,
+  boxSizing: 'border-box', width: '100%', minWidth: 0,
   border: '1px solid var(--dsw-alias-border-l2)',
   borderRadius: 'var(--dsw-radius-sm, 6px)',
-  background: 'var(--dsw-alias-bg-base)',
-  color: 'var(--dsw-alias-label-primary)',
-  padding: '7px 9px',
-  font: 'inherit',
+  background: 'var(--dsw-alias-bg-base)', color: 'var(--dsw-alias-label-primary)',
+  padding: '7px 9px', font: 'inherit',
 }
 const BUTTON = {
-  border: '1px solid var(--dsw-alias-border-l2)',
-  borderRadius: 'var(--dsw-radius-sm, 6px)',
+  ...CONTROL, width: 'auto', cursor: 'pointer',
   background: 'var(--dsw-alias-interactive-bg-hover)',
-  color: 'var(--dsw-alias-label-primary)',
-  padding: '7px 10px',
-  font: 'inherit',
-  cursor: 'pointer',
 }
+const targetKey = target => JSON.stringify([target.sessionId, target.nodeKey])
 
-/** Build the one Settings → General panel for books and target-step selection. */
+// 预设无需打字；保留可选自定义以满足原有的任意标题／图标要求。
+const ICONS = ['📖', '📚', '💭', '🔎', '⚙️', '✅']
+const MAIN_TITLES = ['', '思考', '分析', '检查', 'Thinking']
+const EXTRA_TITLES = ['', 'Checking project structure', 'Analyzing the request', 'Reviewing implementation', 'Verifying results']
+
+/** 设置嵌入 DSH 通用设置，不提供独立阅读入口。 */
 export function createSettingsRow(React) {
   const h = React.createElement
 
-  function SettingsRow({ t, useNovelState, useNovelUi, onSetOption, onSetNotice, onSetPicking, onRemoveTarget, onSelectBook, onDeleteBook, onImportFile, onImportPastedText }) {
+  function PresetField({ t, label, value, choices, disabled, onChange, testId, maxLength }) {
+    const [custom, setCustom] = React.useState(!choices.includes(value))
+    const showCustom = custom || !choices.includes(value)
+    return h('label', { style: LABEL },
+      h('span', null, label),
+      h('select', {
+        style: CONTROL, value: showCustom ? '__custom' : value, disabled,
+        'data-novel-preset': testId,
+        onChange: event => {
+          const next = event.currentTarget.value
+          if (next === '__custom') setCustom(true)
+          else void onChange(next).then(saved => { if (saved) setCustom(false) })
+        },
+      },
+      choices.map(choice => h('option', { key: choice, value: choice }, choice || t(testId === 'title' ? 'settings.nativeTitle' : 'settings.noExtra'))),
+      h('option', { value: '__custom' }, t('settings.custom')),
+      ),
+      showCustom ? h('input', {
+        style: CONTROL, defaultValue: value, disabled, maxLength,
+        'aria-label': t('settings.customField', { label }),
+        [`data-novel-${testId}`]: true,
+        onChange: event => onChange(event.currentTarget.value),
+      }) : null,
+    )
+  }
+
+  function SettingsRow({ t, useNovelState, useNovelUi, onSetOption, onSetNotice, onListTargets, onAddTarget, onRemoveTarget, onSelectBook, onDeleteBook, onImportFile }) {
     const state = useNovelState(value => value)
     const ui = useNovelUi(value => value)
-    const [pasteTitle, setPasteTitle] = React.useState('')
-    const [pasteText, setPasteText] = React.useState('')
     const [busy, setBusy] = React.useState(false)
-
-    const writeOption = async (key, value) => {
-      try { await onSetOption(key, value) }
-      catch (error) { onSetNotice(t('settings.importError', { message: errorMessage(error) })) }
+    const [targets, setTargets] = React.useState(() => onListTargets())
+    const selectedBook = state.books.find(book => book.id === state.settings.currentBookId)
+    const disabled = busy || !state.hydrated || Boolean(state.error)
+    const perform = async action => {
+      try { await action(); return true }
+      catch (error) { onSetNotice(t('settings.actionError', { message: errorMessage(error) })); return false }
     }
     const importFile = async event => {
       const input = event.currentTarget
@@ -60,50 +81,8 @@ export function createSettingsRow(React) {
         setBusy(false)
       }
     }
-    const importPaste = async () => {
-      if (!pasteText.trim()) return
-      setBusy(true)
-      onSetNotice(t('settings.importing'))
-      try {
-        const book = await onImportPastedText(pasteTitle, pasteText)
-        setPasteText('')
-        onSetNotice(t('settings.importDone', { count: book.segmentCount }))
-      } catch (error) {
-        onSetNotice(t('settings.importError', { message: errorMessage(error) }))
-      } finally {
-        setBusy(false)
-      }
-    }
-    const deleteBook = async book => {
-      if (!globalThis.confirm?.(t('settings.removeConfirm', { title: book.title }))) return
-      try { await onDeleteBook(book.id) }
-      catch (error) { onSetNotice(t('settings.importError', { message: errorMessage(error) })) }
-    }
-    const targetRows = state.settings.targets.length
-      ? state.settings.targets.map(target => h('div', {
-        key: `${target.sessionId}:${target.nodeKey}`,
-        style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '6px 0', borderTop: '1px solid var(--dsw-alias-border-l2)' },
-      },
-      h('span', null, t('settings.targetKey', { session: target.sessionId.slice(0, 8), turn: target.turn, step: target.step })),
-      h('button', { type: 'button', style: BUTTON, onClick: () => onRemoveTarget(target.sessionId, target.nodeKey).catch(error => onSetNotice(errorMessage(error))) }, t('settings.removeTarget')),
-      ))
-      : h('div', { style: { color: 'var(--dsw-alias-label-tertiary)' } }, t('settings.noTargets'))
-
-    const bookRows = state.books.length
-      ? state.books.map(book => h('div', {
-        key: book.id,
-        style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: 8, alignItems: 'center', padding: '8px 0', borderTop: '1px solid var(--dsw-alias-border-l2)' },
-      },
-      h('label', { style: { display: 'flex', alignItems: 'flex-start', gap: 8, minWidth: 0, cursor: 'pointer' } },
-        h('input', { type: 'radio', name: 'novel-current-book', checked: state.settings.currentBookId === book.id, onChange: () => onSelectBook(book.id).catch(error => onSetNotice(errorMessage(error))) }),
-        h('span', { style: { display: 'grid', minWidth: 0 } },
-          h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--dsw-alias-label-primary)' } }, book.title),
-          h('span', { style: { color: 'var(--dsw-alias-label-tertiary)' } }, `${book.format.toUpperCase()} · ${t('settings.progress')}: ${book.progress}/${book.segmentCount}`),
-        ),
-      ),
-      h('button', { type: 'button', style: BUTTON, onClick: () => { void deleteBook(book) } }, t('settings.deleteBook')),
-      ))
-      : h('div', { style: { color: 'var(--dsw-alias-label-tertiary)' } }, t('settings.emptyLibrary'))
+    const describeTarget = target => t('settings.targetKey', { session: target.sessionId.slice(0, 8), turn: target.turn, step: target.step })
+    const selectedTargets = new Set(state.settings.targets.map(targetKey))
 
     return h('section', { style: PANEL, 'data-novel-settings': true },
       h('div', { style: { display: 'grid', gap: 3 } },
@@ -111,46 +90,61 @@ export function createSettingsRow(React) {
         h('span', { style: { color: 'var(--dsw-alias-label-tertiary)' } }, t('settings.description')),
       ),
       !state.hydrated && !state.error ? h('div', null, t('settings.storageLoading')) : null,
-      state.error ? h('div', { role: 'alert', style: { color: 'var(--dsw-alias-danger-label, #c33)' } }, state.error) : null,
+      state.error ? h('div', { role: 'alert' }, state.error) : null,
       h('label', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-        h('input', { type: 'checkbox', checked: state.settings.enabled, onChange: event => { void writeOption('enabled', event.currentTarget.checked) } }),
+        h('input', { type: 'checkbox', disabled, checked: state.settings.enabled, onChange: event => { const enabled = event.currentTarget.checked; void perform(() => onSetOption('enabled', enabled)) } }),
         t('settings.enabled'),
       ),
-      h('div', { style: LABEL },
-        h('span', null, t('settings.targetList')),
-        h('div', { style: { display: 'grid', gap: 6 } }, targetRows),
-        h('button', { type: 'button', style: BUTTON, onClick: () => onSetPicking(!ui.picking), disabled: !state.hydrated }, ui.picking ? t('settings.stopPicking') : t('settings.chooseTarget')),
-        ui.picking ? h('div', { role: 'status', style: { color: 'var(--dsw-alias-label-secondary)' } }, t('settings.pickHint')) : null,
-      ),
-      h('div', { style: LABEL },
+      h('label', { style: LABEL },
         h('span', null, t('settings.bookSource')),
-        h('input', { type: 'file', accept: '.epub,.txt,.md,application/epub+zip,text/plain,text/markdown', onChange: event => { void importFile(event) }, disabled: busy || !state.hydrated, 'data-novel-file-input': true }),
+        h('input', { type: 'file', accept: '.epub,.txt,.md,application/epub+zip,text/plain,text/markdown', onChange: event => { void importFile(event) }, disabled, 'data-novel-file-input': true }),
       ),
-      h('div', { style: LABEL },
-        h('span', null, t('settings.paste')),
-        h('input', { value: pasteTitle, onChange: event => setPasteTitle(event.currentTarget.value), placeholder: t('settings.bookName'), style: CONTROL, disabled: busy || !state.hydrated }),
-        h('textarea', { value: pasteText, onChange: event => setPasteText(event.currentTarget.value), placeholder: t('settings.pastePlaceholder'), rows: 4, style: { ...CONTROL, resize: 'vertical' }, disabled: busy || !state.hydrated, 'data-novel-paste': true }),
-        h('button', { type: 'button', style: BUTTON, disabled: busy || !state.hydrated || !pasteText.trim(), onClick: () => { void importPaste() } }, t('settings.importPaste')),
-      ),
-      h('div', { style: LABEL },
+      h('label', { style: LABEL },
         h('span', null, t('settings.selectBook')),
-        h('div', { style: { display: 'grid' } }, bookRows),
-      ),
-      h('div', { key: String(state.hydrated), style: { display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 8 } },
-        h('label', { style: LABEL },
-          h('span', null, t('settings.icon')),
-          h('input', { defaultValue: state.settings.icon, disabled: !state.hydrated || Boolean(state.error), onChange: event => { void writeOption('icon', event.currentTarget.value) }, style: CONTROL, maxLength: 8, 'data-novel-icon': true }),
-        ),
-        h('label', { style: LABEL },
-          h('span', null, t('settings.titleMain')),
-          h('input', { defaultValue: state.settings.mainTitle, disabled: !state.hydrated || Boolean(state.error), onChange: event => { void writeOption('mainTitle', event.currentTarget.value) }, style: CONTROL, placeholder: t('settings.titleMainPlaceholder'), 'data-novel-title': true }),
-        ),
-        h('label', { style: LABEL },
-          h('span', null, t('settings.titleExtra')),
-          h('input', { defaultValue: state.settings.extraTitle, disabled: !state.hydrated || Boolean(state.error), onChange: event => { void writeOption('extraTitle', event.currentTarget.value) }, style: CONTROL, placeholder: t('settings.titleExtraPlaceholder'), 'data-novel-extra': true }),
+        h('select', { style: CONTROL, disabled: disabled || !state.books.length, value: state.settings.currentBookId ?? '', 'data-novel-book-select': true,
+          onChange: event => { const id = event.currentTarget.value; void perform(() => onSelectBook(id)) } },
+        h('option', { value: '' }, t('settings.noBook')),
+        state.books.map(book => h('option', { key: book.id, value: book.id }, `${book.title} · ${book.format.toUpperCase()}`)),
         ),
       ),
-      ui.notice ? h('div', { role: 'status', 'data-novel-notice': true, style: { color: 'var(--dsw-alias-label-secondary)' } }, ui.notice) : null,
+      selectedBook ? h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 } },
+        h('span', { 'data-novel-progress': true }, t('settings.progressValue', { progress: selectedBook.progress, total: selectedBook.segmentCount, percent: Math.floor(selectedBook.progress / selectedBook.segmentCount * 100) })),
+        h('button', { type: 'button', style: BUTTON, disabled, onClick: () => {
+          if (globalThis.confirm?.(t('settings.removeConfirm', { title: selectedBook.title }))) void perform(() => onDeleteBook(selectedBook.id))
+        } }, t('settings.deleteBook')),
+      ) : h('div', null, t('settings.emptyLibrary')),
+      h('div', { style: LABEL },
+        h('label', { style: LABEL },
+          h('span', null, t('settings.targetList')),
+          h('select', { style: CONTROL, value: '', disabled: disabled || !targets.length, 'data-novel-target-select': true, onChange: event => {
+            const target = targets.find(item => targetKey(item) === event.currentTarget.value)
+            if (target) void perform(() => onAddTarget(target))
+          } },
+          h('option', { value: '' }, t('settings.chooseTarget')),
+          targets.map(target => h('option', { key: targetKey(target), value: targetKey(target), disabled: selectedTargets.has(targetKey(target)) }, describeTarget(target))),
+          ),
+        ),
+        h('button', { type: 'button', style: BUTTON, disabled: !state.hydrated, onClick: () => setTargets(onListTargets()) }, t('settings.refreshTargets')),
+        h('span', null, t(targets.length ? 'settings.targetHint' : 'settings.noAvailableTargets')),
+        state.settings.targets.length ? state.settings.targets.map(target => h('div', {
+          key: targetKey(target), style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+        },
+        h('span', null, describeTarget(target)),
+        h('button', { type: 'button', style: BUTTON, disabled, onClick: () => { void perform(() => onRemoveTarget(target.sessionId, target.nodeKey)) } }, t('settings.removeTarget')),
+        )) : h('div', null, t('settings.noTargets')),
+      ),
+      h('div', { key: String(state.hydrated), style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 8 } },
+        [
+          ['icon', 'settings.icon', 'icon', ICONS, 8],
+          ['mainTitle', 'settings.titleMain', 'title', MAIN_TITLES],
+          ['extraTitle', 'settings.titleExtra', 'extra', EXTRA_TITLES],
+        ].map(([key, label, testId, choices, maxLength]) => h(PresetField, {
+          key, t, label: t(label), value: state.settings[key], choices, disabled, testId, maxLength,
+          onChange: value => perform(() => onSetOption(key, value)),
+        })),
+      ),
+      h('span', { style: { color: 'var(--dsw-alias-label-tertiary)' } }, t('settings.presetHint')),
+      ui.notice ? h('div', { role: 'status', 'data-novel-notice': true }, ui.notice) : null,
     )
   }
 

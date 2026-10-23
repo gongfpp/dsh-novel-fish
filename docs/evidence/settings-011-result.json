@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-23",
+  "stage": "verified",
+  "version": "0.1.1",
+  "runtime": "DSH Web 0.2.1-rc.2",
+  "browser": "155.0.8059.85",
+  "testMode": "fresh Chrome context; local bundle response override; module id aliased to the installed local package; no installed files or daily browser storage changed",
+  "isolatedPackageInstallation": {
+    "profile": "settings-check",
+    "package": "@gongfpp/dsh-novel-fish",
+    "version": "0.1.1",
+    "succeeded": true,
+    "dailyProfileChanged": false
+  },
+  "errors": [],
+  "selects": 5,
+  "targetListed": true,
+  "targetSelectedWithoutClosingSettings": true,
+  "initialProgress": "已读 0 / 6 段（0%）· 自动记忆进度",
+  "afterRepeat": "已读 1 / 6 段（16%）· 自动记忆进度",
+  "afterRefresh": "已读 1 / 6 段（16%）· 自动记忆进度",
+  "repeatedTextUnchanged": true,
+  "typedTitle": "连续输入ABCD",
+  "screenshots": [
+    "settings-011.png",
+    "settings-chat-011.png"
+  ]
+}

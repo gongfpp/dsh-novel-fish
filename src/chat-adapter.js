@@ -3,7 +3,18 @@ import { passageSnapshotKey } from './store.js'
 const THOUGHT = '[data-chat-flow-kind="assistant-step"] [data-variant="think"]'
 const EMPTY = Object.freeze({ kind: 'empty' })
 
-/** Adapt DSH 0.2.1's native disclosure without replacing assistant/tool renderers. */
+/** 只列出现有真实思考步骤；读取位置列表不会打开步骤或消耗正文。 */
+export function listTargets(root = document) {
+  const targets = new Map()
+  for (const thought of root.querySelectorAll(THOUGHT)) {
+    if (!thought.querySelector('[data-disclosure-row]')) continue
+    const identity = identityOf(thought)
+    if (identity) targets.set(JSON.stringify([identity.sessionId, identity.nodeKey]), identity)
+  }
+  return [...targets.values()]
+}
+
+/** 窄适配 DSH 0.2.1 原生折叠行，不替换回答和工具渲染。 */
 export function registerChatAdapter(ctx, store, React, locale) {
   const Body = createBody(React)
   const t = ctx.locale.bind(locale)
@@ -23,10 +34,8 @@ export function registerChatAdapter(ctx, store, React, locale) {
 [data-novel-label] { position:absolute; left:calc(22px + var(--dsh-content-font-delta,0px)); right:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--dsh-content-font-size-secondary,13px); line-height:calc(24px + var(--dsh-content-font-delta,0px)); font-weight:400; pointer-events:none; }
 [data-novel-icon-host] > * { visibility:hidden; }
 [data-novel-icon-host] [data-novel-icon] { visibility:visible; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:var(--dsh-content-font-size-secondary,13px); }
-[data-novel-picking] { outline:1px dashed var(--dsw-alias-border-l1); cursor:crosshair; }
 `
     document.head.append(style)
-
     const restore = root => {
       const record = decorated.get(root)
       if (!record) return
@@ -39,7 +48,6 @@ export function registerChatAdapter(ctx, store, React, locale) {
     }
     const refresh = () => {
       const settings = store.getSettingsSnapshot()
-      const picking = store.getUiSnapshot().picking
       for (const root of decorated.keys()) {
         const id = identityOf(root)
         if (!root.isConnected || !settings.enabled || !isTarget(settings, id)) restore(root)
@@ -47,8 +55,6 @@ export function registerChatAdapter(ctx, store, React, locale) {
       for (const root of document.querySelectorAll(THOUGHT)) {
         const header = root.querySelector('[data-disclosure-row]')
         if (!header) continue
-        if (picking) root.setAttribute('data-novel-picking', '')
-        else root.removeAttribute('data-novel-picking')
         const id = identityOf(root)
         if (!settings.enabled || !isTarget(settings, id)) continue
         let record = decorated.get(root)
@@ -81,33 +87,24 @@ export function registerChatAdapter(ctx, store, React, locale) {
       if (!root?.matches(THOUGHT)) return
       const id = identityOf(root)
       if (!id) return
-      if (store.getUiSnapshot().picking) {
-        event.preventDefault()
-        event.stopPropagation()
-        void store.addTarget(id).catch(error => store.setNotice(String(error)))
-        return
-      }
       const settings = store.getSettingsSnapshot()
       if (settings.enabled && isTarget(settings, id) && header.getAttribute('aria-expanded') === 'false') {
         void store.claimPassage(JSON.stringify([id.sessionId, id.nodeKey]))
       }
     }
     const observer = new MutationObserver(refresh)
-    // Attribute writes are deliberately not observed: expansion is never a continuation signal.
+    // 不监听折叠属性：自动展开、流式更新和重新挂载都不是续读信号。
     observer.observe(document.body, { childList: true, subtree: true, characterData: true })
     document.addEventListener('click', activate, true)
     document.addEventListener('keydown', activate, true)
     const stopSettings = store.subscribeSettings(refresh)
-    const stopUi = store.subscribeUi(refresh)
     refresh()
     return () => {
       observer.disconnect()
       stopSettings()
-      stopUi()
       document.removeEventListener('click', activate, true)
       document.removeEventListener('keydown', activate, true)
       for (const root of decorated.keys()) restore(root)
-      for (const root of document.querySelectorAll('[data-novel-picking]')) root.removeAttribute('data-novel-picking')
       style.remove()
     }
   }, 'novel-fish: native disclosure adapter')

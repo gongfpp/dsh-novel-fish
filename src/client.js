@@ -1,6 +1,6 @@
 import { IndexedDbStorage } from './persistence.js'
 import { NovelStore } from './store.js'
-import { registerChatAdapter } from './chat-adapter.js'
+import { listTargets, registerChatAdapter } from './chat-adapter.js'
 import { createSettingsRow } from './settings.js'
 import zh from '../locale/zh.json'
 import en from '../locale/en.json'
@@ -28,12 +28,12 @@ window.__ModuleLoader__.load({
         const settingsActions = {
           onSetOption: (key, value) => store.setOption(key, value),
           onSetNotice: notice => store.setNotice(notice),
-          onSetPicking: picking => store.setPicking(picking),
+          onListTargets: listTargets,
+          onAddTarget: target => store.addTarget(target),
           onRemoveTarget: (sessionId, nodeKey) => store.removeTarget(sessionId, nodeKey),
           onSelectBook: bookId => store.selectBook(bookId),
           onDeleteBook: bookId => store.deleteBook(bookId),
           onImportFile: file => store.importFile(file),
-          onImportPastedText: (title, text) => store.importPastedText(title, text),
         }
 
         ctx.effect(() => ctx.locale.register(LOCALE, { zh: flatten(zh), en: flatten(en) }), 'novel-fish: locale')

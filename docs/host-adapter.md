@@ -14,7 +14,7 @@
 
 唯一宿主适配文件是 [chat-adapter.js](../src/chat-adapter.js)。正文仍通过官方 `conversation.chat.reasoning.body` 和 `conversation.chat.reasoning.content` Factory 渲染；非目标步骤直接委托原生 Factory，不重绘聊天正文、图片或工具日志。
 
-标题适配仅匹配真实聊天的 `[data-chat-flow-kind="assistant-step"] [data-variant="think"]`，身份取自其 `[data-chat-node-key]` 和最近的 `[data-conversation-session]`。目标设置保存这些精确定位值，不保存任何片段索引或小说绑定。标题和图标以本地 DOM 覆盖层展示，保留原生节点、折叠组件、字体主题和事件处理；停用后移除覆盖层和样式。
+标题适配仅匹配真实聊天的 `[data-chat-flow-kind="assistant-step"] [data-variant="think"]`，身份取自其 `[data-chat-node-key]` 和最近的 `[data-conversation-session]`。设置中的下拉框通过该模块列出当前 DOM 已加载的真实思考位置，按会话和节点去重；列表读取、刷新与选择都不展开思考或消费内容。目标设置保存这些精确定位值，不保存任何片段索引或小说绑定。标题和图标以本地 DOM 覆盖层展示，保留原生节点、折叠组件、字体主题和事件处理；停用后移除覆盖层和样式。
 
 只有可信的用户 `click` 或 Enter/空格事件、且原生头部 `aria-expanded="false"` 时，才调用阅读服务。DOM 观察只恢复目标标题显示，不加载小说；正文挂载/更新的 effect 只识别节点身份，不推进阅读。无任意文本匹配、React 私有属性、全局思考替换或复杂规则引擎。
 

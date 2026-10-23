@@ -21,7 +21,7 @@ export class NovelStore {
   constructor(storage) {
     this.storage = storage
     this.state = { books: [], settings: { ...DEFAULT_SETTINGS }, hydrated: false, error: null }
-    this.ui = { picking: false, notice: null }
+    this.ui = { notice: null }
     this.listeners = new Set()
     this.settingsListeners = new Set()
     this.uiListeners = new Set()
@@ -68,12 +68,6 @@ export class NovelStore {
     this.storage.close?.()
   }
 
-  setPicking(picking) {
-    if (this.ui.picking === Boolean(picking)) return
-    this.ui = { ...this.ui, picking: Boolean(picking), notice: null }
-    this.#emitUi()
-  }
-
   setNotice(notice) {
     this.ui = { ...this.ui, notice: notice ? String(notice) : null }
     this.#emitUi()
@@ -82,9 +76,7 @@ export class NovelStore {
   async setOption(key, value) {
     if (!['enabled', 'icon', 'mainTitle', 'extraTitle'].includes(key)) throw new Error('未知设置项')
     const normalized = key === 'enabled' ? Boolean(value) : String(value)
-    const settings = await this.#updateSettings(() => ({ [key]: normalized }))
-    if (key === 'enabled' && !normalized) this.setPicking(false)
-    return settings
+    return this.#updateSettings(() => ({ [key]: normalized }))
   }
 
   async addTarget(target) {
@@ -98,8 +90,6 @@ export class NovelStore {
       if (settings.targets.some(item => item.sessionId === normalized.sessionId && item.nodeKey === normalized.nodeKey)) return null
       return { targets: [...settings.targets, normalized] }
     })
-    this.ui = { ...this.ui, picking: true, notice: null }
-    this.#emitUi()
   }
 
   async removeTarget(sessionId, nodeKey) {
@@ -131,17 +121,6 @@ export class NovelStore {
     return this.#addBook({
       title: parsed.title?.trim() || fallbackTitle || '未命名书籍',
       format: extension,
-      segments: parsed.segments,
-    })
-  }
-
-  async importPastedText(title, text) {
-    await this.ready
-    this.#assertWritable()
-    const parsed = parseTextBook(text, 'md', DEFAULT_SEGMENT_LENGTH)
-    return this.#addBook({
-      title: String(title).trim() || '粘贴文本',
-      format: 'text',
       segments: parsed.segments,
     })
   }

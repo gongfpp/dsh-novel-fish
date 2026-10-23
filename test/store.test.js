@@ -289,7 +289,7 @@ test('failed hydration blocks later mutations instead of replacing stored settin
   await assert.rejects(store.setOption('icon', '🐟'), /本地书库不可用/u)
   await assert.rejects(store.selectBook('book-b'), /本地书库不可用/u)
   await assert.rejects(store.deleteBook('book-a'), /本地书库不可用/u)
-  await assert.rejects(store.importPastedText('New', 'Text.'), /本地书库不可用/u)
+  await assert.rejects(store.importFile({ name: 'new.txt', text: async () => 'Text.' }), /本地书库不可用/u)
   assert.equal((await store.claimPassage('A')).kind, 'error')
   assert.equal(writes, 0)
   assert.equal(storage.settings.currentBookId, 'book-a')
