@@ -12,12 +12,12 @@
 
 ## 最小本地适配
 
-唯一宿主适配文件是 [chat-adapter.js](../src/chat-adapter.js)。正文仍通过官方 `conversation.chat.reasoning.body` 和 `conversation.chat.reasoning.content` Factory 渲染；非目标步骤直接委托原生 Factory，不重绘聊天正文、图片或工具日志。
+唯一宿主适配文件是 [chat-adapter.js](../src/chat-adapter.js)。0.1.2 的正文使用官方 `conversation.chat.reasoning.body` 插槽，并始终将原始 `text` 和 `running` 委托给 `conversation.chat.reasoning.content` Factory；原文渲染在上，小说单独追加在其后。身份尚不可用、加载失败、自动展开和书末也不隐藏真实思考。不重绘聊天正文、图片或工具日志。
 
-标题适配仅匹配真实聊天的 `[data-chat-flow-kind="assistant-step"] [data-variant="think"]`，身份取自其 `[data-chat-node-key]` 和最近的 `[data-conversation-session]`。设置中的下拉框通过该模块列出当前 DOM 已加载的真实思考位置，按会话和节点去重；列表读取、刷新与选择都不展开思考或消费内容。目标设置保存这些精确定位值，不保存任何片段索引或小说绑定。标题和图标以本地 DOM 覆盖层展示，保留原生节点、折叠组件、字体主题和事件处理；停用后移除覆盖层和样式。
+设置只保存 `targetType: 'reasoning'`，表示原生“思考”类型，适用于任意会话中的该类型，不列举或保存具体轮次／步骤位置。类型定位依据是实际宿主标记 `[data-chat-flow-kind="assistant-step"] [data-variant="think"]`，不是标题文字匹配。`[data-chat-node-key]`、最近的 `[data-conversation-session]` 和同一节点内思考区域序号只组成页面内临时缓存键，不写入设置、不永久绑定小说。同一个 assistant-step 的两个思考区域各自首次展开可读取一段。标题和图标以本地 DOM 覆盖层展示，保留原生节点、折叠组件、字体主题和事件处理；停用后移除覆盖层和样式。
 
 只有可信的用户 `click` 或 Enter/空格事件、且原生头部 `aria-expanded="false"` 时，才调用阅读服务。DOM 观察只恢复目标标题显示，不加载小说；正文挂载/更新的 effect 只识别节点身份，不推进阅读。无任意文本匹配、React 私有属性、全局思考替换或复杂规则引擎。
 
 ## 限制
 
-这不是宿主承诺稳定的标题 API，而是对上述具体 DOM 标记的窄适配，因此安装范围固定为当前版本。未来 DSH 若改变标记，必须重新验收；不悄悄切换到独立页。没有可见思考正文的模型步骤不能被选择，用户需在真实聊天已有的原生“已完成／工作过程”分组内展开步骤。插件不会替模型生成思考。
+这不是宿主承诺稳定的标题 API，而是对上述具体 DOM 标记的窄适配，因此安装范围固定为当前版本。未来 DSH 若改变标记，必须重新验收；不悄悄切换到独立页。没有可见思考正文的模型步骤不提供阅读区；隐藏在原生“已完成／工作过程”分组内的思考，需先展开该分组。插件不会替模型生成思考。

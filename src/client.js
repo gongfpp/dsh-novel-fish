@@ -1,6 +1,6 @@
 import { IndexedDbStorage } from './persistence.js'
 import { NovelStore } from './store.js'
-import { listTargets, registerChatAdapter } from './chat-adapter.js'
+import { registerChatAdapter } from './chat-adapter.js'
 import { createSettingsRow } from './settings.js'
 import zh from '../locale/zh.json'
 import en from '../locale/en.json'
@@ -28,9 +28,6 @@ window.__ModuleLoader__.load({
         const settingsActions = {
           onSetOption: (key, value) => store.setOption(key, value),
           onSetNotice: notice => store.setNotice(notice),
-          onListTargets: listTargets,
-          onAddTarget: target => store.addTarget(target),
-          onRemoveTarget: (sessionId, nodeKey) => store.removeTarget(sessionId, nodeKey),
           onSelectBook: bookId => store.selectBook(bookId),
           onDeleteBook: bookId => store.deleteBook(bookId),
           onImportFile: file => store.importFile(file),

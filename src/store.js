@@ -4,7 +4,7 @@ import { DEFAULT_SEGMENT_LENGTH, parseTextBook } from './segments.js'
 export const DEFAULT_SETTINGS = Object.freeze({
   enabled: true,
   currentBookId: null,
-  targets: [],
+  targetType: 'reasoning',
   icon: '📖',
   mainTitle: '',
   extraTitle: '',
@@ -74,28 +74,10 @@ export class NovelStore {
   }
 
   async setOption(key, value) {
-    if (!['enabled', 'icon', 'mainTitle', 'extraTitle'].includes(key)) throw new Error('未知设置项')
+    if (!['enabled', 'targetType', 'icon', 'mainTitle', 'extraTitle'].includes(key)) throw new Error('未知设置项')
     const normalized = key === 'enabled' ? Boolean(value) : String(value)
+    if (key === 'targetType' && normalized !== 'reasoning') throw new Error('当前仅支持原生思考类型')
     return this.#updateSettings(() => ({ [key]: normalized }))
-  }
-
-  async addTarget(target) {
-    const normalized = {
-      sessionId: String(target.sessionId),
-      nodeKey: String(target.nodeKey),
-      turn: Number(target.turn),
-      step: Number(target.step),
-    }
-    await this.#updateSettings(settings => {
-      if (settings.targets.some(item => item.sessionId === normalized.sessionId && item.nodeKey === normalized.nodeKey)) return null
-      return { targets: [...settings.targets, normalized] }
-    })
-  }
-
-  async removeTarget(sessionId, nodeKey) {
-    await this.#updateSettings(settings => ({
-      targets: settings.targets.filter(item => item.sessionId !== sessionId || item.nodeKey !== nodeKey),
-    }))
   }
 
   async selectBook(bookId) {
@@ -208,10 +190,9 @@ export class NovelStore {
       const storedSettings = stored.settings ?? {}
       const availableIds = new Set(books.map(book => book.id))
       const settings = {
-        ...DEFAULT_SETTINGS,
-        ...storedSettings,
+        ...Object.fromEntries(Object.entries(DEFAULT_SETTINGS).map(([key, fallback]) => [key, storedSettings[key] ?? fallback])),
         currentBookId: availableIds.has(storedSettings.currentBookId) ? storedSettings.currentBookId : null,
-        targets: Array.isArray(storedSettings.targets) ? storedSettings.targets : [],
+        targetType: DEFAULT_SETTINGS.targetType,
       }
       this.#setState({ books, settings, hydrated: true, error: null })
     } catch (error) {

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "小说摸鱼",
-    "description": "在选中的真实思考步骤中，主动展开时阅读本地小说。"
+    "description": "主动展开原生思考时，在真实正文末尾追加一段本地小说。"
   },
   "chat": {
     "think": "思考",
@@ -10,7 +10,7 @@
     "unknownBlock": "未知内容块",
     "jsonTruncated": "… 已截断，共 {total} 字符",
     "noBook": "请先在通用设置的小说摸鱼中选择一本书。",
-    "switchHint": "请收起后再主动展开此步骤，从当前进度读取。",
+    "switchHint": "请收起后再主动展开此区域，从当前进度读取。",
     "loading": "正在读取…",
     "readError": "小说未能加载，阅读进度未改变。",
     "end": "本书已读完。",
@@ -20,17 +20,12 @@
   },
   "settings": {
     "title": "小说摸鱼",
-    "description": "导入并选择一本书，再从下拉框添加阅读位置。小说只在主动展开该思考步骤时加载，不发送给模型。",
+    "description": "导入并选择一本书，再选择原生区域类型。主动展开时保留真实思考，在正文末尾追加小说；不发送给模型。",
     "storageLoading": "正在打开本地书库…",
     "enabled": "启用聊天内阅读",
-    "chooseTarget": "选择一个真实思考步骤以添加…",
-    "targetList": "阅读位置（真实思考步骤）",
-    "targetHint": "可添加多个位置，无需关闭设置去点选聊天。选位置不会消耗小说内容。",
-    "noAvailableTargets": "当前没有已加载的思考步骤。请先在真实聊天中展开“工作过程／已完成”分组，再回来刷新列表。",
-    "refreshTargets": "刷新步骤列表",
-    "noTargets": "尚未添加阅读位置。",
-    "removeTarget": "移除",
-    "targetKey": "第 {turn} 轮 · 步骤 {step}（会话 {session}）",
+    "targetType": "阅读区域类型",
+    "typeReasoning": "思考（Thinking）",
+    "typeHint": "适用于任意会话中的原生思考区域，无需选择轮次或步骤。首次主动展开另一处才续读；当前支持思考类型，不影响工具日志和回答。",
     "bookSource": "导入书籍（EPUB / TXT / MD）",
     "selectBook": "当前书籍",
     "noBook": "请选择书籍",

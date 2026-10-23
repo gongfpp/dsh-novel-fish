@@ -17,7 +17,6 @@ const BUTTON = {
   ...CONTROL, width: 'auto', cursor: 'pointer',
   background: 'var(--dsw-alias-interactive-bg-hover)',
 }
-const targetKey = target => JSON.stringify([target.sessionId, target.nodeKey])
 
 // 预设无需打字；保留可选自定义以满足原有的任意标题／图标要求。
 const ICONS = ['📖', '📚', '💭', '🔎', '⚙️', '✅']
@@ -54,11 +53,10 @@ export function createSettingsRow(React) {
     )
   }
 
-  function SettingsRow({ t, useNovelState, useNovelUi, onSetOption, onSetNotice, onListTargets, onAddTarget, onRemoveTarget, onSelectBook, onDeleteBook, onImportFile }) {
+  function SettingsRow({ t, useNovelState, useNovelUi, onSetOption, onSetNotice, onSelectBook, onDeleteBook, onImportFile }) {
     const state = useNovelState(value => value)
     const ui = useNovelUi(value => value)
     const [busy, setBusy] = React.useState(false)
-    const [targets, setTargets] = React.useState(() => onListTargets())
     const selectedBook = state.books.find(book => book.id === state.settings.currentBookId)
     const disabled = busy || !state.hydrated || Boolean(state.error)
     const perform = async action => {
@@ -81,8 +79,6 @@ export function createSettingsRow(React) {
         setBusy(false)
       }
     }
-    const describeTarget = target => t('settings.targetKey', { session: target.sessionId.slice(0, 8), turn: target.turn, step: target.step })
-    const selectedTargets = new Set(state.settings.targets.map(targetKey))
 
     return h('section', { style: PANEL, 'data-novel-settings': true },
       h('div', { style: { display: 'grid', gap: 3 } },
@@ -113,25 +109,13 @@ export function createSettingsRow(React) {
           if (globalThis.confirm?.(t('settings.removeConfirm', { title: selectedBook.title }))) void perform(() => onDeleteBook(selectedBook.id))
         } }, t('settings.deleteBook')),
       ) : h('div', null, t('settings.emptyLibrary')),
-      h('div', { style: LABEL },
-        h('label', { style: LABEL },
-          h('span', null, t('settings.targetList')),
-          h('select', { style: CONTROL, value: '', disabled: disabled || !targets.length, 'data-novel-target-select': true, onChange: event => {
-            const target = targets.find(item => targetKey(item) === event.currentTarget.value)
-            if (target) void perform(() => onAddTarget(target))
-          } },
-          h('option', { value: '' }, t('settings.chooseTarget')),
-          targets.map(target => h('option', { key: targetKey(target), value: targetKey(target), disabled: selectedTargets.has(targetKey(target)) }, describeTarget(target))),
-          ),
+      h('label', { style: LABEL },
+        h('span', null, t('settings.targetType')),
+        h('select', { style: CONTROL, value: state.settings.targetType, disabled, 'data-novel-type-select': true,
+          onChange: event => { const type = event.currentTarget.value; void perform(() => onSetOption('targetType', type)) } },
+        h('option', { value: 'reasoning' }, t('settings.typeReasoning')),
         ),
-        h('button', { type: 'button', style: BUTTON, disabled: !state.hydrated, onClick: () => setTargets(onListTargets()) }, t('settings.refreshTargets')),
-        h('span', null, t(targets.length ? 'settings.targetHint' : 'settings.noAvailableTargets')),
-        state.settings.targets.length ? state.settings.targets.map(target => h('div', {
-          key: targetKey(target), style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-        },
-        h('span', null, describeTarget(target)),
-        h('button', { type: 'button', style: BUTTON, disabled, onClick: () => { void perform(() => onRemoveTarget(target.sessionId, target.nodeKey)) } }, t('settings.removeTarget')),
-        )) : h('div', null, t('settings.noTargets')),
+        h('span', null, t('settings.typeHint')),
       ),
       h('div', { key: String(state.hydrated), style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 8 } },
         [

@@ -3,17 +3,6 @@ import { passageSnapshotKey } from './store.js'
 const THOUGHT = '[data-chat-flow-kind="assistant-step"] [data-variant="think"]'
 const EMPTY = Object.freeze({ kind: 'empty' })
 
-/** 只列出现有真实思考步骤；读取位置列表不会打开步骤或消耗正文。 */
-export function listTargets(root = document) {
-  const targets = new Map()
-  for (const thought of root.querySelectorAll(THOUGHT)) {
-    if (!thought.querySelector('[data-disclosure-row]')) continue
-    const identity = identityOf(thought)
-    if (identity) targets.set(JSON.stringify([identity.sessionId, identity.nodeKey]), identity)
-  }
-  return [...targets.values()]
-}
-
 /** 窄适配 DSH 0.2.1 原生折叠行，不替换回答和工具渲染。 */
 export function registerChatAdapter(ctx, store, React, locale) {
   const Body = createBody(React)
@@ -89,7 +78,7 @@ export function registerChatAdapter(ctx, store, React, locale) {
       if (!id) return
       const settings = store.getSettingsSnapshot()
       if (settings.enabled && isTarget(settings, id) && header.getAttribute('aria-expanded') === 'false') {
-        void store.claimPassage(JSON.stringify([id.sessionId, id.nodeKey]))
+        void store.claimPassage(readingKey(id))
       }
     }
     const observer = new MutationObserver(refresh)
@@ -120,38 +109,50 @@ function createBody(React) {
       setIdentity(identityOf(ref.current))
     }, [sessionId])
     const selected = settings.enabled && isTarget(settings, identity)
-    const key = settings.currentBookId && identity ? passageSnapshotKey(settings.currentBookId, JSON.stringify([identity.sessionId, identity.nodeKey])) : null
+    const key = settings.currentBookId && identity ? passageSnapshotKey(settings.currentBookId, readingKey(identity)) : null
     const status = useNovelPassages(snapshot => key ? snapshot[key] : undefined) ?? EMPTY
-    let body
-    if (!identity) body = null
-    else if (!selected) body = renderFactorySlot('conversation.chat.reasoning.content', { text, running })
-    else if (status.kind === 'ready') {
-      body = h('div', { 'data-novel-passage': status.index + 1, style: {
+    // Always keep the host's real thought renderer, even before DOM identity is available.
+    const original = renderFactorySlot('conversation.chat.reasoning.content', { text, running })
+    let novel = null
+    if (selected && status.kind === 'ready') {
+      novel = h('div', { 'data-novel-passage': status.index + 1, style: {
         whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
         color: 'var(--dsw-alias-label-tertiary)', fontSize: 'var(--dsh-content-font-size-secondary,13px)',
         lineHeight: 'calc(20px + var(--dsh-content-font-delta-secondary,0px))',
       } }, status.passage.text)
-    } else {
-      const key = status.kind === 'loading' ? 'chat.loading' : status.kind === 'end' ? 'chat.end'
+    } else if (selected) {
+      const message = status.kind === 'loading' ? 'chat.loading' : status.kind === 'end' ? 'chat.end'
         : status.kind === 'error' ? 'chat.readError' : settings.currentBookId ? 'chat.switchHint' : 'chat.noBook'
-      body = h('span', { role: status.kind === 'error' ? 'alert' : 'status' }, t(key))
+      novel = h('span', { role: status.kind === 'error' ? 'alert' : 'status' }, t(message))
     }
-    return h('div', { ref }, body)
+    return h('div', { ref },
+      h('div', { 'data-novel-original': true }, original),
+      novel === null ? null : h('div', { 'data-novel-append': true, style: {
+        marginBlockStart: 'var(--dsw-space-2,8px)', paddingBlockStart: 'var(--dsw-space-2,8px)',
+        borderBlockStart: '1px solid var(--dsw-alias-border-l2)',
+      } }, novel),
+    )
   }
 }
 
 function identityOf(element) {
-  const node = element?.closest('[data-chat-flow-kind="assistant-step"][data-chat-node-key]')
-  const container = element?.closest('[data-conversation-session]')
-  if (!node || !container) return null
+  const root = element?.closest('[data-variant="think"]')
+  const node = root?.closest('[data-chat-flow-kind="assistant-step"][data-chat-node-key]')
+  const container = node?.closest('[data-conversation-session]')
+  if (!root || !node || !container) return null
+  const regions = [...node.querySelectorAll('[data-variant="think"]')]
+    .filter(region => region.closest('[data-chat-node-key]') === node)
+  const index = regions.indexOf(root)
+  const sessionId = container.getAttribute('data-conversation-session')
   const nodeKey = node.getAttribute('data-chat-node-key')
-  const match = /assistant-step(\d+):(\d+)$/u.exec(nodeKey)
-  return {
-    sessionId: container.getAttribute('data-conversation-session'), nodeKey,
-    turn: Number(match?.[1] ?? node.getAttribute('data-chat-turn')), step: Number(match?.[2] ?? 0),
-  }
+  if (index < 0 || !sessionId || !nodeKey) return null
+  return { sessionId, nodeKey, type: 'reasoning', index }
+}
+
+function readingKey(identity) {
+  return JSON.stringify([identity.sessionId, identity.nodeKey, identity.type, identity.index])
 }
 
 function isTarget(settings, identity) {
-  return identity !== null && settings.targets.some(target => target.sessionId === identity.sessionId && target.nodeKey === identity.nodeKey)
+  return identity !== null && identity.type === settings.targetType
 }

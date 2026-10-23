@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Novel Fish",
-    "description": "Read local novels by actively expanding selected real reasoning steps."
+    "description": "Append a local novel passage after the real thought when actively expanding native Thinking."
   },
   "chat": {
     "think": "Thinking",
@@ -10,27 +10,22 @@
     "unknownBlock": "Unknown content block",
     "jsonTruncated": "… truncated, {total} characters",
     "noBook": "Select a book under Settings → General → Novel Fish first.",
-    "switchHint": "Collapse and actively expand this step to read from the current progress.",
+    "switchHint": "Collapse and actively expand this region to read from the current progress.",
     "loading": "Loading…",
     "readError": "The passage could not be loaded; progress did not change.",
     "end": "The book is finished.",
-    "retry": "Collapse and actively expand this step to retry.",
+    "retry": "Collapse and actively expand this region to retry.",
     "chapter": "Chapter {number} · {title}",
     "passage": "Passage {number}"
   },
   "settings": {
     "title": "Novel Fish",
-    "description": "Import and select a book, then choose reading locations from the dropdown. Text loads only on active expansion and is never sent to the model.",
+    "description": "Import and select a book, then select a native region type. Active expansion keeps the real thought and appends a novel passage after it; nothing is sent to the model.",
     "storageLoading": "Opening the local library…",
     "enabled": "Enable reading in chat",
-    "chooseTarget": "Select a real reasoning step to add…",
-    "targetList": "Reading locations (real reasoning steps)",
-    "targetHint": "Add multiple locations here without closing settings. Selecting a location does not consume text.",
-    "noAvailableTargets": "No loaded reasoning steps. Expand the native process/completed group in chat, then return and refresh this list.",
-    "refreshTargets": "Refresh steps",
-    "noTargets": "No reading locations added.",
-    "removeTarget": "Remove",
-    "targetKey": "Turn {turn} · step {step} (session {session})",
+    "targetType": "Reading region type",
+    "typeReasoning": "Thinking",
+    "typeHint": "Applies to native Thinking regions in any chat, without selecting turns or steps. A different region's first active expansion continues reading. Only Thinking is currently supported; tool logs and answers are untouched.",
     "bookSource": "Import a book (EPUB / TXT / MD)",
     "selectBook": "Current book",
     "noBook": "Select a book",

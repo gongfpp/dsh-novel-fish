@@ -9,7 +9,7 @@ function makeStore({ delayReads = 0 } = {}) {
       { id: 'book-a', title: 'A/B/C', format: 'txt', segmentCount: 3, progress: 0 },
       { id: 'book-b', title: 'Other', format: 'md', segmentCount: 2, progress: 0 },
     ],
-    settings: { ...DEFAULT_SETTINGS, currentBookId: 'book-a', targets: [{ sessionId: 'session-1', nodeKey: 'step-1', turn: 1, step: 1 }] },
+    settings: { ...DEFAULT_SETTINGS, currentBookId: 'book-a' },
     passages: {
       'book-a': [{ text: 'A' }, { text: 'B' }, { text: 'C' }],
       'book-b': [{ text: 'X' }, { text: 'Y' }],
@@ -179,17 +179,20 @@ test('switching during a pending progress save rolls back the undisplayed passag
   store.dispose()
 })
 
-test('rapid target additions calculate from the latest queued settings', async () => {
+test('rapid type and title settings merge with the latest queued settings', async () => {
   const { store, storage } = makeStore()
   await store.ready
   const gate = gateNextCall(storage, 'saveSettings')
-  const first = store.addTarget({ sessionId: 's', nodeKey: 'target-a', turn: 2, step: 1 })
+  const first = store.setOption('mainTitle', '思考')
   await gate.entered
-  const second = store.addTarget({ sessionId: 's', nodeKey: 'target-b', turn: 2, step: 2 })
+  const second = store.setOption('targetType', 'reasoning')
+  const third = store.setOption('extraTitle', 'Checking project structure')
   gate.release()
-  await Promise.all([first, second])
-  assert.deepEqual(store.getSettingsSnapshot().targets.map(target => target.nodeKey), ['step-1', 'target-a', 'target-b'])
-  assert.deepEqual(storage.settings.targets, store.getSettingsSnapshot().targets)
+  await Promise.all([first, second, third])
+  assert.equal(store.getSettingsSnapshot().mainTitle, '思考')
+  assert.equal(store.getSettingsSnapshot().targetType, 'reasoning')
+  assert.equal(store.getSettingsSnapshot().extraTitle, 'Checking project structure')
+  assert.deepEqual(storage.settings, store.getSettingsSnapshot())
   store.dispose()
 })
 
@@ -296,6 +299,29 @@ test('failed hydration blocks later mutations instead of replacing stored settin
   store.dispose()
 })
 
+test('type settings preserve existing books/progress while dropping obsolete location lists', async () => {
+  const storage = new MemoryStorage({
+    books: [{ id: 'existing', title: '原书库', format: 'txt', segmentCount: 3, progress: 2 }],
+    settings: { ...DEFAULT_SETTINGS, currentBookId: 'existing', mainTitle: '原自定义标题', targets: [{ sessionId: 'old-session', nodeKey: 'old-step' }], targetKey: 'old-step' },
+    passages: { existing: [{ text: 'A' }, { text: 'B' }, { text: 'C' }] },
+  })
+  const store = new NovelStore(storage)
+  await store.ready
+  assert.equal(store.getSettingsSnapshot().targetType, 'reasoning')
+  assert.equal(store.getSettingsSnapshot().mainTitle, '原自定义标题')
+  assert.equal(Object.hasOwn(store.getSettingsSnapshot(), 'targets'), false)
+  assert.equal(Object.hasOwn(store.getSettingsSnapshot(), 'targetKey'), false)
+  assert.equal(store.getSnapshot().books[0].progress, 2)
+  assert.equal(storage.reads, 0)
+  await assert.rejects(store.setOption('targetType', 'tool-call'), /仅支持原生思考类型/u)
+  await assert.rejects(store.setOption('targetKey', 'another-step'), /未知设置项/u)
+  await store.setOption('targetType', 'reasoning')
+  assert.equal(Object.hasOwn(storage.settings, 'targets'), false)
+  assert.equal(Object.hasOwn(storage.settings, 'targetKey'), false)
+  assert.equal(storage.books.get('existing').progress, 2)
+  store.dispose()
+})
+
 test('end of book does not wrap and target settings contain no passage binding', async () => {
   const { store, storage } = makeStore()
   await store.ready
@@ -306,5 +332,7 @@ test('end of book does not wrap and target settings contain no passage binding',
   assert.equal(ended.kind, 'end')
   assert.equal(storage.books.get('book-a').progress, 3)
   assert.equal(storage.reads, 3)
-  assert.deepEqual(storage.settings.targets, [{ sessionId: 'session-1', nodeKey: 'step-1', turn: 1, step: 1 }])
+  assert.equal(store.getSettingsSnapshot().targetType, 'reasoning')
+  assert.equal(Object.hasOwn(store.getSettingsSnapshot(), 'targets'), false)
+  assert.equal(Object.hasOwn(storage.settings, 'targets'), false)
 })
