@@ -5,7 +5,6 @@ export const DEFAULT_SETTINGS = Object.freeze({
   enabled: true,
   currentBookId: null,
   targetType: 'reasoning',
-  icon: '📖',
   mainTitle: '',
   extraTitle: '',
 })
@@ -74,7 +73,7 @@ export class NovelStore {
   }
 
   async setOption(key, value) {
-    if (!['enabled', 'targetType', 'icon', 'mainTitle', 'extraTitle'].includes(key)) throw new Error('未知设置项')
+    if (!['enabled', 'targetType', 'mainTitle', 'extraTitle'].includes(key)) throw new Error('未知设置项')
     const normalized = key === 'enabled' ? Boolean(value) : String(value)
     if (key === 'targetType' && normalized !== 'reasoning') throw new Error('当前仅支持原生思考类型')
     return this.#updateSettings(() => ({ [key]: normalized }))

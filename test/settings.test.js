@@ -42,15 +42,15 @@ test('设置选择的是原生区域类型，不依赖聊天 DOM 或选择具体
   } finally { await act(async () => view.unmount()) }
 })
 
-test('图标和标题默认都是下拉，只有明确选择自定义才出现文本框', async () => {
+test('图标完全跟随 DSH，只有标题提供预设和明确选择后的自定义文本框', async () => {
   const model = setup()
   let view
   await act(async () => { view = TestRenderer.create(React.createElement(createSettingsRow(React), model.props)) })
   try {
     assert.equal(view.root.findAllByType('input').filter(node => !['checkbox','file'].includes(node.props.type)).length, 0)
-    const icon = view.root.findByProps({'data-novel-preset':'icon'})
-    await act(async () => icon.props.onChange({currentTarget:{value:'🔎'}}))
-    assert.deepEqual(model.options, [['icon','🔎']])
+    assert.equal(view.root.findAllByProps({'data-novel-preset':'icon'}).length, 0)
+    assert.match(JSON.stringify(view.toJSON()), /图标、悬停箭头、展开箭头与折叠交互均跟随 DSH 原生/u)
+    assert.deepEqual(model.options, [])
     const title = view.root.findByProps({'data-novel-preset':'title'})
     await act(async () => title.props.onChange({currentTarget:{value:'__custom'}}))
     const custom = view.root.findByProps({'data-novel-title':true})

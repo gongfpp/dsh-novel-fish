@@ -18,8 +18,7 @@ const BUTTON = {
   background: 'var(--dsw-alias-interactive-bg-hover)',
 }
 
-// 预设无需打字；保留可选自定义以满足原有的任意标题／图标要求。
-const ICONS = ['📖', '📚', '💭', '🔎', '⚙️', '✅']
+// 只自定义文字；图标、箭头和折叠交互完全交给 DSH。
 const MAIN_TITLES = ['', '思考', '分析', '检查', 'Thinking']
 const EXTRA_TITLES = ['', 'Checking project structure', 'Analyzing the request', 'Reviewing implementation', 'Verifying results']
 
@@ -119,7 +118,6 @@ export function createSettingsRow(React) {
       ),
       h('div', { key: String(state.hydrated), style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 8 } },
         [
-          ['icon', 'settings.icon', 'icon', ICONS, 8],
           ['mainTitle', 'settings.titleMain', 'title', MAIN_TITLES],
           ['extraTitle', 'settings.titleExtra', 'extra', EXTRA_TITLES],
         ].map(([key, label, testId, choices, maxLength]) => h(PresetField, {
@@ -127,6 +125,7 @@ export function createSettingsRow(React) {
           onChange: value => perform(() => onSetOption(key, value)),
         })),
       ),
+      h('span', { style: { color: 'var(--dsw-alias-label-tertiary)' } }, t('settings.nativeControls')),
       h('span', { style: { color: 'var(--dsw-alias-label-tertiary)' } }, t('settings.presetHint')),
       ui.notice ? h('div', { role: 'status', 'data-novel-notice': true }, ui.notice) : null,
     )

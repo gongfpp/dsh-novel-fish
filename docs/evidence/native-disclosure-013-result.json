@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-24",
+  "pluginVersion": "0.1.3",
+  "host": "DSH Web 0.2.1-rc.2",
+  "environment": "original local DSH service in a driver-owned isolated Chrome profile",
+  "automated": { "command": "pnpm verify", "passed": 49, "failed": 0, "skipped": 0 },
+  "realHost": {
+    "existingConversationUsed": true,
+    "newChatMessageSent": false,
+    "actualConversationOrServerResponsesReplaced": false,
+    "settingsNativeIconsOnly": true,
+    "testMdImported": true,
+    "passagesInTestBook": 3,
+    "initialSavedProgress": 0,
+    "syntheticDomExpansionShowsRealThought": true,
+    "syntheticDomExpansionShowsNativeOpenArrow": true,
+    "syntheticDomExpansionShowsWaitForUserNotice": true,
+    "closedThoughtNativeGlyphAndCommandAndReadRowsVisible": true,
+    "savedProgressAfterSyntheticExpansionAndCollapse": 0,
+    "dailyBrowserBooksModified": false,
+    "screenshots": ["native-disclosures-013.png", "native-open-013.png"]
+  },
+  "notVerifiedThisRound": [
+    "trusted mouse or keyboard A/B/C end-to-end reading",
+    "physical pointer hover animation and operating-system keyboard focus",
+    "real title-preset change and active model streaming in the browser",
+    "DSH versions other than 0.2.1-rc.2, Desktop and other browsers"
+  ],
+  "inputRouteLimitation": {
+    "trustedBrowserClick": { "effect": "refused", "route": "trusted_input", "reason": "route_unavailable" },
+    "nativeWindow": "AX unresolved; system window screenshot unavailable; background native input refused",
+    "workaroundBypassingTrustedGateUsed": false,
+    "syntheticClickUsedOnlyForNegativeTestAndNativePresentation": true
+  },
+  "releaseStatus": "local only; no push, tag, public Release or market index update"
+}

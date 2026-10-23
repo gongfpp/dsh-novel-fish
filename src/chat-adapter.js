@@ -3,100 +3,147 @@ import { passageSnapshotKey } from './store.js'
 const THOUGHT = '[data-chat-flow-kind="assistant-step"] [data-variant="think"]'
 const EMPTY = Object.freeze({ kind: 'empty' })
 
-/** 窄适配 DSH 0.2.1 原生折叠行，不替换回答和工具渲染。 */
+/** DSH 0.2.1 窄适配：只改原生文字节点，不覆盖图标、箭头、按钮或样式。 */
 export function registerChatAdapter(ctx, store, React, locale) {
-  const Body = createBody(React)
-  const t = ctx.locale.bind(locale)
   ctx.slots.inject('conversation.chat.reasoning.body', () => ctx.slots.register({
     name: 'conversation.chat.reasoning.body', priority: -10, locale,
     inject: () => ({
       hooks: { novelSettings: store.settingsSource, novelPassages: store.passageSource },
     }),
-  }, Body))
+  }, createBody(React)))
 
   ctx.effect(() => {
     const decorated = new Map()
-    const style = document.createElement('style')
-    style.textContent = `
-[data-novel-header] { position: relative; }
-[data-novel-header] > :not([data-novel-label]):not(:first-child) { visibility: hidden; }
-[data-novel-label] { position:absolute; left:calc(22px + var(--dsh-content-font-delta,0px)); right:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--dsh-content-font-size-secondary,13px); line-height:calc(24px + var(--dsh-content-font-delta,0px)); font-weight:400; pointer-events:none; }
-[data-novel-icon-host] > * { visibility:hidden; }
-[data-novel-icon-host] [data-novel-icon] { visibility:visible; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:var(--dsh-content-font-size-secondary,13px); }
-`
-    document.head.append(style)
+    const pending = new Map()
+    const view = document.defaultView
+    let disposed = false
+
     const restore = root => {
       const record = decorated.get(root)
       if (!record) return
-      record.label.remove()
-      record.icon.remove()
-      record.header.removeAttribute('data-novel-header')
-      record.leading?.removeAttribute('data-novel-icon-host')
+      for (const [node, text] of record.texts) restoreText(node, text)
       root.removeAttribute('data-novel-target')
       decorated.delete(root)
     }
     const refresh = () => {
       const settings = store.getSettingsSnapshot()
       for (const root of decorated.keys()) {
-        const id = identityOf(root)
-        if (!root.isConnected || !settings.enabled || !isTarget(settings, id)) restore(root)
+        if (!root.isConnected || !settings.enabled || !isTarget(settings, identityOf(root))) restore(root)
       }
       for (const root of document.querySelectorAll(THOUGHT)) {
         const header = root.querySelector('[data-disclosure-row]')
-        if (!header) continue
-        const id = identityOf(root)
-        if (!settings.enabled || !isTarget(settings, id)) continue
+        if (!header || !settings.enabled || !isTarget(settings, identityOf(root))) continue
         let record = decorated.get(root)
-        if (!record || record.header !== header || !record.label.isConnected) {
+        if (!record || record.header !== header) {
           restore(root)
-          const label = document.createElement('span')
-          label.setAttribute('data-novel-label', '')
-          const icon = document.createElement('span')
-          icon.setAttribute('data-novel-icon', '')
-          icon.setAttribute('aria-hidden', 'true')
-          const leading = header.firstElementChild
-          header.append(label)
-          leading?.append(icon)
-          header.setAttribute('data-novel-header', '')
-          leading?.setAttribute('data-novel-icon-host', '')
-          root.setAttribute('data-novel-target', '')
-          record = { header, leading, label, icon }
+          record = { header, texts: new Map() }
           decorated.set(root, record)
+          root.setAttribute('data-novel-target', '')
         }
-        const title = [settings.mainTitle.trim() || t('chat.think'), settings.extraTitle.trim()].filter(Boolean).join(' · ')
-        if (record.label.textContent !== title) record.label.textContent = title
-        if (record.icon.textContent !== settings.icon) record.icon.textContent = settings.icon
+        const desired = new Map()
+        // The base and shimmer-highlight layers must receive the same text.
+        // Leave their native classes, pseudo-elements, visibility and DOM identities intact.
+        const content = header.children[1]
+        const layers = [content?.firstElementChild, content?.querySelector('[inert]')?.firstElementChild?.firstElementChild]
+        for (const layer of layers) {
+          const title = layer?.firstElementChild
+          if (!title) continue
+          collectText(title, settings.mainTitle.trim(), desired)
+          const separator = title.nextElementSibling
+          if (separator?.hasAttribute('data-shimmer-decoration')) {
+            collectText(separator.nextElementSibling, settings.extraTitle.trim(), desired)
+          }
+        }
+        for (const [node, text] of record.texts) {
+          if (!desired.has(node)) { restoreText(node, text); record.texts.delete(node) }
+        }
+        for (const [node, value] of desired) {
+          const current = readText(node)
+          const previous = record.texts.get(node)
+          const native = previous && current === previous.shown ? previous.native : current
+          record.texts.set(node, { native, shown: value })
+          if (current !== value) writeText(node, value)
+        }
       }
     }
+
     const activate = event => {
-      if (!event.isTrusted) return
-      if (event.type === 'keydown' && !['Enter', ' '].includes(event.key)) return
-      const header = event.target instanceof Element ? event.target.closest('[data-disclosure-row]') : null
+      if (!event.isTrusted || event.defaultPrevented) return
+      if (event.type === 'keydown' && (event.repeat || !['Enter', ' '].includes(event.key))) return
+      if (event.type === 'click' && event.button > 0) return
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement
+      const header = target?.closest('[data-disclosure-row]')
       const root = header?.closest('[data-variant="think"]')
       if (!root?.matches(THOUGHT)) return
+      // Respect the host's two modes: whole-row toggle, or leading-button-only.
+      const toggle = header.matches('[role="button"][aria-expanded]')
+        ? header : header.querySelector(':scope > button[aria-expanded]')
+      if (!toggle || !toggle.contains(target) || toggle.getAttribute('aria-expanded') !== 'false') return
+      const control = target.closest('button, [role="button"], a, input, select, textarea, [contenteditable="true"]')
+      if (control && control !== toggle) return
+      if (event.type === 'keydown' && target !== toggle) return
       const id = identityOf(root)
-      if (!id) return
       const settings = store.getSettingsSnapshot()
-      if (settings.enabled && isTarget(settings, id) && header.getAttribute('aria-expanded') === 'false') {
-        void store.claimPassage(readingKey(id))
+      if (!settings.enabled || !isTarget(settings, id) || pending.has(toggle)) return
+      const bookId = settings.currentBookId
+      const intent = { frame: null }
+      pending.set(toggle, intent)
+      const verify = () => {
+        pending.delete(toggle)
+        const current = store.getSettingsSnapshot()
+        // Observe the real host transition; never consume on a canceled/no-op action.
+        if (!disposed && toggle.isConnected && toggle.getAttribute('aria-expanded') === 'true'
+          && current.enabled && current.currentBookId === bookId && isTarget(current, identityOf(root))) {
+          void store.claimPassage(readingKey(id))
+        }
       }
+      if (view?.requestAnimationFrame) intent.frame = view.requestAnimationFrame(verify)
+      else queueMicrotask(verify)
     }
     const observer = new MutationObserver(refresh)
-    // 不监听折叠属性：自动展开、流式更新和重新挂载都不是续读信号。
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true })
+    // Observe text and native shimmer updates, never treat automatic expansion as reading intent.
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['data-shimmer-text'] })
     document.addEventListener('click', activate, true)
     document.addEventListener('keydown', activate, true)
     const stopSettings = store.subscribeSettings(refresh)
     refresh()
     return () => {
+      disposed = true
       observer.disconnect()
       stopSettings()
       document.removeEventListener('click', activate, true)
       document.removeEventListener('keydown', activate, true)
+      for (const intent of pending.values()) if (intent.frame !== null) view.cancelAnimationFrame(intent.frame)
+      pending.clear()
       for (const root of decorated.keys()) restore(root)
-      style.remove()
     }
   }, 'novel-fish: native disclosure adapter')
+}
+
+function collectText(element, value, desired) {
+  if (!element || !value) return
+  const walker = element.ownerDocument.createTreeWalker(element, 4 /* SHOW_TEXT */)
+  let first = true
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    desired.set(node, first ? value : '')
+    first = false
+  }
+  for (const node of [element, ...element.querySelectorAll('[data-shimmer-text]')]) {
+    if (node.hasAttribute('data-shimmer-text')) desired.set(node, value)
+  }
+}
+
+function readText(node) {
+  return node.nodeType === 3 ? node.nodeValue : node.getAttribute('data-shimmer-text')
+}
+
+function writeText(node, value) {
+  if (node.nodeType === 3) node.nodeValue = value
+  else node.setAttribute('data-shimmer-text', value)
+}
+
+function restoreText(node, text) {
+  if (readText(node) === text.shown) writeText(node, text.native)
 }
 
 function createBody(React) {
@@ -111,26 +158,23 @@ function createBody(React) {
     const selected = settings.enabled && isTarget(settings, identity)
     const key = settings.currentBookId && identity ? passageSnapshotKey(settings.currentBookId, readingKey(identity)) : null
     const status = useNovelPassages(snapshot => key ? snapshot[key] : undefined) ?? EMPTY
-    // Always keep the host's real thought renderer, even before DOM identity is available.
     const original = renderFactorySlot('conversation.chat.reasoning.content', { text, running })
     let novel = null
     if (selected && status.kind === 'ready') {
-      novel = h('div', { 'data-novel-passage': status.index + 1, style: {
-        whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
-        color: 'var(--dsw-alias-label-tertiary)', fontSize: 'var(--dsh-content-font-size-secondary,13px)',
-        lineHeight: 'calc(20px + var(--dsh-content-font-delta-secondary,0px))',
-      } }, status.passage.text)
+      // Same native typography as the real thought. Escape Markdown so local book
+      // text cannot introduce images, links or other new visual/interactive controls.
+      const plain = status.passage.text.replace(/[\\`*_{}\[\]()#+\-.!<>|~&]/gu, '\\$&')
+      novel = h('div', { 'data-novel-passage': status.index + 1 },
+        renderFactorySlot('conversation.chat.reasoning.content', { text: plain, running: false }))
     } else if (selected) {
       const message = status.kind === 'loading' ? 'chat.loading' : status.kind === 'end' ? 'chat.end'
         : status.kind === 'error' ? 'chat.readError' : settings.currentBookId ? 'chat.switchHint' : 'chat.noBook'
-      novel = h('span', { role: status.kind === 'error' ? 'alert' : 'status' }, t(message))
+      novel = h('div', { role: status.kind === 'error' ? 'alert' : 'status' },
+        renderFactorySlot('conversation.chat.reasoning.content', { text: t(message), running: false }))
     }
     return h('div', { ref },
       h('div', { 'data-novel-original': true }, original),
-      novel === null ? null : h('div', { 'data-novel-append': true, style: {
-        marginBlockStart: 'var(--dsw-space-2,8px)', paddingBlockStart: 'var(--dsw-space-2,8px)',
-        borderBlockStart: '1px solid var(--dsw-alias-border-l2)',
-      } }, novel),
+      novel === null ? null : h('div', { 'data-novel-append': true }, novel),
     )
   }
 }

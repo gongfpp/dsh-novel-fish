@@ -6,13 +6,19 @@ import TestRenderer, { act } from 'react-test-renderer'
 import { passageSnapshotKey } from '../src/store.js'
 import { registerChatAdapter } from '../src/chat-adapter.js'
 
-function row() {
-  return '<div data-variant="think"><div data-disclosure-row role="button" aria-expanded="false"><span><svg></svg></span><span>Native title</span></div></div>'
+// Mirrors CURRENT 0.2.1-rc.2 DisclosureRow/TextShimmer nesting, not a replacement
+// renderer. Trusted events below are handler-contract probes, NOT browser evidence.
+function row({ leadingOnly = false, running = true } = {}) {
+  const toggle = leadingOnly ? '' : 'role="button" tabindex="0" aria-expanded="false"'
+  const leading = leadingOnly ? 'button type="button" aria-expanded="false" aria-label="Native title"' : 'span'
+  const layer = highlight => `<span class="native-content"><span class="native-title" ${highlight ? 'data-shimmer-text="Native title"' : ''}>${highlight ? '' : 'Native title'}</span><span data-shimmer-decoration aria-hidden="true" class="native-separator"></span><span class="native-summary"><span class="native-text" ${highlight ? 'data-shimmer-text="Native summary"' : ''}>${highlight ? '' : 'Native summary'}</span></span></span>`
+  return `<div data-variant="think"><div data-disclosure-header><div data-disclosure-row class="native-row" ${toggle}><${leading} class="native-leading"><span class="native-idle"><svg width="14" data-glyph="think"></svg></span><svg class="native-hover" data-glyph="down"></svg></${leadingOnly ? 'button' : 'span'}><span class="native-shimmer" ${running ? 'data-shimmer' : ''}>${layer(false)}${running ? `<span aria-hidden="true" inert class="native-decoration"><span class="native-sweep">${layer(true)}</span></span>` : ''}</span></div></div></div>`
 }
 function thought(key, content = row()) {
   return `<div data-chat-flow-kind="assistant-step" data-chat-node-key="${key}">${content}</div>`
 }
 const readingKey = (session, node, index = 0) => JSON.stringify([session, node, 'reasoning', index])
+const settle = () => new Promise(resolve => setImmediate(resolve))
 
 function installDom(dom) {
   const originals = Object.fromEntries(['document', 'Element', 'MutationObserver'].map(key => [key, globalThis[key]]))
@@ -25,11 +31,10 @@ function installDom(dom) {
     }
   }
 }
-
-test('type selection decorates every native thought across chats, never tools or synthetic/automatic opens', async () => {
-  const dom = new JSDOM(`<body><div data-conversation-session="session-a">${thought('14:assistant-step1:1')}${thought('14:assistant-step1:2')}<div data-chat-flow-kind="tool-call">${row()}</div></div><div data-conversation-session="session-b">${thought('14:assistant-step2:1')}</div></body>`)
+function adapterFixture(content = thought('node-a'), session = 'session-a') {
+  const dom = new JSDOM(`<body><div data-conversation-session="${session}">${content}</div></body>`)
   const restoreDom = installDom(dom)
-  let settings = { enabled: true, currentBookId: 'book', targetType: 'reasoning', icon: '◎', mainTitle: '思考', extraTitle: 'Checking project structure' }
+  let settings = { enabled: true, currentBookId: 'book', targetType: 'reasoning', mainTitle: '思考', extraTitle: 'Checking project structure' }
   const claims = [], effects = [], actions = {}
   const add = document.addEventListener.bind(document)
   document.addEventListener = (type, handler, ...args) => { actions[type] = handler; return add(type, handler, ...args) }
@@ -39,51 +44,146 @@ test('type selection decorates every native thought across chats, never tools or
     subscribeSettings: fn => { settingsChanged = fn; return () => {} },
     claimPassage: key => { claims.push(key); return Promise.resolve() },
   }
-  const ctx = { locale: { bind: () => key => key }, slots: { inject: (_key, fn) => fn(), register: () => () => {} }, effect: fn => { effects.push(fn()) } }
+  const ctx = { slots: { inject: (_key, fn) => fn(), register: () => () => {} }, effect: fn => { effects.push(fn()) } }
+  return {
+    dom, claims, actions, start: () => registerChatAdapter(ctx, store, React, 'novel'),
+    settings: patch => { settings = { ...settings, ...patch }; settingsChanged() },
+    close: () => { effects.reverse().forEach(dispose => dispose?.()); restoreDom() },
+  }
+}
+const trustedClick = target => ({ isTrusted: true, type: 'click', defaultPrevented: false, button: 0, target })
+
+test('text-only adaptation retains native glyphs, shimmer layers, layout nodes and tool rows', async () => {
+  const f = adapterFixture(thought('a') + thought('b') + `<div data-chat-flow-kind="tool-call">${row()}</div>`)
   try {
-    registerChatAdapter(ctx, store, React, 'novel')
     const roots = document.querySelectorAll('[data-chat-flow-kind="assistant-step"] [data-variant="think"]')
-    assert.equal(document.querySelectorAll('[data-novel-label]').length, 3, 'no individual location selection is needed')
-    assert.equal(roots[0].querySelector('[data-novel-label]').textContent, '思考 · Checking project structure')
-    assert.equal(roots[0].querySelector('[data-novel-icon]').textContent, '◎')
-    assert.equal(document.querySelector('[data-chat-flow-kind="tool-call"] [data-novel-label]'), null)
     const header = roots[0].querySelector('[data-disclosure-row]')
-    header.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
-    assert.equal(claims.length, 0)
-    header.setAttribute('aria-expanded', 'true')
-    header.append(document.createTextNode('streaming update'))
-    await new Promise(resolve => setImmediate(resolve))
-    assert.equal(claims.length, 0, 'automatic expansion/history/stream changes must not claim')
-    actions.click({ isTrusted: true, type: 'click', target: header })
-    assert.equal(claims.length, 0, 'closing an expanded region does not claim')
-    header.setAttribute('aria-expanded', 'false')
-    actions.click({ isTrusted: true, type: 'click', target: header })
-    actions.click({ isTrusted: true, type: 'click', target: roots[1].querySelector('[data-disclosure-row]') })
-    actions.keydown({ isTrusted: true, type: 'keydown', key: 'Enter', target: roots[2].querySelector('[data-disclosure-row]') })
-    assert.deepEqual(claims, [readingKey('session-a', '14:assistant-step1:1'), readingKey('session-a', '14:assistant-step1:2'), readingKey('session-b', '14:assistant-step2:1')])
-    settings = { ...settings, targetType: 'unsupported' }; settingsChanged()
-    assert.equal(document.querySelector('[data-novel-label]'), null)
-    settings = { ...settings, targetType: 'reasoning', enabled: false }; settingsChanged()
-    assert.equal(document.querySelector('[data-novel-label]'), null)
-    assert.equal(header.querySelector('svg') !== null, true)
-    assert.equal(header.querySelector('span:nth-child(2)').textContent, 'Native title')
-  } finally { effects.reverse().forEach(dispose => dispose?.()); restoreDom() }
+    const leading = header.firstElementChild
+    const glyphs = leading.outerHTML
+    const title = header.querySelector('.native-title')
+    const titleText = title.firstChild
+    const nodes = [...header.querySelectorAll('*')]
+    const tool = document.querySelector('[data-chat-flow-kind="tool-call"]')
+    const toolHtml = tool.innerHTML
+    f.start()
+    assert.equal(document.querySelectorAll('[data-novel-target]').length, 2)
+    assert.equal(header.firstElementChild, leading)
+    assert.equal(leading.outerHTML, glyphs)
+    assert.equal(title.firstChild, titleText, 'native React text node is retained')
+    assert.equal(title.textContent, '思考')
+    assert.equal(header.querySelector('.native-summary').textContent, 'Checking project structure')
+    assert.deepEqual([...header.querySelectorAll('*')], nodes, 'no replacement title, overlay or arrow nodes')
+    assert.deepEqual([...header.querySelectorAll('[data-shimmer-text]')].map(node => node.getAttribute('data-shimmer-text')), ['思考', 'Checking project structure'])
+    assert.equal(header.querySelector('[data-shimmer]').hasAttribute('data-shimmer'), true)
+    assert.equal(tool.innerHTML, toolHtml)
+    assert.equal(document.querySelector('style, [data-novel-label], [data-novel-icon]'), null)
+    assert.equal(header.querySelector('[style]'), null, 'native font/color/spacing/hover styles remain authoritative')
+    // Simulate a native streaming write; disabling must restore the latest host text.
+    titleText.nodeValue = 'Updated native title'
+    await settle()
+    assert.equal(title.textContent, '思考')
+    f.settings({ enabled: false })
+    assert.equal(title.textContent, 'Updated native title')
+    assert.equal(header.querySelector('.native-summary').textContent, 'Native summary')
+    assert.equal(header.querySelector('[data-shimmer-text]').getAttribute('data-shimmer-text'), 'Native title')
+    assert.equal(leading.outerHTML, glyphs)
+    assert.equal(document.querySelector('[data-novel-target]'), null)
+  } finally { f.close() }
 })
 
-test('two thought regions within one assistant step have independent temporary cache keys', () => {
-  const dom = new JSDOM(`<div data-conversation-session="session-a">${thought('node-a', row() + row())}</div>`)
-  const restoreDom = installDom(dom)
-  const claims = [], effects = []
-  let click
-  const add = document.addEventListener.bind(document)
-  document.addEventListener = (type, handler, ...args) => { if (type === 'click') click = handler; return add(type, handler, ...args) }
-  const store = { settingsSource: {}, passageSource: {}, getSettingsSnapshot: () => ({ enabled: true, targetType: 'reasoning', icon: '📖', mainTitle: '', extraTitle: '' }), subscribeSettings: () => () => {}, claimPassage: key => { claims.push(key) } }
-  const ctx = { locale: { bind: () => key => key }, slots: { inject: (_key, fn) => fn(), register: () => () => {} }, effect: fn => { effects.push(fn()) } }
+test('only verified user closed-to-open transitions claim; automatic, canceled and nested actions do not', async () => {
+  const f = adapterFixture()
   try {
-    registerChatAdapter(ctx, store, React, 'novel')
-    for (const target of document.querySelectorAll('[data-disclosure-row]')) click({ type: 'click', isTrusted: true, target })
-    assert.deepEqual(claims, [readingKey('session-a', 'node-a', 0), readingKey('session-a', 'node-a', 1)])
-  } finally { effects.reverse().forEach(dispose => dispose?.()); restoreDom() }
+    f.start()
+    const header = document.querySelector('[data-disclosure-row]')
+    const nested = document.createElement('button')
+    nested.textContent = 'Independent action'; header.append(nested)
+    const link = document.createElement('a'); link.href = '#other'; header.append(link)
+    header.dispatchEvent(new f.dom.window.MouseEvent('click', { bubbles: true }))
+    f.actions.click({ ...trustedClick(header), defaultPrevented: true })
+    f.actions.click({ ...trustedClick(header), button: 1 })
+    f.actions.click(trustedClick(nested))
+    f.actions.click(trustedClick(link))
+    f.actions.keydown({ isTrusted: true, type: 'keydown', key: ' ', repeat: true, target: header })
+    f.actions.keydown({ isTrusted: true, type: 'keydown', key: 'Escape', target: header })
+    f.actions.keydown({ isTrusted: true, type: 'keydown', key: 'Enter', target: nested })
+    await settle()
+    assert.equal(f.claims.length, 0)
+    f.actions.click(trustedClick(header))
+    assert.equal(f.claims.length, 0, 'capture is intent only')
+    await settle()
+    assert.equal(f.claims.length, 0, 'no host transition means no read')
+    header.setAttribute('aria-expanded', 'true')
+    header.append(document.createTextNode('streaming update'))
+    await settle()
+    assert.equal(f.claims.length, 0, 'history/automatic expansion and stream changes do not read')
+    f.actions.click(trustedClick(header))
+    header.setAttribute('aria-expanded', 'false')
+    await settle()
+    assert.equal(f.claims.length, 0, 'closing does not read')
+    f.actions.click(trustedClick(header.querySelector('.native-title')))
+    header.setAttribute('aria-expanded', 'true')
+    assert.equal(f.claims.length, 0)
+    await settle()
+    assert.deepEqual(f.claims, [readingKey('session-a', 'node-a')])
+  } finally { f.close() }
+})
+
+test('Enter/Space use the native toggle and thought regions get independent temporary keys', async () => {
+  const f = adapterFixture(thought('node-a', row() + row()))
+  try {
+    f.start()
+    const headers = document.querySelectorAll('[data-disclosure-row]')
+    for (const [index, target] of [...headers].entries()) {
+      f.actions.keydown({ isTrusted: true, type: 'keydown', key: index ? ' ' : 'Enter', repeat: false, target })
+      target.setAttribute('aria-expanded', 'true')
+    }
+    await settle()
+    assert.deepEqual(f.claims, [readingKey('session-a', 'node-a', 0), readingKey('session-a', 'node-a', 1)])
+  } finally { f.close() }
+})
+
+test('leading-button mode ignores title/row clicks and keeps the native button accessible label', async () => {
+  const f = adapterFixture(thought('node-a', row({ leadingOnly: true })))
+  try {
+    f.start()
+    const header = document.querySelector('[data-disclosure-row]')
+    const toggle = header.firstElementChild
+    f.actions.click(trustedClick(header))
+    f.actions.click(trustedClick(header.querySelector('.native-title')))
+    await settle()
+    assert.equal(f.claims.length, 0)
+    assert.equal(toggle.getAttribute('aria-label'), 'Native title')
+    f.actions.click(trustedClick(toggle.querySelector('svg')))
+    toggle.setAttribute('aria-expanded', 'true')
+    await settle()
+    assert.equal(f.claims.length, 1)
+    assert.equal(toggle.getAttribute('aria-label'), 'Native title', 'no accessible-control rewrite')
+  } finally { f.close() }
+})
+
+test('book switch, disposal and removed rows cancel pending reads; rapid intent is coalesced', async () => {
+  const f = adapterFixture()
+  try {
+    f.start()
+    const header = document.querySelector('[data-disclosure-row]')
+    f.actions.click(trustedClick(header))
+    header.setAttribute('aria-expanded', 'true')
+    f.settings({ currentBookId: 'other-book' })
+    await settle()
+    assert.equal(f.claims.length, 0)
+    header.setAttribute('aria-expanded', 'false')
+    f.actions.click(trustedClick(header)); f.actions.click(trustedClick(header))
+    header.setAttribute('aria-expanded', 'true')
+    await settle()
+    assert.equal(f.claims.length, 1)
+    header.setAttribute('aria-expanded', 'false')
+    f.actions.click(trustedClick(header))
+    header.setAttribute('aria-expanded', 'true')
+    header.remove()
+    await settle()
+    assert.equal(f.claims.length, 1)
+  } finally { f.close() }
 })
 
 function bodyFixture() {
@@ -91,12 +191,12 @@ function bodyFixture() {
   const marker = dom.window.document.createElement('div')
   dom.window.document.querySelector('[data-variant="think"]').append(marker)
   let Body
-  const ctx = { locale: { bind: () => key => key }, slots: { inject: (_key, fn) => fn(), register: (_options, component) => { Body = component; return () => {} } }, effect: () => {} }
+  const ctx = { slots: { inject: (_key, fn) => fn(), register: (_options, component) => { Body = component; return () => {} } }, effect: () => {} }
   registerChatAdapter(ctx, {}, React, 'novel')
   return { dom, marker, Body }
 }
 
-test('novel is appended after real thought; remount, stream and completion only read cache', async () => {
+test('novel uses native typography after real thought, without separator/style overrides; remount/stream never claim', async () => {
   const { dom, marker, Body } = bodyFixture()
   const settings = { enabled: true, currentBookId: 'book', targetType: 'reasoning' }
   let status = { kind: 'ready', index: 0, passage: { text: 'A cached passage' } }
@@ -112,29 +212,36 @@ test('novel is appended after real thought; remount, stream and completion only 
   let view
   try {
     await act(async () => { view = TestRenderer.create(React.createElement(Body, props), { createNodeMock: () => marker }) })
-    const original = view.root.findByProps({ 'data-novel-original': true })
-    assert.equal(original.findByType('p').children.join(''), props.text)
-    assert.equal(view.root.findByProps({ 'data-novel-passage': 1 }).children.join(''), 'A cached passage')
+    assert.equal(view.root.findByProps({ 'data-novel-original': true }).findByType('p').children.join(''), props.text)
+    assert.equal(view.root.findByProps({ 'data-novel-passage': 1 }).findByType('p').children.join(''), 'A cached passage')
     assert.equal(view.toJSON().children[0].props['data-novel-original'], true)
-    assert.equal(view.toJSON().children[1].props['data-novel-append'], true, 'novel follows, never replaces, original thought')
+    assert.equal(view.toJSON().children[1].props['data-novel-append'], true)
+    assert.equal(view.toJSON().children[1].props.style, undefined)
     await act(async () => view.update(React.createElement(Body, { ...props, text: 'stream update', running: false })))
     assert.match(JSON.stringify(view.toJSON()), /stream update.*A cached passage/u)
-    assert.deepEqual(forwarded.at(-1), { name: 'conversation.chat.reasoning.content', text: 'stream update', running: false })
+    assert.ok(forwarded.some(input => input.name === 'conversation.chat.reasoning.content' && input.text === 'stream update' && input.running === false))
     assert.equal(claims, 0)
     await act(async () => view.unmount())
     await act(async () => { view = TestRenderer.create(React.createElement(Body, props), { createNodeMock: () => marker }) })
     assert.match(JSON.stringify(view.toJSON()), /ORIGINAL MODEL THOUGHT.*A cached passage/u)
+    status = { kind: 'ready', index: 0, passage: { text: '![image](https://example.invalid/x) <script> & text' } }
+    await act(async () => view.update(React.createElement(Body, props)))
+    assert.ok(forwarded.at(-1).text.startsWith('\\!\\[image\\]\\('), 'novel cannot introduce interactive Markdown controls')
     for (const next of [undefined, { kind: 'loading' }, { kind: 'error' }, { kind: 'end' }]) {
       status = next
       await act(async () => view.update(React.createElement(Body, { ...props, running: false })))
       assert.match(JSON.stringify(view.toJSON()), /ORIGINAL MODEL THOUGHT/u)
       assert.equal(view.root.findAllByProps({ 'data-novel-passage': 1 }).length, 0)
+      const notice = view.root.findByProps({ role: next?.kind === 'error' ? 'alert' : 'status' })
+      assert.equal(notice.findAllByType('p').length, 1, 'loading/error/end/hint use native thought typography too')
+      assert.equal(forwarded.at(-1).name, 'conversation.chat.reasoning.content')
+      assert.equal(forwarded.at(-1).running, false)
+      assert.equal(notice.props.style, undefined)
     }
-    assert.equal(claims, 0, 'empty/restored/failed bodies do not initiate a load')
+    assert.equal(claims, 0)
     settings.enabled = false
     await act(async () => view.update(React.createElement(Body, props)))
     assert.equal(view.root.findAllByProps({ 'data-novel-append': true }).length, 0)
-    assert.match(JSON.stringify(view.toJSON()), /ORIGINAL MODEL THOUGHT/u)
   } finally { await act(async () => view?.unmount()); dom.window.close() }
 })
 
