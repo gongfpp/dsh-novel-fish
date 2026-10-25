@@ -20,7 +20,7 @@ test('public package identity matches the Host patch and browser module', async 
 
 test('notices include JSZip prebundled libraries and the zlib copyright', async () => {
   const notices = await read('THIRD-PARTY-NOTICES.txt')
-  for (const name of ['pako@1.0.11', 'lie@3.3.0', 'immediate@3.0.6', 'setimmediate@1.0.5', 'Jean-loup Gailly and Mark Adler']) {
+  for (const name of ['pako@1.0.11', 'lie@3.3.0', 'immediate@3.0.6', 'setimmediate@1.0.5', 'crc-32@1.2.2', 'Jean-loup Gailly and Mark Adler']) {
     assert.ok(notices.includes(name), `Missing third-party notice: ${name}`)
   }
 })

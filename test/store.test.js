@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { DEFAULT_SETTINGS, NovelStore, passageSnapshotKey } from '../src/store.js'
+import { DEFAULT_SETTINGS, NovelStore, TARGET_TYPES, passageSnapshotKey } from '../src/store.js'
 import { MemoryStorage } from './helpers/memory-storage.js'
 
 function makeStore({ delayReads = 0 } = {}) {
@@ -185,12 +185,12 @@ test('rapid type and title settings merge with the latest queued settings', asyn
   const gate = gateNextCall(storage, 'saveSettings')
   const first = store.setOption('mainTitle', '思考')
   await gate.entered
-  const second = store.setOption('targetType', 'reasoning')
+  const second = store.setOption('targetTypes', ['reasoning', 'command'])
   const third = store.setOption('extraTitle', 'Checking project structure')
   gate.release()
   await Promise.all([first, second, third])
   assert.equal(store.getSettingsSnapshot().mainTitle, '思考')
-  assert.equal(store.getSettingsSnapshot().targetType, 'reasoning')
+  assert.deepEqual(store.getSettingsSnapshot().targetTypes, ['reasoning', 'command'])
   assert.equal(store.getSettingsSnapshot().extraTitle, 'Checking project structure')
   assert.deepEqual(storage.settings, store.getSettingsSnapshot())
   store.dispose()
@@ -302,23 +302,261 @@ test('failed hydration blocks later mutations instead of replacing stored settin
 test('type settings preserve existing books/progress while dropping obsolete location lists', async () => {
   const storage = new MemoryStorage({
     books: [{ id: 'existing', title: '原书库', format: 'txt', segmentCount: 3, progress: 2 }],
-    settings: { ...DEFAULT_SETTINGS, currentBookId: 'existing', mainTitle: '原自定义标题', targets: [{ sessionId: 'old-session', nodeKey: 'old-step' }], targetKey: 'old-step' },
+    settings: { enabled: true, targetType: 'reasoning', currentBookId: 'existing', mainTitle: '原自定义标题', targets: [{ sessionId: 'old-session', nodeKey: 'old-step' }], targetKey: 'old-step' },
     passages: { existing: [{ text: 'A' }, { text: 'B' }, { text: 'C' }] },
   })
   const store = new NovelStore(storage)
   await store.ready
-  assert.equal(store.getSettingsSnapshot().targetType, 'reasoning')
+  assert.deepEqual(store.getSettingsSnapshot().targetTypes, ['reasoning'])
+  assert.equal(Object.hasOwn(store.getSettingsSnapshot(), 'targetType'), false)
   assert.equal(store.getSettingsSnapshot().mainTitle, '原自定义标题')
   assert.equal(Object.hasOwn(store.getSettingsSnapshot(), 'targets'), false)
   assert.equal(Object.hasOwn(store.getSettingsSnapshot(), 'targetKey'), false)
   assert.equal(store.getSnapshot().books[0].progress, 2)
   assert.equal(storage.reads, 0)
-  await assert.rejects(store.setOption('targetType', 'tool-call'), /仅支持原生思考类型/u)
+  await assert.rejects(store.setOption('targetType', 'reasoning'), /未知设置项/u)
   await assert.rejects(store.setOption('targetKey', 'another-step'), /未知设置项/u)
-  await store.setOption('targetType', 'reasoning')
+  await store.setOption('targetTypes', ['reasoning'])
+  assert.equal(Object.hasOwn(storage.settings, 'targetType'), false)
   assert.equal(Object.hasOwn(storage.settings, 'targets'), false)
   assert.equal(Object.hasOwn(storage.settings, 'targetKey'), false)
   assert.equal(storage.books.get('existing').progress, 2)
+  store.dispose()
+})
+
+test('disabling before a queued claim executes prevents the audited progress leak', async () => {
+  const { store, storage } = makeStore()
+  await store.ready
+  const gate = gateNextCall(storage, 'saveSettings')
+  const disabling = store.setOption('enabled', false)
+  await gate.entered
+  const reading = store.claimPassage('queued')
+  gate.release()
+  await disabling
+  assert.equal((await reading).kind, 'empty')
+  assert.equal(store.getSettingsSnapshot().enabled, false)
+  assert.equal(storage.books.get('book-a').progress, 0)
+  assert.equal(storage.reads, 0)
+  store.dispose()
+})
+
+for (const boundary of ['getSegment', 'updateBook']) {
+  test(`disable intent cancels a pending ${boundary} and preserves ready passages`, async () => {
+    const { store, storage } = makeStore()
+    await store.ready
+    const ready = await store.claimPassage('cached')
+    const gate = gateNextCall(storage, boundary)
+    const reading = store.claimPassage('pending')
+    await gate.entered
+    const disabling = store.setOption('enabled', false)
+    assert.equal(store.getPassageStatus('book-a', 'pending').kind, 'empty')
+    assert.strictEqual(store.getPassageStatus('book-a', 'cached'), ready)
+    gate.release()
+    assert.equal((await reading).kind, 'empty')
+    await disabling
+    assert.equal(storage.books.get('book-a').progress, 1)
+    assert.equal(store.getSnapshot().books[0].progress, 1)
+    await store.setOption('enabled', true)
+    assert.strictEqual(await store.claimPassage('cached'), ready)
+    assert.equal((await store.claimPassage('pending')).passage.text, 'B')
+    store.dispose()
+  })
+}
+
+test('a failed disable write still cancels the unfinished read without losing ready cache', async () => {
+  const { store, storage } = makeStore()
+  await store.ready
+  const ready = await store.claimPassage('cached')
+  const gate = gateNextCall(storage, 'updateBook')
+  const reading = store.claimPassage('pending')
+  await gate.entered
+  storage.saveSettings = async () => { throw new Error('settings quota failure') }
+  const rejected = assert.rejects(store.setOption('enabled', false), /settings quota failure/u)
+  gate.release()
+  assert.equal((await reading).kind, 'empty')
+  await rejected
+  assert.equal(store.getSettingsSnapshot().enabled, true)
+  assert.equal(storage.books.get('book-a').progress, 1)
+  assert.equal(store.getPassageStatus('book-a', 'pending').kind, 'empty')
+  assert.strictEqual(await store.claimPassage('cached'), ready)
+  assert.equal((await store.claimPassage('pending')).passage.text, 'B')
+  store.dispose()
+})
+
+test('a canceled read failure stays empty and does not consume progress', async () => {
+  const { store, storage } = makeStore()
+  await store.ready
+  const gate = gateNextCall(storage, 'getSegment')
+  const reading = store.claimPassage('pending')
+  await gate.entered
+  storage.failNextRead = true
+  const disabling = store.setOption('enabled', false)
+  gate.release()
+  assert.equal((await reading).kind, 'empty')
+  await disabling
+  assert.equal(store.getPassageStatus('book-a', 'pending').kind, 'empty')
+  assert.equal(storage.books.get('book-a').progress, 0)
+  store.dispose()
+})
+
+test('a failed progress save does not publish or consume a passage and remains retryable', async () => {
+  const { store, storage } = makeStore()
+  await store.ready
+  const updateBook = storage.updateBook.bind(storage)
+  storage.updateBook = async () => { throw new Error('progress quota failure') }
+  const failed = await store.claimPassage('pending')
+  assert.equal(failed.kind, 'error')
+  assert.match(failed.message, /progress quota failure/u)
+  assert.equal(storage.books.get('book-a').progress, 0)
+  assert.equal(store.getSnapshot().books[0].progress, 0)
+  storage.updateBook = updateBook
+  assert.equal((await store.claimPassage('pending')).passage.text, 'A')
+  store.dispose()
+})
+
+test('all selected types persist and accept reads, including an intentionally empty selection', async () => {
+  const { store, storage } = makeStore()
+  await store.ready
+  const selected = [...TARGET_TYPES]
+  await store.setOption('targetTypes', selected)
+  selected.length = 0
+  assert.deepEqual(store.getSettingsSnapshot().targetTypes, TARGET_TYPES)
+  assert.deepEqual(storage.settings.targetTypes, TARGET_TYPES)
+  assert.equal(Object.hasOwn(storage.settings, 'targetType'), false)
+  for (const [index, type] of TARGET_TYPES.entries()) {
+    assert.equal((await store.claimPassage(type, type)).kind, index < 3 ? 'ready' : 'end')
+  }
+  assert.equal(storage.reads, 3)
+  await store.setOption('targetTypes', [])
+  assert.equal((await store.claimPassage('not-selected', 'command')).kind, 'empty')
+  assert.equal(storage.reads, 3)
+  store.dispose()
+  const remounted = new NovelStore(storage)
+  await remounted.ready
+  assert.deepEqual(remounted.getSettingsSnapshot().targetTypes, [])
+  assert.equal((await remounted.claimPassage('not-selected')).kind, 'empty')
+  remounted.dispose()
+})
+
+for (const type of TARGET_TYPES) {
+  test(`${type} can be selected alone and survives remount without consuming unrelated types`, async () => {
+    const { store, storage } = makeStore()
+    await store.ready
+    await store.setOption('targetTypes', [type])
+    store.dispose()
+    const remounted = new NovelStore(storage)
+    await remounted.ready
+    assert.deepEqual(remounted.getSettingsSnapshot().targetTypes, [type])
+    const otherType = type === 'reasoning' ? 'command' : 'reasoning'
+    assert.equal((await remounted.claimPassage('other', otherType)).kind, 'empty')
+    assert.equal(storage.reads, 0)
+    assert.equal((await remounted.claimPassage(`${type}:step`, type)).passage.text, 'A')
+    assert.equal(storage.books.get('book-a').progress, 1)
+    remounted.dispose()
+  })
+}
+
+test('invalid type selections reject without persisting or replacing the current selection', async () => {
+  const { store, storage } = makeStore()
+  await store.ready
+  for (const value of [null, 'reasoning', ['unknown'], ['reasoning', 'reasoning'], [false]]) {
+    await assert.rejects(store.setOption('targetTypes', value), /有效且不重复的类型数组/u)
+  }
+  assert.deepEqual(store.getSettingsSnapshot().targetTypes, ['reasoning'])
+  assert.deepEqual(storage.settings.targetTypes, ['reasoning'])
+  assert.equal((await store.claimPassage('unselected', 'command')).kind, 'empty')
+  assert.equal(storage.reads, 0)
+  store.dispose()
+})
+
+test('hydration normalizes stored type arrays without resurrecting the old field', async () => {
+  const storage = new MemoryStorage({ settings: { targetTypes: ['command', 'command', 'unknown', 'read-file'], targetType: 'reasoning' } })
+  const store = new NovelStore(storage)
+  await store.ready
+  assert.deepEqual(store.getSettingsSnapshot().targetTypes, ['command', 'read-file'])
+  assert.equal(Object.hasOwn(store.getSettingsSnapshot(), 'targetType'), false)
+  await store.setOption('mainTitle', '工具')
+  assert.deepEqual(storage.settings.targetTypes, ['command', 'read-file'])
+  assert.equal(Object.hasOwn(storage.settings, 'targetType'), false)
+  store.dispose()
+})
+
+for (const boundary of ['getSegment', 'updateBook']) {
+  test(`deselecting a type cancels its pending ${boundary} but retains its ready passage`, async () => {
+    const { store, storage } = makeStore()
+    await store.ready
+    await store.setOption('targetTypes', ['reasoning', 'command'])
+    const ready = await store.claimPassage('command:cached', 'command')
+    const gate = gateNextCall(storage, boundary)
+    const reading = store.claimPassage('command:pending', 'command')
+    await gate.entered
+    const deselecting = store.setOption('targetTypes', ['reasoning'])
+    assert.equal(store.getPassageStatus('book-a', 'command:pending').kind, 'empty')
+    assert.strictEqual(store.getPassageStatus('book-a', 'command:cached'), ready)
+    gate.release()
+    assert.equal((await reading).kind, 'empty')
+    await deselecting
+    assert.equal(storage.books.get('book-a').progress, 1)
+    assert.equal((await store.claimPassage('command:new', 'command')).kind, 'empty')
+    await store.setOption('targetTypes', ['command'])
+    assert.strictEqual(await store.claimPassage('command:cached', 'command'), ready)
+    assert.equal((await store.claimPassage('command:pending', 'command')).passage.text, 'B')
+    store.dispose()
+  })
+}
+
+test('failed deselection persistence cancels the in-flight claim and allows a clean retry', async () => {
+  const { store, storage } = makeStore()
+  await store.ready
+  await store.setOption('targetTypes', ['command'])
+  const gate = gateNextCall(storage, 'updateBook')
+  const reading = store.claimPassage('command:pending', 'command')
+  await gate.entered
+  storage.saveSettings = async () => { throw new Error('settings quota failure') }
+  const rejected = assert.rejects(store.setOption('targetTypes', []), /settings quota failure/u)
+  gate.release()
+  assert.equal((await reading).kind, 'empty')
+  await rejected
+  assert.deepEqual(store.getSettingsSnapshot().targetTypes, ['command'])
+  assert.equal(store.getPassageStatus('book-a', 'command:pending').kind, 'empty')
+  assert.equal(storage.books.get('book-a').progress, 0)
+  assert.equal((await store.claimPassage('command:pending', 'command')).passage.text, 'A')
+  store.dispose()
+})
+
+test('failed canceled-progress restoration blocks later writes with an actionable error', async () => {
+  const { store, storage } = makeStore()
+  await store.ready
+  const gate = gateNextCall(storage, 'updateBook')
+  const reading = store.claimPassage('pending')
+  await gate.entered
+  storage.updateBook = async () => { throw new Error('restore quota failure') }
+  const rejected = assert.rejects(store.setOption('enabled', false), /本地书库不可用/u)
+  gate.release()
+  const failed = await reading
+  assert.equal(failed.kind, 'error')
+  assert.match(failed.message, /restore quota failure/u)
+  await rejected
+  assert.match(store.getSnapshot().error, /恢复失败.*restore quota failure/u)
+  assert.equal(store.getPassageStatus('book-a', 'pending').kind, 'empty')
+  assert.equal((await store.claimPassage('later')).kind, 'error')
+  await assert.rejects(store.setOption('mainTitle', '不要覆盖'), /本地书库不可用/u)
+  assert.equal(storage.settings.mainTitle, '')
+  store.dispose()
+})
+
+test('a claim queued behind deselection never reads even with the new generation', async () => {
+  const { store, storage } = makeStore()
+  await store.ready
+  const gate = gateNextCall(storage, 'saveSettings')
+  const deselecting = store.setOption('targetTypes', [])
+  await gate.entered
+  const reading = store.claimPassage('queued')
+  gate.release()
+  await deselecting
+  assert.equal((await reading).kind, 'empty')
+  assert.equal(storage.reads, 0)
+  assert.equal(storage.books.get('book-a').progress, 0)
   store.dispose()
 })
 
@@ -332,7 +570,8 @@ test('end of book does not wrap and target settings contain no passage binding',
   assert.equal(ended.kind, 'end')
   assert.equal(storage.books.get('book-a').progress, 3)
   assert.equal(storage.reads, 3)
-  assert.equal(store.getSettingsSnapshot().targetType, 'reasoning')
+  assert.deepEqual(store.getSettingsSnapshot().targetTypes, ['reasoning'])
+  assert.equal(Object.hasOwn(store.getSettingsSnapshot(), 'targetType'), false)
   assert.equal(Object.hasOwn(store.getSettingsSnapshot(), 'targets'), false)
   assert.equal(Object.hasOwn(storage.settings, 'targets'), false)
 })

@@ -1,10 +1,13 @@
 import { parseEpub } from './epub.js'
 import { DEFAULT_SEGMENT_LENGTH, parseTextBook } from './segments.js'
+import { decodeBookText } from './text-decoding.js'
+
+export const TARGET_TYPES = Object.freeze(['reasoning', 'tool-call', 'read-file', 'command', 'file-search'])
 
 export const DEFAULT_SETTINGS = Object.freeze({
   enabled: true,
   currentBookId: null,
-  targetType: 'reasoning',
+  targetTypes: Object.freeze(['reasoning']),
   mainTitle: '',
   extraTitle: '',
 })
@@ -73,9 +76,19 @@ export class NovelStore {
   }
 
   async setOption(key, value) {
-    if (!['enabled', 'targetType', 'mainTitle', 'extraTitle'].includes(key)) throw new Error('未知设置项')
-    const normalized = key === 'enabled' ? Boolean(value) : String(value)
-    if (key === 'targetType' && normalized !== 'reasoning') throw new Error('当前仅支持原生思考类型')
+    if (!['enabled', 'targetTypes', 'mainTitle', 'extraTitle'].includes(key)) throw new Error('未知设置项')
+    let normalized
+    if (key === 'targetTypes') {
+      if (!Array.isArray(value) || value.some(type => !TARGET_TYPES.includes(type)) || new Set(value).size !== value.length) {
+        throw new Error('阅读类型必须是有效且不重复的类型数组')
+      }
+      normalized = Object.freeze([...value])
+    } else {
+      normalized = key === 'enabled' ? Boolean(value) : String(value)
+    }
+    // Invalidate at intent time, not after a queued settings write finishes.
+    // Any type update also covers removals from settings writes still in flight.
+    if ((key === 'enabled' && !normalized) || key === 'targetTypes') this.#cancelPendingReads()
     return this.#updateSettings(() => ({ [key]: normalized }))
   }
 
@@ -97,7 +110,7 @@ export class NovelStore {
     if (!['epub', 'txt', 'md'].includes(extension)) throw new Error('只支持 EPUB、TXT、MD 文件')
     const parsed = extension === 'epub'
       ? await parseEpub(file, DEFAULT_SEGMENT_LENGTH)
-      : parseTextBook(await file.text(), extension, DEFAULT_SEGMENT_LENGTH)
+      : parseTextBook(decodeBookText(await file.arrayBuffer()), extension, DEFAULT_SEGMENT_LENGTH)
     const fallbackTitle = String(file.name).replace(/\.(epub|txt|md)$/iu, '')
     return this.#addBook({
       title: parsed.title?.trim() || fallbackTitle || '未命名书籍',
@@ -129,17 +142,17 @@ export class NovelStore {
     })
   }
 
-  async claimPassage(stepKey) {
+  async claimPassage(stepKey, targetType = 'reasoning') {
     if (this.disposed) return EMPTY_STATUS
     const generation = this.cacheGeneration
-    const requestKey = `${generation}\u0000${stepKey}`
+    const requestKey = `${generation}\u0000${targetType}\u0000${stepKey}`
     const inFlight = this.pendingReads.get(requestKey)
     if (inFlight) return inFlight
 
     let bookId
     let loadingStatus
     const operation = this.#enqueueMutation(async () => {
-      if (generation !== this.cacheGeneration) return EMPTY_STATUS
+      if (!this.#canRead(generation, targetType)) return EMPTY_STATUS
       bookId = this.state.settings.currentBookId
       if (!bookId) return EMPTY_STATUS
       const existing = this.getPassageStatus(bookId, stepKey)
@@ -154,11 +167,11 @@ export class NovelStore {
       const index = book.progress
       const passage = await this.storage.getSegment(bookId, index)
       if (!passage?.text) throw new Error('当前段落为空或已损坏')
-      if (generation !== this.cacheGeneration) return EMPTY_STATUS
+      if (!this.#canRead(generation, targetType)) return EMPTY_STATUS
 
       const updated = { ...book, progress: index + 1 }
       await this.storage.updateBook(updated)
-      if (generation !== this.cacheGeneration) {
+      if (!this.#canRead(generation, targetType)) {
         await this.#restore(() => this.storage.updateBook(book))
         return EMPTY_STATUS
       }
@@ -166,8 +179,9 @@ export class NovelStore {
       this.#setState({ books: this.state.books.map(item => item.id === bookId ? updated : item) })
       return this.#writePassageStatus(bookId, stepKey, result)
     }).catch(error => {
+      if (!this.persistenceError && !this.#canRead(generation, targetType)) return EMPTY_STATUS
       const failure = { kind: 'error', message: messageOf(error) }
-      if (generation === this.cacheGeneration && bookId) this.#writePassageStatus(bookId, stepKey, failure)
+      if (this.#canRead(generation, targetType) && bookId) this.#writePassageStatus(bookId, stepKey, failure)
       return failure
     })
 
@@ -191,7 +205,10 @@ export class NovelStore {
       const settings = {
         ...Object.fromEntries(Object.entries(DEFAULT_SETTINGS).map(([key, fallback]) => [key, storedSettings[key] ?? fallback])),
         currentBookId: availableIds.has(storedSettings.currentBookId) ? storedSettings.currentBookId : null,
-        targetType: DEFAULT_SETTINGS.targetType,
+        // Migrate the old reasoning-only field once; never carry it into writes.
+        targetTypes: Object.freeze(Array.isArray(storedSettings.targetTypes)
+          ? [...new Set(storedSettings.targetTypes.filter(type => TARGET_TYPES.includes(type)))]
+          : [...DEFAULT_SETTINGS.targetTypes]),
       }
       this.#setState({ books, settings, hydrated: true, error: null })
     } catch (error) {
@@ -263,6 +280,27 @@ export class NovelStore {
       this.persistenceError = error
       this.#setState({ error: `本地书库恢复失败，请刷新后检查阅读进度：${messageOf(error)}` })
       throw error
+    }
+  }
+
+  #canRead(generation, targetType) {
+    return !this.disposed && generation === this.cacheGeneration
+      && this.state.settings.enabled && this.state.settings.targetTypes.includes(targetType)
+  }
+
+  #cancelPendingReads() {
+    this.cacheGeneration += 1
+    this.pendingReads.clear()
+    let changed = false
+    for (const [key, status] of this.passageStates) {
+      if (status.kind === 'loading') {
+        this.passageStates.delete(key)
+        changed = true
+      }
+    }
+    if (changed) {
+      this.passageSnapshot = Object.freeze(Object.fromEntries(this.passageStates))
+      this.#emitPassages()
     }
   }
 

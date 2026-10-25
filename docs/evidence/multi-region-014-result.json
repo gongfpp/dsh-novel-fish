@@ -1,0 +1,47 @@
+{
+  "version": "0.1.4",
+  "scope": "local_candidate_not_public_release",
+  "host": "DSH Web 0.2.1-rc.2",
+  "automated": {
+    "command": "pnpm verify",
+    "build": "passed",
+    "tests": 92,
+    "passed": 92,
+    "failed": 0,
+    "skipped": 0,
+    "coverage": [
+      "plain text never enters Markdown/math/autolink parsing",
+      "separator and visible chapter label",
+      "five disjoint native region classes and multi-select settings",
+      "native tool input/output/control nodes retain identity",
+      "A cache reuse, first B, rapid clicks, refresh progress, end-of-book",
+      "pending disable, deselection, book-switch and frame revival cancellation",
+      "bounded required-entry streaming and incremental CRC",
+      "unused ZIP entries are not inflated and forged sizes do not bypass budget",
+      "strict UTF-8 and UTF-16 BOM/XML signatures",
+      "namespace-prefixed and no-namespace XHTML",
+      "block boundaries and inline continuity"
+    ],
+    "inputEvidence": "adapter fixtures, not real browser trusted user input"
+  },
+  "realGui": {
+    "completed": false,
+    "dailyBrowser": "browser_consent_required; existing profile untouched",
+    "isolatedBrowser": "authenticated against existing service; later native/CDP binding became heuristic and mutation was refused",
+    "refusal": "authorization_host_failed",
+    "newVersionScreenshotsClaimed": false,
+    "trustedABCCompleted": false,
+    "hoverAndKeyboardCompleted": false,
+    "restrictionBypassed": false
+  },
+  "limits": {
+    "epubImages": false,
+    "gbkAutomaticConversion": false,
+    "cumulativeUnpackedBytes": 134217728,
+    "memoryNote": "not a peak heap cap; assembled bytes, decoded strings and XML DOM use additional memory",
+    "multiTabSynchronization": false,
+    "hostPrivateDomStability": false
+  },
+  "modelRequestsGeneratedByVerification": 0,
+  "publicReleaseUpdated": false
+}

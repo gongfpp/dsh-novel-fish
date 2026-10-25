@@ -1,4 +1,6 @@
 import JSZip from 'jszip'
+import CRC32 from 'crc-32'
+import { decodeBookText } from './text-decoding.js'
 import { DOMParser } from '@xmldom/xmldom'
 import containerModule from 'epubjs/lib/container.js'
 import packagingModule from 'epubjs/lib/packaging.js'
@@ -15,15 +17,14 @@ const MAX_UNPACKED_BYTES = 128 * 1024 * 1024
 /** Parse an EPUB's declared linear spine once; no iframe, script, CSS, or network is used. */
 export async function parseEpub(file, targetLength = 600) {
   try {
-    const zip = await JSZip.loadAsync(await file.arrayBuffer(), { checkCRC32: true })
-    let readBytes = 0
+    // 不启用全包 CRC 检查：它会在读取正文前解压所有未引用资源。
+    const zip = await JSZip.loadAsync(await file.arrayBuffer())
+    const budget = { remaining: MAX_UNPACKED_BYTES }
     const readXml = async path => {
       const entry = zip.file(path)
       if (!entry) throw new Error(`书内文件缺失：${path}`)
-      const bytes = await entry.async('uint8array')
-      readBytes += bytes.byteLength
-      if (readBytes > MAX_UNPACKED_BYTES) throw new Error('EPUB 解压正文超过 128 MiB，请使用较小书籍')
-      const source = new TextDecoder().decode(bytes)
+      const bytes = await readEntry(entry, budget)
+      const source = decodeBookText(bytes, { xml: true })
       if (/<!ENTITY|<!DOCTYPE[^>]*\[/iu.test(source)) throw new Error(`不支持含外部实体声明的书内文件：${path}`)
       return new DOMParser({
         onError(level, message) { if (level !== 'warning') throw new Error(`${path}: ${message}`) },
@@ -45,7 +46,8 @@ export async function parseEpub(file, targetLength = 600) {
       }
       const path = archivePath(manifest.href, packagePath)
       const document = await readXml(path)
-      const body = document.getElementsByTagName('body')[0]
+      const body = document.getElementsByTagNameNS('http://www.w3.org/1999/xhtml', 'body')[0]
+        || document.getElementsByTagNameNS(null, 'body')[0]
       if (!body) throw new Error(`章节没有正文：${path}`)
       const sectionTitle = labels.get(path) || manifest.href.replace(/\.[^.]+$/u, '')
       let current = { title: sectionTitle, paragraphs: [] }
@@ -70,6 +72,49 @@ export async function parseEpub(file, targetLength = 600) {
   }
 }
 
+// 使用 JSZip 的分块流而非 async() 的全量累积，预算在保存每个块之前扣除。
+function readEntry(entry, budget) {
+  return new Promise((resolve, reject) => {
+    const stream = entry.internalStream('uint8array')
+    let chunks = []
+    let length = 0
+    let checksum = 0
+    let settled = false
+    const fail = error => {
+      if (settled) return
+      settled = true
+      // pause 会停止后续压缩输入；当前 inflate 输入仍可能产出少量块，回调不再保留它们。
+      stream.pause()
+      chunks = []
+      reject(error)
+    }
+    stream.on('data', chunk => {
+      if (settled) return
+      if (chunk.byteLength > budget.remaining) {
+        fail(new Error('EPUB 解压正文超过 128 MiB，请使用较小书籍'))
+        return
+      }
+      budget.remaining -= chunk.byteLength
+      length += chunk.byteLength
+      checksum = CRC32.buf(chunk, checksum)
+      chunks.push(chunk)
+    }).on('error', fail).on('end', () => {
+      if (settled) return
+      // JSZip 未公开期望 CRC；此字段来自它解析的中央目录，只用于校验实际读取项。
+      if ((checksum >>> 0) !== (entry._data.crc32 >>> 0)) {
+        fail(new Error(`书内文件 CRC 校验失败：${entry.name}`))
+        return
+      }
+      const bytes = new Uint8Array(length)
+      let offset = 0
+      for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength }
+      chunks = []
+      settled = true
+      resolve(bytes)
+    }).resume()
+  })
+}
+
 function archivePath(href, base = '') {
   const url = new URL(href, new URL(base, ORIGIN))
   if (url.origin !== new URL(ORIGIN).origin || url.search) throw new Error('EPUB 只能引用书内文件')
@@ -83,30 +128,32 @@ function hidden(node) {
     || /(?:display\s*:\s*none|visibility\s*:\s*hidden)/iu.test(node.getAttribute('style') || '')
 }
 
-function visibleText(node) {
-  if (node.nodeType === 3 || node.nodeType === 4) return node.nodeValue || ''
-  if (node.nodeType !== 1 || hidden(node)) return ''
-  if (node.localName === 'br') return '\n'
-  return Array.from(node.childNodes ?? []).map(visibleText).join('')
-}
-
 function extractBlocks(root) {
   const blocks = []
+  const blockTags = new Set(['div', 'section', 'article', 'aside', 'main', 'header', 'footer', 'address',
+    'p', 'li', 'ul', 'ol', 'blockquote', 'pre', 'figure', 'figcaption', 'dl', 'dt', 'dd',
+    'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th', 'hr'])
+  let pending = ''
+  let kind = 'paragraph'
+  const flush = () => {
+    const text = pending.replace(/\u00a0/gu, ' ').trim()
+    if (text) blocks.push({ kind, text })
+    pending = ''
+  }
   const walk = node => {
-    for (const child of Array.from(node.childNodes ?? [])) {
-      if (child.nodeType === 3 || child.nodeType === 4) {
-        const text = (child.nodeValue || '').trim()
-        if (text) blocks.push({ kind: 'paragraph', text })
-      } else if (child.nodeType === 1 && !hidden(child)) {
-        const tag = String(child.localName ?? child.nodeName).toLowerCase()
-        if (/^h[1-6]$/u.test(tag) || ['p', 'li', 'blockquote', 'pre', 'figcaption', 'dt', 'dd'].includes(tag)) {
-          const text = visibleText(child).replace(/\u00a0/gu, ' ').trim()
-          if (text) blocks.push({ kind: /^h[1-6]$/u.test(tag) ? 'heading' : 'paragraph', text })
-        } else walk(child)
-      }
-    }
+    if (node.nodeType === 3 || node.nodeType === 4) { pending += node.nodeValue || ''; return }
+    if (node.nodeType !== 1 || hidden(node)) return
+    const tag = String(node.localName ?? node.nodeName).toLowerCase()
+    if (tag === 'br') { pending += '\n'; return }
+    const heading = /^h[1-6]$/u.test(tag)
+    const block = heading || blockTags.has(tag)
+    const previousKind = kind
+    if (block) { flush(); kind = heading ? 'heading' : 'paragraph' }
+    for (const child of Array.from(node.childNodes ?? [])) walk(child)
+    if (block) { flush(); kind = previousKind }
   }
   walk(root)
+  flush()
   return blocks
 }
 

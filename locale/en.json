@@ -1,9 +1,10 @@
 {
   "meta": {
     "title": "Novel Fish",
-    "description": "Append a local novel passage after the real thought when actively expanding native Thinking."
+    "description": "Append local novel text below a separator after real content when actively expanding selected native regions."
   },
   "chat": {
+    "novel": "Novel",
     "think": "Thinking",
     "running": "Running",
     "stopped": "Stopped",
@@ -20,12 +21,18 @@
   },
   "settings": {
     "title": "Novel Fish",
-    "description": "Import and select a book, then select a native region type. Active expansion keeps the real thought and appends a novel passage after it; nothing is sent to the model.",
+    "description": "Import a book and select one or more native region types. Active expansion keeps real content and appends plain novel text below a separator; nothing is sent to the model.",
     "storageLoading": "Opening the local library…",
     "enabled": "Enable reading in chat",
     "targetType": "Reading region type",
     "typeReasoning": "Thinking",
-    "typeHint": "Applies to native Thinking regions in any chat, without selecting turns or steps. A different region's first active expansion continues reading. Only Thinking is currently supported; tool logs and answers are untouched.",
+    "typeToolCall": "Other tool calls",
+    "typeReadFile": "Open files (read / read_image)",
+    "typeCommand": "Run commands (bash / pwsh)",
+    "typeFileSearch": "File search (grep / glob)",
+    "selectedTypes": "{count} / {total} types selected · expand to choose",
+    "allTypes": "Select / deselect all",
+    "typeHint": "Five non-overlapping types; select several, all or none. Only existing native disclosures are adapted. Tool inputs, outputs and chat answers stay intact, with no new controls for non-expandable cards. A different region's first active expansion continues reading.",
     "bookSource": "Import a book (EPUB / TXT / MD)",
     "selectBook": "Current book",
     "noBook": "Select a book",
@@ -35,8 +42,8 @@
     "nativeControls": "Icons, hover/open chevrons and disclosure interactions remain entirely native to DSH.",
     "titleMain": "Main title",
     "titleExtra": "Additional text",
-    "nativeTitle": "Follow DSH's native Thinking title",
-    "noExtra": "Follow DSH's native thought summary",
+    "nativeTitle": "Follow the native DSH region title",
+    "noExtra": "Follow the native DSH region summary",
     "custom": "Custom…",
     "customField": "Custom {label}",
     "presetHint": "Choose presets without typing; an input appears only when Custom is selected.",

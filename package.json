@@ -1,6 +1,6 @@
 {
   "name": "@gongfpp/dsh-novel-fish",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/gongfpp/dsh-novel-fish.git"
@@ -9,9 +9,15 @@
   "bugs": {
     "url": "https://github.com/gongfpp/dsh-novel-fish/issues"
   },
-  "keywords": ["dsh", "dsh-plugin", "novel", "epub", "local-reading"],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "novel",
+    "epub",
+    "local-reading"
+  ],
   "author": "gongfpp",
-  "description": "按原生思考类型生效，主动展开时保留真实思考并在末尾追加本地小说；不改会话、不发送给模型。",
+  "description": "多选原生思考与工具区域，主动展开时保留原文并以分隔线追加本地小说；不改会话、不发送给模型。",
   "type": "module",
   "exports": {
     ".": "./index.js",
@@ -43,8 +49,9 @@
     "pack": "pnpm pack"
   },
   "devDependencies": {
-    "epubjs": "0.3.93",
     "@xmldom/xmldom": "^0.9.12",
+    "crc-32": "1.2.2",
+    "epubjs": "0.3.93",
     "esbuild": "^0.25.12",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^30.1.3",

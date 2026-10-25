@@ -1,9 +1,10 @@
 {
   "meta": {
     "title": "小说摸鱼",
-    "description": "主动展开原生思考时，在真实正文末尾追加一段本地小说。"
+    "description": "主动展开选中的原生区域时，在真实内容后的分隔线下追加本地小说。"
   },
   "chat": {
+    "novel": "小说",
     "think": "思考",
     "running": "运行中",
     "stopped": "已停止",
@@ -20,12 +21,18 @@
   },
   "settings": {
     "title": "小说摸鱼",
-    "description": "导入并选择一本书，再选择原生区域类型。主动展开时保留真实思考，在正文末尾追加小说；不发送给模型。",
+    "description": "导入并选择一本书，再多选原生区域类型。主动展开时保留真实内容，在分隔线下追加纯文本小说；不发送给模型。",
     "storageLoading": "正在打开本地书库…",
     "enabled": "启用聊天内阅读",
     "targetType": "阅读区域类型",
     "typeReasoning": "思考（Thinking）",
-    "typeHint": "适用于任意会话中的原生思考区域，无需选择轮次或步骤。首次主动展开另一处才续读；当前支持思考类型，不影响工具日志和回答。",
+    "typeToolCall": "其他工具调用",
+    "typeReadFile": "打开文件（read / read_image）",
+    "typeCommand": "运行命令（bash / pwsh）",
+    "typeFileSearch": "文件搜索（grep / glob）",
+    "selectedTypes": "已选择 {count} / {total} 类 · 点击多选",
+    "allTypes": "全选 / 取消全选",
+    "typeHint": "五类互不重叠，可多选或全选；空选不读取。仅适配已有原生折叠区域，不改工具输入输出或回答，也不为不可展开的卡片制造控件。首次主动展开另一处才续读。",
     "bookSource": "导入书籍（EPUB / TXT / MD）",
     "selectBook": "当前书籍",
     "noBook": "请选择书籍",
@@ -35,8 +42,8 @@
     "nativeControls": "图标、悬停箭头、展开箭头与折叠交互均跟随 DSH 原生，不做自定义覆盖。",
     "titleMain": "主标题",
     "titleExtra": "补充文字",
-    "nativeTitle": "跟随 DSH 的“思考”标题",
-    "noExtra": "跟随 DSH 的思考摘要",
+    "nativeTitle": "跟随 DSH 的原生区域标题",
+    "noExtra": "跟随 DSH 的原生区域摘要",
     "custom": "自定义…",
     "customField": "自定义{label}",
     "presetHint": "直接选择预设，无需打字；只有选择“自定义”时才显示输入框。",

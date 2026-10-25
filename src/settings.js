@@ -1,3 +1,7 @@
+import { TARGET_TYPES } from './store.js'
+
+const TYPE_LABELS = { reasoning: 'typeReasoning', 'tool-call': 'typeToolCall', 'read-file': 'typeReadFile', command: 'typeCommand', 'file-search': 'typeFileSearch' }
+
 const PANEL = {
   display: 'grid', gap: 14, padding: 14,
   border: '1px solid var(--dsw-alias-border-l2)',
@@ -56,11 +60,17 @@ export function createSettingsRow(React) {
     const state = useNovelState(value => value)
     const ui = useNovelUi(value => value)
     const [busy, setBusy] = React.useState(false)
+    const [savingTypes, setSavingTypes] = React.useState(false)
     const selectedBook = state.books.find(book => book.id === state.settings.currentBookId)
     const disabled = busy || !state.hydrated || Boolean(state.error)
     const perform = async action => {
       try { await action(); return true }
       catch (error) { onSetNotice(t('settings.actionError', { message: errorMessage(error) })); return false }
+    }
+    const setTypes = async types => {
+      setSavingTypes(true)
+      try { await perform(() => onSetOption('targetTypes', types)) }
+      finally { setSavingTypes(false) }
     }
     const importFile = async event => {
       const input = event.currentTarget
@@ -108,11 +118,21 @@ export function createSettingsRow(React) {
           if (globalThis.confirm?.(t('settings.removeConfirm', { title: selectedBook.title }))) void perform(() => onDeleteBook(selectedBook.id))
         } }, t('settings.deleteBook')),
       ) : h('div', null, t('settings.emptyLibrary')),
-      h('label', { style: LABEL },
-        h('span', null, t('settings.targetType')),
-        h('select', { style: CONTROL, value: state.settings.targetType, disabled, 'data-novel-type-select': true,
-          onChange: event => { const type = event.currentTarget.value; void perform(() => onSetOption('targetType', type)) } },
-        h('option', { value: 'reasoning' }, t('settings.typeReasoning')),
+      h('div', { style: LABEL },
+        h('span', { id: 'novel-type-label' }, t('settings.targetType')),
+        h('details', { style: CONTROL, 'data-novel-type-select': true },
+          h('summary', { style: { cursor: 'pointer' }, 'aria-labelledby': 'novel-type-label' },
+            t('settings.selectedTypes', { count: state.settings.targetTypes.length, total: TARGET_TYPES.length })),
+          h('fieldset', { disabled: disabled || savingTypes, style: { border: 0, margin: '8px 0 0', padding: 0, display: 'grid', gap: 7 }, 'aria-label': t('settings.targetType') },
+            h('label', null,
+              h('input', { type: 'checkbox', 'data-novel-type-all': true, checked: state.settings.targetTypes.length === TARGET_TYPES.length,
+                onChange: event => { void setTypes(event.currentTarget.checked ? [...TARGET_TYPES] : []) } }), t('settings.allTypes')),
+            TARGET_TYPES.map(type => h('label', { key: type },
+              h('input', { type: 'checkbox', checked: state.settings.targetTypes.includes(type), 'data-novel-type': type,
+                onChange: event => { const selected = event.currentTarget.checked;
+                  void setTypes(selected ? TARGET_TYPES.filter(value => value === type || state.settings.targetTypes.includes(value)) : state.settings.targetTypes.filter(value => value !== type)) } }),
+              t(`settings.${TYPE_LABELS[type]}`))),
+          ),
         ),
         h('span', null, t('settings.typeHint')),
       ),
