@@ -25,7 +25,7 @@
       "headCommit": "a6a621691f8cf4f8fede940b554344e3eb26872a",
       "path": "data/plugins/gongfpp__dsh-novel-fish.yml",
       "tarball": "https://github.com/gongfpp/dsh-novel-fish/releases/download/v0.1.4/gongfpp-dsh-novel-fish-0.1.4.tgz",
-      "ciObserved": "IN_PROGRESS",
+      "ciObserved": "SUCCESS (check and Submission gate); awaiting maintainer review.",
       "catalogueMerged": false,
       "nativeInstallIndexIncluded": false
     },

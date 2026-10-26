@@ -14,7 +14,7 @@
 
 | 独立来源 | 本轮操作与核验结果 | 当前限制 |
 | --- | --- | --- |
-| [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) | 已提交 [PR #9655](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/9655)，只新增一份 YAML，提供固定 v0.1.4 的公开 tarball。 | PR 尚未合并；不能称已上架。其 npm-only 原生索引也不会因为 Git 目录登记自动包含本插件。 |
+| [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) | 已提交 [PR #9655](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/9655)，只新增一份 YAML，提供固定 v0.1.4 的公开 tarball；CI 与 Submission gate 均已通过。 | PR 仍待维护者合并；不能称已上架。其 npm-only 原生索引也不会因为 Git 目录登记自动包含本插件。 |
 | [imsai 公共目录 / 1024store 上游](https://github.com/imsai-sh/awesome-deepseek-harness-plugins) | [PR #707](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/pull/707) 已通过静态审核并于 14:58:51 UTC 合并；主分支的[插件条目](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/blob/main/catalog/plugins/gongfpp--dsh-novel-fish.json)已可读取。 | 已完成目录收录；无 npm 包时为浏览条目，不声称客户端内可一键安装或站点已同步。 |
 | [dshopen](https://dshopen.org/) | 按维护者允许的固定 Git 途径提交 [申请 #101](https://github.com/polang233/dsh-plugin-index/issues/101)，给出版本、完整 SHA 与已有安装记录。 | 申请仍开放、无审核结论；真实 format-1 索引暂未收录。 |
 | [dpharness](https://dpharness.com/) | 使用公开投稿表单对应接口提交仓库；HTTP 200，返回 `ok: true`、`moderated: true`、`hidden: true`。 | 已进入审核，不是公开上架；随后公开搜索仍为 0 条。 |
