@@ -1,0 +1,51 @@
+{
+  "version": "0.1.4",
+  "publishedOn": "2026-10-26",
+  "repository": "https://github.com/gongfpp/dsh-novel-fish",
+  "release": "https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.1.4",
+  "sourceCommit": "7c25fa93c7c253a8b1925cc1ddff35a47064c633",
+  "indexCommit": "6840c6380907af4fb33304e32e263560c1f1ebcf",
+  "market": {
+    "indexUrl": "https://raw.githubusercontent.com/gongfpp/dsh-novel-fish/main/index.json",
+    "format": 1,
+    "officialParserDshVersion": "0.2.1-rc.2",
+    "indexHttpStatus": 200,
+    "iconHttpStatus": 200,
+    "recommendedVersion": "0.1.4",
+    "retainsVersion": "0.1.0",
+    "installSpec": "git+https://github.com/gongfpp/dsh-novel-fish.git#7c25fa93c7c253a8b1925cc1ddff35a47064c633",
+    "maintainedByAuthor": true,
+    "officialCentralReviewClaimed": false
+  },
+  "verification": {
+    "localTests": { "passed": 93, "failed": 0, "skipped": 0 },
+    "generatedBundleAndNoticesDrift": false,
+    "ci": {
+      "commit": "6840c6380907af4fb33304e32e263560c1f1ebcf",
+      "conclusion": "success",
+      "url": "https://github.com/gongfpp/dsh-novel-fish/actions/runs/40333436191"
+    },
+    "archiveMatchesTaggedSource": { "packageFiles": 63, "sourceZipFiles": 66, "packageJsonComparedSemantically": true },
+    "anonymousDownloads": [
+      { "name": "gongfpp-dsh-novel-fish-0.1.4.tgz", "httpStatus": 200, "bytes": 1136035, "sha256": "a221eb37bfb6d4f94feba58b7bdb01cd153ead3b1f894d7fd9e14ac655eea7dd" },
+      { "name": "dsh-novel-fish-source-0.1.4.zip", "httpStatus": 200, "bytes": 1167499, "sha256": "0a163eaa8a654ba8d87fa34ea10690679934eca78fd32cc5bb0b2fcd5bec2b1c" },
+      { "name": "SHA256SUMS.txt", "httpStatus": 200, "bytes": 197, "sha256": "52071eff7299607ecdd2157b769475d61f87c1779b4d18651a0b3d62a81a6426" }
+    ],
+    "isolatedInstallations": [
+      { "route": "readme-tag", "requested": "github:gongfpp/dsh-novel-fish#v0.1.4", "installedVersion": "0.1.4", "exitCode": 0 },
+      { "route": "market-immutable-source", "requested": "git+https://github.com/gongfpp/dsh-novel-fish.git#7c25fa93c7c253a8b1925cc1ddff35a47064c633", "installedVersion": "0.1.4", "exitCode": 0 },
+      { "route": "release-tarball", "requested": "https://github.com/gongfpp/dsh-novel-fish/releases/download/v0.1.4/gongfpp-dsh-novel-fish-0.1.4.tgz", "installedVersion": "0.1.4", "exitCode": 0 }
+    ],
+    "allInstalledBrowserBundlesMatchSourceSha256": "1c7f360627e3406b67946a1dcabacef2a240498f10761ab9e1e5db48cd47f5d6",
+    "allInstalledHostApplyExportsAreFunctions": true,
+    "allInstalledClientLoaderRegistrations": "@gongfpp/dsh-novel-fish",
+    "allInstalledPackagesContainIndex": true,
+    "dailyProfileModifiedForPublishing": false
+  },
+  "limitations": [
+    "Only DSH Web 0.2.1-rc.2 compatibility is declared.",
+    "No new real-GUI card, trusted A/B/C, keyboard or hover acceptance was completed for 0.1.4; prior Cua authorization and binding limitations still apply.",
+    "Isolated installation and entry-registration checks are not a substitute for real-GUI reading acceptance.",
+    "EPUB images and GBK input are unsupported."
+  ]
+}
