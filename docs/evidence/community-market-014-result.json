@@ -1,0 +1,170 @@
+{
+  "checkedDate": "2026-10-26",
+  "package": "@gongfpp/dsh-novel-fish",
+  "version": "0.1.4",
+  "repository": "https://github.com/gongfpp/dsh-novel-fish",
+  "sourceCommit": "7c25fa93c7c253a8b1925cc1ddff35a47064c633",
+  "supportedDsh": "0.2.1-rc.2",
+  "verificationScope": "Public metadata, HTTP APIs, catalogues, GitHub submissions and reviewed catalogue validation scripts; no new DSH GUI verification.",
+  "preferredCommunitySource": {
+    "repository": "https://github.com/awesome-dsh-plugin/awesome-dsh-plugin",
+    "observedStars": 20872,
+    "observedYamlEntries": 6896,
+    "independentConsumers": [
+      "https://github.com/dsh-market/dsh-market",
+      "https://github.com/anywhere-labs/dsh-desktop/blob/9cea9ddd8c90f9fb15bd4d392f6a2360c191c821/dsh-desktop-next/src/client/market-toggle.ts"
+    ],
+    "claim": "Preferred on observed adoption, actual consumers, maintenance and contribution route; not an official or universally dominant source."
+  },
+  "submissions": [
+    {
+      "source": "awesome-dsh-plugin/awesome-dsh-plugin",
+      "url": "https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/9655",
+      "kind": "single YAML catalogue contribution",
+      "state": "OPEN",
+      "headCommit": "a6a621691f8cf4f8fede940b554344e3eb26872a",
+      "path": "data/plugins/gongfpp__dsh-novel-fish.yml",
+      "tarball": "https://github.com/gongfpp/dsh-novel-fish/releases/download/v0.1.4/gongfpp-dsh-novel-fish-0.1.4.tgz",
+      "ciObserved": "IN_PROGRESS",
+      "catalogueMerged": false,
+      "nativeInstallIndexIncluded": false
+    },
+    {
+      "source": "imsai-sh/awesome-deepseek-harness-plugins",
+      "url": "https://github.com/imsai-sh/awesome-deepseek-harness-plugins/pull/707",
+      "kind": "single JSON catalogue contribution",
+      "state": "MERGED",
+      "mergedAt": "2026-10-26T14:58:51Z",
+      "mergeCommit": "627e2ece007cedec222412e259ec85f99f50a594",
+      "ciObserved": "static-review SUCCESS; merge SUCCESS",
+      "canonicalEntry": "https://github.com/imsai-sh/awesome-deepseek-harness-plugins/blob/main/catalog/plugins/gongfpp--dsh-novel-fish.json",
+      "canonicalEntryReadBack": true,
+      "catalogueMerged": true,
+      "websiteSyncVerified": false,
+      "nativeInstallIndexIncluded": false,
+      "limitation": "Browse-only without a published npm package."
+    },
+    {
+      "source": "polang233/dsh-plugin-index",
+      "url": "https://github.com/polang233/dsh-plugin-index/issues/101",
+      "kind": "maintainer review request for a fixed Git source",
+      "state": "OPEN",
+      "commentsObserved": 0,
+      "index": "https://dshopen.org/index.json",
+      "catalogueMerged": false,
+      "nativeInstallIndexIncluded": false
+    },
+    {
+      "source": "dpharness.com",
+      "url": "https://dpharness.com/submit",
+      "kind": "public GitHub-repository submission form",
+      "httpStatus": 200,
+      "ok": true,
+      "moderated": true,
+      "hidden": true,
+      "pluginId": "cmvpdsdlq02cdny2voxznjl98",
+      "fullName": "gongfpp/dsh-novel-fish",
+      "createdAt": "2026-10-26T14:57:55.934Z",
+      "state": "PENDING_REVIEW",
+      "subsequentPublicSearchCount": 0,
+      "catalogueMerged": false,
+      "nativeInstallIndexIncluded": false
+    },
+    {
+      "source": "zhu1090093659/dsh-community-plugins",
+      "url": "https://github.com/zhu1090093659/dsh-community-plugins/pull/60",
+      "kind": "append-only community metadata contribution",
+      "state": "OPEN",
+      "headCommit": "37dcd4d92efd1f2cad9c75d584cdce32de7fc6b0",
+      "baseCommit": "5d4ecf30a8c121423807bd6e0a3f0e0b2bbe190b",
+      "path": "community.json",
+      "entriesBefore": 143,
+      "entriesAfter": 144,
+      "npmFieldOmitted": true,
+      "localValidator": "community-index: OK (144 entries)",
+      "localTests": { "passed": 9, "failed": 0, "skipped": 0 },
+      "ciObserved": "Reviewer-routing workflow SUCCESS; no full CI result claimed.",
+      "catalogueMerged": false,
+      "compatibilityDisclosure": "Entry explicitly supports only rc.2; no rc.3+ host compatibility claimed."
+    }
+  ],
+  "existingDiscovery": [
+    {
+      "source": "dshfind",
+      "entry": "https://dshfind.com/en/plugins/gongfpp/dsh-novel-fish",
+      "api": "https://api.dshfind.com/v1/plugins/gongfpp/dsh-novel-fish",
+      "firstSeenAt": "2026-10-23T07:54:40.204Z",
+      "lastSyncedAt": "2026-10-26T03:54:50.593Z",
+      "repositoryListed": true,
+      "versionRecorded": null,
+      "nativeIndex": "https://api.dshfind.com/market/dsh-index.json",
+      "nativeInstallIndexIncluded": false,
+      "duplicateSubmissionCreated": false
+    },
+    {
+      "source": "bradeGithub/DSH-Plugins-Marketplace",
+      "index": "https://raw.githubusercontent.com/bradeGithub/DSH-Plugins-Marketplace/main/registry.json",
+      "generatedAt": "2026-10-26T12:55:39.619Z",
+      "observedEntries": 20820,
+      "repositoryListed": true,
+      "recordedPackage": "@gongfpp/dsh-novel-fish",
+      "recordedVersion": "0.1.0",
+      "officialFormat1": false,
+      "duplicateSubmissionCreated": false
+    },
+    {
+      "source": "2BingLing/dsh-market",
+      "index": "https://dsh.market/plugins.json",
+      "observedEntries": 15182,
+      "repositoryListed": true,
+      "recordedType": "cordis-plugin",
+      "readmeSnapshotVersion": "0.1.0",
+      "officialFormat1": false,
+      "duplicateSubmissionCreated": false
+    },
+    {
+      "source": "bruc3van/awesome-dsh-plugin",
+      "approvalFile": "https://github.com/bruc3van/awesome-dsh-plugin/blob/main/data/approved.json",
+      "approvalValueForExactRepository": "2026-10-23",
+      "catalogueEntryFound": false,
+      "marketJsonEntryFound": false,
+      "nativeIndex": "https://bruc3van.com/dsh-plugins/index.json",
+      "observedNativeEntries": 1000,
+      "nativeInstallIndexIncluded": false,
+      "showcaseEligible": false,
+      "duplicateSubmissionCreated": false
+    },
+    {
+      "source": "dshmarketplace.dev",
+      "rules": "https://dshmarketplace.dev/submit",
+      "route": "existing dsh-plugin topic plus refreshed public repository summary",
+      "publicSearchCount": 0,
+      "manualSubmissionReceipt": false,
+      "manualFormInspectionFailure": "HTTP Error 403: Forbidden for static form script request; no access-control bypass attempted.",
+      "nativeInstallIndexIncluded": false
+    }
+  ],
+  "repositoryMetadata": {
+    "topic": "dsh-plugin",
+    "descriptionUpdatedAt": "2026-10-26T15:08:17Z",
+    "purpose": "Accurate Chinese discoverability and current native-region behavior; no fabricated stars, commits or package publication."
+  },
+  "npm": {
+    "published": false,
+    "authenticationProbe": "ENEEDAUTH",
+    "publishAttempted": false,
+    "limitation": "npm-only native install indexes require authorized npm publication and subsequent source processing."
+  },
+  "exclusions": [
+    "Own single-author index is not a public mainstream source.",
+    "Client repositories and mirrors sharing an upstream receive no duplicate submissions.",
+    "Archived repositories, unrelated names and single-author collections excluded.",
+    "Compatibility radar is not counted as an installable market.",
+    "vbarter/dsh-plugin-registry lacks corroborated mainstream adoption for this scope."
+  ],
+  "unchanged": [
+    "Plugin source and supported host range",
+    "Read-only legacy project",
+    "Known missing fresh trusted GUI A/B/C, hover and keyboard evidence"
+  ]
+}
