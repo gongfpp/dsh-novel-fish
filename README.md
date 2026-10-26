@@ -4,19 +4,11 @@
 
 适配 **DSH Web 0.2.1-rc.2**。没有独立阅读页、假会话、工作区入口或阅读工具栏。
 
-## 当前分支状态
+## 当前版本：0.1.4
 
-本分支为 **0.1.4 本地候选版，尚未发布到市场或 GitHub Release**：支持思考、其他工具调用、打开文件、运行命令、文件搜索五类多选和全选；保留原文、原生图标与交互，以分隔线追加章节/纯文本。修复审计确认的编码、解压、正文结构和关闭竞态问题。92 项自动测试通过；**本轮真实 GUI 全流程受 Cua 绑定限制未完成**，详见 [0.1.4 验证与补验清单](docs/multi-region-update.md)。下方公开地址仍是旧交互 0.1.0。
+支持思考、其他工具调用、打开文件、运行命令、文件搜索五类多选和全选；保留原文、原生图标与交互，以分隔线追加章节/纯文本。修复编码、EPUB 解压、正文结构和关闭竞态问题。93 项自动测试通过；**本轮真实 GUI 全流程受 Cua 绑定限制未完成**，详见 [0.1.4 验证与补验清单](docs/multi-region-update.md)。发布产物见 [v0.1.4](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.1.4)。
 
-本地构建和安装（在项目根目录）：
-
-```sh
-pnpm verify
-pnpm pack --pack-destination dist
-dsh plugin --profile web add ./dist/gongfpp-dsh-novel-fish-0.1.4.tgz
-```
-
-## 开始读（本分支 0.1.4）
+## 开始读
 
 1. 在 **插件** 页启用 **小说摸鱼**，进入 **左下角头像 → 设置 → 通用设置 → 小说摸鱼**。不依赖旧版本；不要同时启用两个接管思考的阅读插件。
 2. 导入 `.epub`、`.txt` 或 `.md`，用“当前书籍”下拉选择一本书。旁边显示自动保存的分段进度，并可删除选中书籍。不提供粘贴文本入口。
@@ -26,21 +18,21 @@ dsh plugin --profile web add ./dist/gongfpp-dsh-novel-fish-0.1.4.tgz
 
 自动展开或已恢复展开的区域保留原文，但不读取小说；需要先收起，再主动展开。空选和关闭阅读都不消耗进度。设置页只管理书籍和显示，不是阅读入口。
 
-## 安装已发布的 0.1.0（旧交互）
+## 安装 0.1.4
 
-已有可运行的 DSH Web `0.2.1-rc.2` 后，在终端安装固定版本：
-
-```sh
-dsh plugin --profile web add github:gongfpp/dsh-novel-fish#v0.1.0
-```
-
-仓库的发布版本已包含浏览器构建产物，无需先安装 Node 开发依赖。也可从 [v0.1.0 发布页](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.1.0) 下载 `gongfpp-dsh-novel-fish-0.1.0.tgz`：
+已有可运行的 DSH Web `0.2.1-rc.2` 后，在下方插件市场中安装，或在终端安装固定版本：
 
 ```sh
-dsh plugin --profile web add ./gongfpp-dsh-novel-fish-0.1.0.tgz
+dsh plugin --profile web add github:gongfpp/dsh-novel-fish#v0.1.4
 ```
 
-`web` 是 DSH profile 名称；使用其他 profile 时替换它。安装后刷新现有 DSH 页面；若更换版本仍未加载新代码，重启原来的 `dsh web`，不要另开一个服务器。旧发布的下载与验证范围见 [发布记录](docs/release.md)。
+发布版本包含浏览器构建产物，无需先安装开发依赖。也可从 [v0.1.4 发布页](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.1.4) 下载 `gongfpp-dsh-novel-fish-0.1.4.tgz`：
+
+```sh
+dsh plugin --profile web add ./gongfpp-dsh-novel-fish-0.1.4.tgz
+```
+
+`web` 是 profile 名称；使用其他 profile 时替换它。升级保留当前浏览器的书库和进度。安装后刷新现有 DSH 页面；若仍未加载新代码，重启原来的 `dsh web`，不要另开服务器。发布与安装验证范围见 [发布记录](docs/release.md)。
 
 ### DSH 自定义插件市场
 
@@ -50,7 +42,7 @@ DSH 当前没有默认的统一第三方插件目录。本项目提供符合官�
 https://raw.githubusercontent.com/gongfpp/dsh-novel-fish/main/index.json
 ```
 
-在「发现」页添加索引后安装 **小说摸鱼**。若没有「发现」页，先启用实验性功能中的「自定义插件市场」。**索引仍是已发布的 0.1.0，不包含本分支的类型选择与追加交互**。完整说明见 [市场接入说明](docs/marketplace.md)。
+在「发现」页添加索引后安装 **小说摸鱼 0.1.4**；已添加本索引的用户刷新索引后查看新版本。若没有「发现」页，先启用实验性功能中的「自定义插件索引」（旧版名称「自定义插件市场」）。完整说明见 [市场接入说明](docs/marketplace.md)。
 
 **先停用其他接管思考渲染的阅读插件。** 不依赖旧插件，也不支持两个阅读插件叠加运行。
 
@@ -75,7 +67,7 @@ TXT/MD 保留基本段落、章节；默认每段约 600 个 Unicode 字符，�
 
 原生正文插槽不提供标题接口。本插件对具体 DSH DOM 标记中的文字做窄适配，更新原生 shimmer 文字层；不覆盖原生图标、按钮、箭头、布局或事件。思考原文仍用官方 Factory，工具原文节点保持；小说以自己的分隔线和纯文本追加。不替换聊天根节点，不修改 DSH 安装文件。具体定位、工具末尾 DOM 适配和限制见 [宿主适配说明](docs/host-adapter.md)。
 
-本分支通过 92 项自动测试。当前 Cua 无法获得新版真实 GUI 的可变更精确绑定，**未宣称完成本轮人工悬停、键盘及真实 A/B/C 全流程**。新版验证、七项修复和手工清单见 [0.1.4 记录](docs/multi-region-update.md)。[0.1.3 原生显示记录](docs/native-disclosure-update.md) 和 [0.1.2 追加阅读记录](docs/type-append-update.md) 仅为历史证据。
+0.1.4 通过 93 项自动测试（含市场源契约）。当前 Cua 无法获得新版真实 GUI 的可变更精确绑定，**未宣称完成本轮人工悬停、键盘及真实 A/B/C 全流程**。新版验证、七项修复和手工清单见 [0.1.4 记录](docs/multi-region-update.md)。[0.1.3 原生显示记录](docs/native-disclosure-update.md) 和 [0.1.2 追加阅读记录](docs/type-append-update.md) 仅为历史证据。
 
 [历史验收记录](docs/acceptance.md) 与 [0.1.1 设置改进](docs/settings-update.md) 保留各自版本的验证范围，不替代本轮运行证据。
 

@@ -1,6 +1,6 @@
 # 0.1.4：审计修复与多区域追加
 
-本记录只描述本地 0.1.4 候选版，不代表 GitHub Release 或市场索引已经更新。原有 0.1.0–0.1.3 验收记录属于各自版本，不能替代本轮证据。
+本记录描述 0.1.4 开发完成时的功能验证；公开发布另见[发布记录](release.md)。原有 0.1.0–0.1.3 验收记录属于各自版本，不能替代本轮证据。
 
 ## 已实施
 
@@ -40,7 +40,7 @@
 - 测试中的用户事件是适配器级可控事件夹具，不冒充浏览器实际可信输入。
 - **新版真实 GUI 全流程未完成**：当前 Cua 拒绝接入日常 Chrome profile（`browser_consent_required`）；另开隔离浏览器并出现翻译弹窗后，原生窗口与 CDP 关联降为 heuristic，返回 `authorization_host_failed` 且不允许变更。没有绕过拒绝、改用其他浏览器后端或取消 `isTrusted` 限制。未把旧截图、设置预览或单元测试作为新版真实 A/B/C、悬停和键盘证明。
 
-机器可读结果见 [multi-region-014-result.json](evidence/multi-region-014-result.json)。本轮不产生模型请求，不修改 DSH 安装文件，不推送或更新公开市场。
+机器可读结果见 [multi-region-014-result.json](evidence/multi-region-014-result.json)。开发验证阶段未发起模型请求、未修改 DSH 安装文件；后续公开分发验证见[发布记录](release.md)。
 
 ## 手工补验
 

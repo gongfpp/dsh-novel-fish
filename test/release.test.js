@@ -25,10 +25,32 @@ test('notices include JSZip prebundled libraries and the zlib copyright', async 
   }
 })
 
+test('市场索引保留固定提交来源、版本唯一和宿主兼容范围', async () => {
+  const manifest = JSON.parse(await read('package.json'))
+  const index = JSON.parse(await read('index.json'))
+  assert.equal(index.format, 1)
+  const entry = index.plugins.find(plugin => plugin.name === manifest.name)
+  assert.ok(entry)
+  assert.equal(entry.author, manifest.author)
+  assert.equal(entry.repository.url + '.git', manifest.repository.url)
+  await access(new URL(entry.icon, root))
+  assert.ok(entry.versions.length)
+  assert.equal(new Set(entry.versions.map(version => version.version)).size, entry.versions.length)
+  for (const version of entry.versions) {
+    assert.match(version.version, /^\d+\.\d+\.\d+$/u)
+    assert.ok(Number.isSafeInteger(version.publishTimestamp) && version.publishTimestamp > 0)
+    assert.equal(version.engines.dsh, manifest.engines.dsh)
+    assert.equal(version.source.type, 'git')
+    assert.equal(version.source.url, entry.repository.url)
+    assert.match(version.source.commit, /^[a-f0-9]{40}$/u)
+  }
+})
+
 test('README local links resolve and installation contains no personal absolute path', async () => {
   const readme = await read('README.md')
   assert.doesNotMatch(readme, /\/Users\/|C:\\Users\\/u)
-  assert.match(readme, /github:gongfpp\/dsh-novel-fish#v0\.1\.0/u)
+  const manifest = JSON.parse(await read('package.json'))
+  assert.ok(readme.includes(`github:gongfpp/dsh-novel-fish#v${manifest.version}`))
   for (const match of readme.matchAll(/\]\(([^)]+)\)/gu)) {
     const path = match[1].replace(/^<|>$/gu, '').split('#')[0]
     if (!path || /^[a-z]+:/iu.test(path)) continue
