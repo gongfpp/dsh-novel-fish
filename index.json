@@ -13,8 +13,8 @@
       "name": "@gongfpp/dsh-novel-fish",
       "title": { "en": "Novel Fish", "zh": "小说摸鱼" },
       "description": {
-        "en": "Read a local novel passage only when you expand a selected real reasoning step. No model requests.",
-        "zh": "主动展开选中的真实思考步骤时阅读一段本地小说；不改会话数据，不发送给模型。"
+        "en": "Append a local novel passage after selected native thought or tool content on active expansion. Multi-select region types; no model requests.",
+        "zh": "多选原生思考与工具区域，主动展开时保留原文，以分隔线追加章节和本地小说；不改会话、不发送给模型。"
       },
       "icon": "./assets/icon.svg",
       "author": "gongfpp",
@@ -22,6 +22,16 @@
       "repository": { "url": "https://github.com/gongfpp/dsh-novel-fish" },
       "metadata": { "keywords": ["dsh-plugin", "novel", "epub", "local-reading"] },
       "versions": [
+        {
+          "version": "0.1.4",
+          "publishTimestamp": 1793021943,
+          "engines": { "dsh": "0.2.1-rc.2" },
+          "source": {
+            "type": "git",
+            "url": "https://github.com/gongfpp/dsh-novel-fish",
+            "commit": "7c25fa93c7c253a8b1925cc1ddff35a47064c633"
+          }
+        },
         {
           "version": "0.1.0",
           "publishTimestamp": 1792668400,
