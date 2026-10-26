@@ -1,6 +1,6 @@
 # 公共社区市场与收录进展
 
-核验日期：2026-10-26。插件 `@gongfpp/dsh-novel-fish` **0.1.4**，仅声明适配 DSH Web **0.2.1-rc.2**。
+核验日期：2026-10-27。插件 `@gongfpp/dsh-novel-fish` **0.1.4**，仅声明适配 DSH Web **0.2.1-rc.2**。
 
 ## 哪个来源优先
 
@@ -14,9 +14,9 @@
 
 | 独立来源 | 本轮操作与核验结果 | 当前限制 |
 | --- | --- | --- |
-| [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) | 已提交 [PR #9655](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/9655)，只新增一份 YAML，提供固定 v0.1.4 的公开 tarball；CI 与 Submission gate 均已通过。 | PR 仍待维护者合并；不能称已上架。其 npm-only 原生索引也不会因为 Git 目录登记自动包含本插件。 |
+| [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) | 已合并 [PR #9655](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/9655)，固定 v0.1.4 的公开 tarball 已进入社区目录；[DSH Market](https://dshmarket.com/) 当前在线目录和 [插件详情页](https://awesome-dsh-plugin.com/p/gongfpp/dsh-novel-fish/)均能检索、提供 tarball 安装命令。 | 可视化 DSH Market 已可搜索安装，但该目录的 npm-only 原生索引不等于已经完成 npm 发布。 |
 | [imsai 公共目录 / 1024store 上游](https://github.com/imsai-sh/awesome-deepseek-harness-plugins) | [PR #707](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/pull/707) 已通过静态审核并于 14:58:51 UTC 合并；主分支的[插件条目](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/blob/main/catalog/plugins/gongfpp--dsh-novel-fish.json)已可读取。 | 已完成目录收录；无 npm 包时为浏览条目，不声称客户端内可一键安装或站点已同步。 |
-| [dshopen](https://dshopen.org/) | 按维护者允许的固定 Git 途径提交 [申请 #101](https://github.com/polang233/dsh-plugin-index/issues/101)，给出版本、完整 SHA 与已有安装记录。 | 申请仍开放、无审核结论；真实 format-1 索引暂未收录。 |
+| [dshopen](https://dshopen.org/) | 维护者已同意并关闭 [申请 #101](https://github.com/polang233/dsh-plugin-index/issues/101)；[公开 format-1 索引](https://dshopen.org/index.json)已有准确的 0.1.4、固定 Git 提交和 `verified`（已审查）标记。 | 可以在原版 DSH 发现页添加公共索引、搜索并安装；仍只声明 rc.2 兼容，本轮未实际完成新版 GUI 安装实拍。 |
 | [dpharness](https://dpharness.com/) | 使用公开投稿表单对应接口提交仓库；HTTP 200，返回 `ok: true`、`moderated: true`、`hidden: true`。 | 已进入审核，不是公开上架；随后公开搜索仍为 0 条。 |
 | [dsh-web 社区目录](https://github.com/zhu1090093659/dsh-community-plugins) | 已提交 [PR #60](https://github.com/zhu1090093659/dsh-community-plugins/pull/60)，仅追加一个条目；在本地执行上游校验及 9 项测试通过。 | 等待人工审核。文案明确仅 rc.2，不声称兼容该索引包当前依赖的 rc.3+ Web 壳；没有虚构 npm 包。 |
 | [dshfind](https://dshfind.com/en/plugins/gongfpp/dsh-novel-fish) | 网页／公共 API 目录已自动收录准确的新仓库，首次发现为 2026-10-23；已有 topic，无须重复投稿。 | 快照仍旧、没有可安装版本；其 npm-only format-1 索引没有本插件。 |
@@ -37,7 +37,7 @@
 
 awesome、dshfind 等来源的**原生 format-1 分发层**仅生成 npm 发布版本。当前没有发布 npm，`npm whoami --registry=https://registry.npmjs.org` 返回 `ENEEDAUTH`。本轮未获取令牌、未冒用 npm scope、未暗中登录或发布。要覆盖这些 npm-only 原生索引，仍需作者完成 npm 登录及 scope 权限核对，再发布并等待各源处理；这与已经完成的公共目录收录是不同后续步骤。
 
-因此，当前不能承诺在原版 DSH 只添加上述任意公共源就能搜到并安装 0.1.4。现阶段可用[项目自建索引](marketplace.md)或 README 的固定版本安装命令；自建索引仍不属于“主流公共源上架”的成果。
+原版 DSH 现可添加 [dshopen 公共 format-1 索引](https://dshopen.org/index.json) 搜索并安装 `0.1.4`；独立 [DSH Market](https://dshmarket.com/) 也可搜索、使用 GitHub Release 包安装，仍可选用[项目自建索引](marketplace.md)或 README 的固定版本命令。**1024 Store 等 npm-only 安装入口仍待 npm 发布**，不可把“目录已收录”当成 npm 上架。
 
 ## 投稿依据和证据
 
