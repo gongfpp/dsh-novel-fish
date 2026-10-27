@@ -20,7 +20,13 @@
 
 ## 安装 0.1.4
 
-已有可运行的 DSH Web `0.2.1-rc.2` 后，在下方插件市场中安装，或在终端安装固定版本：
+已有可运行的 DSH Web `0.2.1-rc.2` 后，可从 **npm 官方仓库**直接安装固定版本（已完成匿名下载和隔离 DSH CLI 安装验收）：
+
+```sh
+dsh plugin --profile web add @gongfpp/dsh-novel-fish@0.1.4
+```
+
+也可使用原有 GitHub Release 固定版本：
 
 ```sh
 dsh plugin --profile web add github:gongfpp/dsh-novel-fish#v0.1.4

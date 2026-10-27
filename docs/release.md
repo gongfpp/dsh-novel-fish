@@ -1,8 +1,18 @@
 # 公开发布记录
 
+## npm 官方仓库上架（2026-10-27）
+
+- [@gongfpp/dsh-novel-fish@0.1.4](https://www.npmjs.com/package/@gongfpp/dsh-novel-fish) 已正式公开发布，registry 时间为 `2026-10-27T04:44:37.774Z`，dist-tag `latest` 指向 `0.1.4`，不再需要开发者 npm 登录即可下载。
+- 官方仓库 tarball 的 SHA-1 为 `31cdf3ab76fc2bcb3ce4be9e3feab7018e5752de`，SHA-256 为 `f0ccc58e7059525cdb8e2be087eb3f3e3537bebf14a4ea9297ca120c1171a8eb`；与本地准备的 1,140,705 字节、66 文件安装包逐字一致。
+- 完成不带登录凭据的独立 `npm install @gongfpp/dsh-novel-fish@0.1.4 --ignore-scripts` 测试：版本、宿主补丁 `cordis.patch.yml`、构建完成的 `lib/client.js` 均存在。另在全新临时 `DSH_HOME` 使用 **DSH 0.2.1-rc.2** 的真实 `dsh plugin --profile web add @gongfpp/dsh-novel-fish@0.1.4` 安装并执行 `dsh plugin --profile web list --depth 0`：均成功，日常 profile 未变动，临时目录已清理。
+- 本次未更改插件业务代码和浏览器 bundle，仍只保证 DSH Web `0.2.1-rc.2` 兼容，未追加最新版本的真实 GUI 验收。
+- 各社区索引的自动识别有同步延迟；npm 上架与某个第三方市场索引已经刷新，是两个不同的状态。可安装的公共市场和待刷新索引详见 [社区市场状态](community-markets.md)。
+
+---
+
 ## 0.1.4（2026-10-26）
 
-- 当前发布：[@gongfpp/dsh-novel-fish 0.1.4](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.1.4)。保留 0.1.0 供回退，不发布 npm 包。
+- 当日通过 GitHub Release 首次发布 [0.1.4](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.1.4) 并保留 0.1.0 供回退；随后于 2026-10-27 补发 npm，见上方记录。
 - 将本地 0.1.1–0.1.4 的设置简化、类型追加、原生控件修正和七项审计修复一并公开。功能代码以 `1bd5659` 为基线，发布准备不改阅读逻辑。
 - 发布前重新执行 `pnpm verify`：93 项自动测试（原有 92 项加市场契约），并核对重新构建的浏览器产物和许可声明不漂移。
 - 索引继续使用 `format: 1` 和完整提交 SHA；只声明精确适配 DSH Web `0.2.1-rc.2`。当前官方指南仍是用户添加索引源，不是官方集中审核商店。

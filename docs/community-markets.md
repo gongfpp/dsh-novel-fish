@@ -14,12 +14,12 @@
 
 | 独立来源 | 本轮操作与核验结果 | 当前限制 |
 | --- | --- | --- |
-| [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) | 已合并 [PR #9655](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/9655)，固定 v0.1.4 的公开 tarball 已进入社区目录；[DSH Market](https://dshmarket.com/) 当前在线目录和 [插件详情页](https://awesome-dsh-plugin.com/p/gongfpp/dsh-novel-fish/)均能检索、提供 tarball 安装命令。 | 可视化 DSH Market 已可搜索安装，但该目录的 npm-only 原生索引不等于已经完成 npm 发布。 |
-| [imsai 公共目录 / 1024store 上游](https://github.com/imsai-sh/awesome-deepseek-harness-plugins) | [PR #707](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/pull/707) 已通过静态审核并于 14:58:51 UTC 合并；主分支的[插件条目](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/blob/main/catalog/plugins/gongfpp--dsh-novel-fish.json)已可读取。 | 已完成目录收录；无 npm 包时为浏览条目，不声称客户端内可一键安装或站点已同步。 |
+| [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) | 已合并 [PR #9655](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/9655)，固定 v0.1.4 的公开 tarball 已进入社区目录；[DSH Market](https://dshmarket.com/) 当前在线目录和 [插件详情页](https://awesome-dsh-plugin.com/p/gongfpp/dsh-novel-fish/)均能检索、提供 tarball 安装命令。 | npm 包现已公开发布，列表的 npm 映射按仓库源自动识别，无需手工添加 `npm:`（贡献指南明确拒绝该字段）；2026-10-27 实查 npm-served 和网页 format-1 索引仍未包含本插件，等待目录生成任务同步。可视化市场的 GitHub Release 安装入口仍可用。 |
+| [imsai 公共目录 / 1024store 上游](https://github.com/imsai-sh/awesome-deepseek-harness-plugins) | [PR #707](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/pull/707) 已通过静态审核并于 14:58:51 UTC 合并；主分支的[插件条目](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/blob/main/catalog/plugins/gongfpp--dsh-novel-fish.json)已可读取。 | npm 包已公开发布。1024 Store 公开搜索 API 已收录本插件，但截至 2026-10-27 仍返回 GitHub 安装命令；其贡献规则明确表示 npm 新上架会自动识别，无需为相同条目再建重复 PR。未确认 1024 Store 内的 npm 安装选项已刷新。 |
 | [dshopen](https://dshopen.org/) | 维护者已同意并关闭 [申请 #101](https://github.com/polang233/dsh-plugin-index/issues/101)；[公开 format-1 索引](https://dshopen.org/index.json)已有准确的 0.1.4、固定 Git 提交和 `verified`（已审查）标记。 | 可以在原版 DSH 发现页添加公共索引、搜索并安装；仍只声明 rc.2 兼容，本轮未实际完成新版 GUI 安装实拍。 |
 | [dpharness](https://dpharness.com/) | 使用公开投稿表单对应接口提交仓库；HTTP 200，返回 `ok: true`、`moderated: true`、`hidden: true`。 | 已进入审核，不是公开上架；随后公开搜索仍为 0 条。 |
 | [dsh-web 社区目录](https://github.com/zhu1090093659/dsh-community-plugins) | 已提交 [PR #60](https://github.com/zhu1090093659/dsh-community-plugins/pull/60)，仅追加一个条目；在本地执行上游校验及 9 项测试通过。 | 等待人工审核。文案明确仅 rc.2，不声称兼容该索引包当前依赖的 rc.3+ Web 壳；没有虚构 npm 包。 |
-| [dshfind](https://dshfind.com/en/plugins/gongfpp/dsh-novel-fish) | 网页／公共 API 目录已自动收录准确的新仓库，首次发现为 2026-10-23；已有 topic，无须重复投稿。 | 快照仍旧、没有可安装版本；其 npm-only format-1 索引没有本插件。 |
+| [dshfind](https://dshfind.com/en/plugins/gongfpp/dsh-novel-fish) | 网页／公共 API 目录已自动收录准确的新仓库，首次发现为 2026-10-23；已有 topic，无须重复投稿。 | 先前快照仍旧；2026-10-27 再次请求其 npm-only format-1 索引遇到超时，尚无法核实本次 npm 上架后的同步结果。 |
 | [brade 公共目录](https://github.com/bradeGithub/DSH-Plugins-Marketplace) | 实读公开 `registry.json`，20,820 条中有准确的新仓库与包名；按 topic 自动收录，无须重复 issue。 | 当前元数据版本仍为 0.1.0，不当成 0.1.4 验收。该 JSON 不是原版 DSH 的 format-1 索引。 |
 | [2BingLing DSH Market](https://dsh.market/) | 实读公开 `plugins.json`，15,182 条中已有准确的新仓库与 Cordis 类型、安装命令；无须重复提交。 | README 摘要和 tarball 命令仍为旧版快照，不声称新版已刷新；使用该市场自己的 schema。 |
 | [bruc 社区来源](https://github.com/bruc3van/awesome-dsh-plugin) | `data/approved.json` 已有准确的新仓库，批准日期为 2026-10-23；不重复申请已存在的批准记录。 | 当前公开 CATALOG、`data/market.json` 和 1,000 条 format-1 索引都没有本插件，不能称可搜索／可安装。推荐展示区要求 >10 星，本仓库不满足，未走该通道。 |
@@ -35,9 +35,9 @@
 - 完整源码提交：`7c25fa93c7c253a8b1925cc1ddff35a47064c633`
 - 公开 tarball：<https://github.com/gongfpp/dsh-novel-fish/releases/download/v0.1.4/gongfpp-dsh-novel-fish-0.1.4.tgz>
 
-awesome、dshfind 等来源的**原生 format-1 分发层**仅生成 npm 发布版本。当前没有发布 npm，`npm whoami --registry=https://registry.npmjs.org` 返回 `ENEEDAUTH`。本轮未获取令牌、未冒用 npm scope、未暗中登录或发布。要覆盖这些 npm-only 原生索引，仍需作者完成 npm 登录及 scope 权限核对，再发布并等待各源处理；这与已经完成的公共目录收录是不同后续步骤。
+**npm 官方仓库现已公开发布** `@gongfpp/dsh-novel-fish@0.1.4`，公开 tarball 与原始产物校验一致，匿名 npm 下载和全新临时 DSH `0.2.1-rc.2` 安装实测通过（证据见 [发布记录](release.md)）。已收录的 awesome 目录和 1024 Store 均通过 npm registry 自动发现对应包；其中 awesome 源明确拒绝手写 `npm:` 字段，因此无需重复投稿。目录网站、host 的 format-1 索引刷新时间未必与 npm 发布同步；2026-10-27 抽查仍存在滞后，不能因此宣称所有市场已一键安装。
 
-原版 DSH 现可添加 [dshopen 公共 format-1 索引](https://dshopen.org/index.json) 搜索并安装 `0.1.4`；独立 [DSH Market](https://dshmarket.com/) 也可搜索、使用 GitHub Release 包安装，仍可选用[项目自建索引](marketplace.md)或 README 的固定版本命令。**1024 Store 等 npm-only 安装入口仍待 npm 发布**，不可把“目录已收录”当成 npm 上架。
+原版 DSH 现可添加 [dshopen 公共 format-1 索引](https://dshopen.org/index.json) 搜索并安装 `0.1.4`；独立 [DSH Market](https://dshmarket.com/) 也可搜索、使用 GitHub Release 包安装，仍可选用[项目自建索引](marketplace.md)或 README 的固定版本命令。**npm 发布已完成，但部分 npm-only 市场索引尚未刷新或尚未核实**；继续区分官网 npm 可安装、公共目录收录和第三方市场可搜索安装三个状态。
 
 ## 投稿依据和证据
 
