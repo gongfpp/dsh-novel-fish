@@ -1,0 +1,132 @@
+{
+  "checkedAt": "2026-10-28T07:45:12Z",
+  "package": {
+    "name": "@gongfpp/dsh-novel-fish",
+    "version": "0.1.4",
+    "registry": "https://registry.npmjs.org",
+    "publishedAt": "2026-10-27T04:44:37.774Z",
+    "repository": "git+https://github.com/gongfpp/dsh-novel-fish.git",
+    "engines": { "node": ">=22", "dsh": "0.2.1-rc.2" },
+    "tarball": "https://registry.npmjs.org/@gongfpp/dsh-novel-fish/-/dsh-novel-fish-0.1.4.tgz",
+    "integrity": "sha512-nRRpqxcyHp3ByMrDvrmrlqhZFfQhyt4p/3/I0uX0ffQcXeyNcoqsg5Shu+4/zGrYFQ7lev2XpL/cF+BYg+Zm4Q==",
+    "integrityVerified": true,
+    "sha256": "f0ccc58e7059525cdb8e2be087eb3f3e3537bebf14a4ea9297ca120c1171a8eb",
+    "bytes": 1140705,
+    "files": 66,
+    "clientBundleSha256": "1c7f360627e3406b67946a1dcabacef2a240498f10761ab9e1e5db48cd47f5d6",
+    "bundleMatchesCurrentSource": true,
+    "lifecycleInstallScripts": [],
+    "unsafeArchiveEntries": 0
+  },
+  "indices": [
+    {
+      "url": "https://awesome-dsh-plugin.com/index.json",
+      "checkedAt": "2026-10-28T07:43:23.852Z",
+      "plugins": 3823,
+      "officialDsh021rc2ParserAccepted": true,
+      "contentSha256": "4feb52b4bb3a14d5c76c8c7b370ffdc7490915b9dfd8710697d05ce98853beeb",
+      "lastModified": "Wed, 28 Oct 2026 04:38:43 GMT",
+      "targetPresent": true,
+      "sourceType": "npm",
+      "version": "0.1.4",
+      "enginesDsh": "0.2.1-rc.2",
+      "installSpec": "@gongfpp/dsh-novel-fish@0.1.4"
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/dsh-plugin-catalog@2026.1028.11655/index.json",
+      "checkedAt": "2026-10-28T07:43:25.065Z",
+      "plugins": 3823,
+      "officialDsh021rc2ParserAccepted": true,
+      "contentSha256": "4feb52b4bb3a14d5c76c8c7b370ffdc7490915b9dfd8710697d05ce98853beeb",
+      "catalogVersion": "2026.1028.11655",
+      "targetPresent": true,
+      "sourceType": "npm",
+      "version": "0.1.4",
+      "installSpec": "@gongfpp/dsh-novel-fish@0.1.4",
+      "note": "Pinned catalog version; will not follow future releases."
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/dsh-plugin-catalog/index.json",
+      "checkedAt": "2026-10-28T07:43:26.086Z",
+      "plugins": 3730,
+      "officialDsh021rc2ParserAccepted": true,
+      "contentSha256": "7390ced05e68f699c2b02017a04816b6cb99829a12b2f80962e266720c72578a",
+      "catalogVersion": "2026.1027.11136",
+      "targetPresent": false,
+      "cacheControl": "public, max-age=604800, s-maxage=43200",
+      "ageSeconds": 26824,
+      "note": "Registry latest is newer; this unversioned alias response remains cached."
+    }
+  ],
+  "catalogGeneration": {
+    "latestNpmCatalogVersion": "2026.1028.11655",
+    "nightlyRun": "https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/actions/runs/40621332540",
+    "conclusion": "success",
+    "mainRegistryEntryChanged": false,
+    "reason": "Automatic registry mapping is already present. The contributor guide forbids manual npm fields."
+  },
+  "communityUpdate": {
+    "pr": "https://github.com/zhu1090093659/dsh-community-plugins/pull/60",
+    "state": "OPEN",
+    "commit": "e25eabfa977555982fa6f32f23064d5f7468d80a",
+    "file": "community.json",
+    "addedNpm": "@gongfpp/dsh-novel-fish",
+    "changedEntries": 1,
+    "addedLines": 1,
+    "otherMetadataUnchanged": true,
+    "readbackMatched": true,
+    "upstreamGate": "PASS",
+    "contractTestsPassed": 9,
+    "prBodyUpdated": true,
+    "merged": false
+  },
+  "otherSources": {
+    "imsai1024store": {
+      "url": "https://deepseek1024.com/api/v2/plugins/gongfpp/dsh-novel-fish",
+      "checkedAt": "2026-10-28T07:45:12.488755Z",
+      "catalogueListed": true,
+      "installMethodKinds": ["github"],
+      "npmMethodPresent": false,
+      "verification": "unknown",
+      "code": "not_checked",
+      "manualNpmFieldAllowed": false
+    },
+    "dpharness": {
+      "url": "https://dpharness.com/api/plugins?q=gongfpp%2Fdsh-novel-fish&take=5",
+      "checkedAt": "2026-10-28T07:45:12.111091Z",
+      "count": 1,
+      "id": "cmvpdsdlq02cdny2voxznjl98",
+      "nativeInstallIndexContainsTarget": false
+    },
+    "otherNativeIndexSnapshots": {
+      "checkedAt": "2026-10-28T07:31Z",
+      "dshopen": { "plugins": 918, "targetVersion": "0.1.4", "sourceType": "git" },
+      "dshfind": { "plugins": 5781, "targetPresent": false },
+      "dshmarketplace": { "plugins": 1718, "targetPresent": false },
+      "dpharness": { "plugins": 3151, "targetPresent": false }
+    }
+  },
+  "installation": {
+    "dshVersion": "0.2.1-rc.2",
+    "isolatedDshHome": true,
+    "installSpecFromOfficialMarketParser": "@gongfpp/dsh-novel-fish@0.1.4",
+    "cliInstallExitCode": 0,
+    "cliListExitCode": 0,
+    "installedVersion": "0.1.4",
+    "dailyProfileTouched": false,
+    "modelRequestMade": false,
+    "realGuiInstallationVerified": false
+  },
+  "cdnPurge": {
+    "requested": false,
+    "reason": "The official purge form requires human CAPTCHA; no purge endpoint was called or bypass attempted.",
+    "documentation": "https://www.jsdelivr.com/tools/purge"
+  },
+  "historicalEvidence": "community-market-014-result.json",
+  "limitations": [
+    "Public HTTP/API and isolated CLI validation do not replace real GUI evidence.",
+    "Only DSH Web 0.2.1-rc.2 compatibility is declared.",
+    "The pending community PR is not counted as merged or publicly installable.",
+    "Other directories may remain unsynchronized after npm publication."
+  ]
+}

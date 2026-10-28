@@ -1,5 +1,12 @@
 # 公开发布记录
 
+## npm 市场映射复核（2026-10-28）
+
+- Awesome 官网 format-1 索引及 `dsh-plugin-catalog@2026.1028.11655` 已有准确的 npm `0.1.4`；安装版 DSH `0.2.1-rc.2` 官方解析器接受整个索引并生成固定 npm spec。无版本 jsDelivr 地址仍命中旧 `2026.1027.11136`，不是 npm 尚未发布或缺少清单。可用地址见 [社区市场记录](community-markets.md)。
+- 重新校验官方 npm tarball 的 SHA-512 integrity、SHA-1、SHA-256、66 个归档文件及浏览器 bundle 一致性；再次在全新临时 `DSH_HOME` 安装并列出 `0.1.4` 成功。未改日常 profile、没有模型请求，不代替新版 GUI 阅读或安装实拍。
+- 在原 Workshop PR #60 新条目中仅补一行 scoped npm 包名，保留全部其他元数据和精确 rc.2 声明，上游 gate、9 项测试和远端读回通过。PR 仍待审。其他严格 schema 的目录由自动采集映射，不添加非法字段、不重复投稿、不重新发布相同版本。
+- [本次结构化证据](evidence/npm-market-014-result.json)与原 10 月 26 日投稿快照分别保留。
+
 ## npm 官方仓库上架（2026-10-27）
 
 - [@gongfpp/dsh-novel-fish@0.1.4](https://www.npmjs.com/package/@gongfpp/dsh-novel-fish) 已正式公开发布，registry 时间为 `2026-10-27T04:44:37.774Z`，dist-tag `latest` 指向 `0.1.4`，不再需要开发者 npm 登录即可下载。

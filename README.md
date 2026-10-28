@@ -42,6 +42,7 @@ dsh plugin --profile web add ./gongfpp-dsh-novel-fish-0.1.4.tgz
 
 ### 已收录的公共可搜索市场
 
+- **[Awesome DSH Plugin](https://awesome-dsh-plugin.com/)**：官网原生安装索引已收录 npm **0.1.4**。在 DSH「插件 → 发现」添加 `https://awesome-dsh-plugin.com/index.json`，搜索 **dsh-novel-fish** 或 **小说摸鱼**。2026-10-28 核验时，无版本 jsDelivr 镜像仍返回旧目录；优先使用上述官网地址，已有该源则刷新。官方索引解析和隔离 CLI 安装已验证，未声称完成本轮 GUI 安装实拍。
 - **[Open Plugin Market](https://dshopen.org/)**：已审核收录 0.1.4。在 DSH「插件 → 发现 → 索引源」添加 `https://dshopen.org/index.json`，搜索 **小说摸鱼** 并选择 0.1.4 安装；使用已固定 Git 提交的发布版本，不依赖 npm。
 - **[DSH Market](https://dshmarket.com/)**：可视化市场已收录 **dsh-novel-fish**，支持搜索及 GitHub Release 包安装。尚未安装市场插件的用户可以运行 `dsh plugin --profile web add dshmarket`，重启 `dsh web` 后打开「插件 → Plugin Market」；[在线详情页](https://awesome-dsh-plugin.com/p/gongfpp/dsh-novel-fish/)也提供安装命令。
 
