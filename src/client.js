@@ -19,12 +19,13 @@ window.__ModuleLoader__.load({
   id: MODULE_ID,
   factory(require) {
     const React = require('react')
+    const { Switch } = require('@deepseek-ai/dsh-client-ui-primitives')
     return {
       inject: ['slots', 'locale'],
       apply(ctx) {
         const storage = new IndexedDbStorage()
         const store = new NovelStore(storage)
-        const SettingsRow = createSettingsRow(React)
+        const SettingsRow = createSettingsRow(React, Switch)
         const settingsActions = {
           onSetOption: (key, value) => store.setOption(key, value),
           onSetNotice: notice => store.setNotice(notice),
@@ -35,10 +36,9 @@ window.__ModuleLoader__.load({
 
         ctx.effect(() => ctx.locale.register(LOCALE, { zh: flatten(zh), en: flatten(en) }), 'novel-fish: locale')
         ctx.effect(() => () => store.dispose(), 'novel-fish: store')
-        ctx.slots.inject('settings.general.item', () => ctx.slots.register({
-          name: 'settings.general.item',
-          id: 'novel-fish',
-          order: 24,
+        ctx.slots.inject('plugins.bundle.config', () => ctx.slots.register({
+          name: 'plugins.bundle.config',
+          key: MODULE_ID,
           locale: LOCALE,
           inject: () => ({
             hooks: {

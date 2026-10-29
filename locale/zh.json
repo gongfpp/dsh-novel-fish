@@ -10,7 +10,7 @@
     "stopped": "已停止",
     "unknownBlock": "未知内容块",
     "jsonTruncated": "… 已截断，共 {total} 字符",
-    "noBook": "请先在通用设置的小说摸鱼中选择一本书。",
+    "noBook": "请先在插件 → 小说摸鱼中选择一本书。",
     "switchHint": "请收起后再主动展开此区域，从当前进度读取。",
     "loading": "正在读取…",
     "readError": "小说未能加载，阅读进度未改变。",

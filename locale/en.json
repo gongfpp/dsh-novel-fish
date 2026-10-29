@@ -10,7 +10,7 @@
     "stopped": "Stopped",
     "unknownBlock": "Unknown content block",
     "jsonTruncated": "… truncated, {total} characters",
-    "noBook": "Select a book under Settings → General → Novel Fish first.",
+    "noBook": "Select a book under Plugins → Novel Fish first.",
     "switchHint": "Collapse and actively expand this region to read from the current progress.",
     "loading": "Loading…",
     "readError": "The passage could not be loaded; progress did not change.",

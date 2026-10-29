@@ -8,6 +8,11 @@ import zh from '../locale/zh.json' with { type: 'json' }
 import en from '../locale/en.json' with { type: 'json' }
 
 const t = (key, vars = {}) => key.split('.').reduce((value, field) => value?.[field], zh)?.replace(/\{(\w+)\}/gu, (_, key) => String(vars[key])) ?? key
+// Only the host supplies the native Switch; this double tests our state/actions.
+function HostSwitch({ checked, disabled, label, onChange }) {
+  return React.createElement('button', { role: 'switch', 'aria-checked': checked, 'aria-label': label, disabled, onClick: () => onChange(!checked) })
+}
+const SettingsRow = createSettingsRow(React, HostSwitch)
 
 function setup(settings = {}) {
   const state = { hydrated: true, books: [{id:'book-a',title:'测试书籍',format:'txt',progress:1,segmentCount:3}], settings:{...DEFAULT_SETTINGS,currentBookId:'book-a',...settings} }
@@ -23,7 +28,7 @@ function setup(settings = {}) {
 test('设置选择的是原生区域类型，不依赖聊天 DOM 或选择具体轮次步骤', async () => {
   const model = setup()
   let view
-  await act(async () => { view = TestRenderer.create(React.createElement(createSettingsRow(React), model.props)) })
+  await act(async () => { view = TestRenderer.create(React.createElement(SettingsRow, model.props)) })
   try {
     const dropdown = view.root.findByProps({'data-novel-type-select':true})
     assert.equal(dropdown.type, 'details')
@@ -51,7 +56,7 @@ test('设置选择的是原生区域类型，不依赖聊天 DOM 或选择具体
 test('图标完全跟随 DSH，只有标题提供预设和明确选择后的自定义文本框', async () => {
   const model = setup()
   let view
-  await act(async () => { view = TestRenderer.create(React.createElement(createSettingsRow(React), model.props)) })
+  await act(async () => { view = TestRenderer.create(React.createElement(SettingsRow, model.props)) })
   try {
     assert.equal(view.root.findAllByType('input').filter(node => !['checkbox','file'].includes(node.props.type)).length, 0)
     assert.equal(view.root.findAllByProps({'data-novel-preset':'icon'}).length, 0)
@@ -68,7 +73,7 @@ test('图标完全跟随 DSH，只有标题提供预设和明确选择后的自�
 test('已保存的自定义内容保留，打开设置不会写入选项', async () => {
   const model = setup({mainTitle:'已存标题'})
   let view
-  await act(async () => { view = TestRenderer.create(React.createElement(createSettingsRow(React), model.props)) })
+  await act(async () => { view = TestRenderer.create(React.createElement(SettingsRow, model.props)) })
   try {
     assert.equal(view.root.findByProps({'data-novel-title':true}).props.defaultValue, '已存标题')
     assert.deepEqual(model.options, [])
@@ -81,7 +86,7 @@ test('自定义输入不受异步落盘旧快照控制，连续输入不会被 R
   const saving = new Promise(resolve => { release = resolve })
   model.props.onSetOption = async () => saving
   let view
-  await act(async () => { view = TestRenderer.create(React.createElement(createSettingsRow(React), model.props)) })
+  await act(async () => { view = TestRenderer.create(React.createElement(SettingsRow, model.props)) })
   try {
     const input = view.root.findByProps({'data-novel-title':true})
     await act(async () => { void input.props.onChange({currentTarget:{value:'已存标题连续输入'}}) })
@@ -99,7 +104,7 @@ test('预设保存失败仍保留自定义模式，下拉值始终对应有效�
   model.props.onSetOption = async () => saving
   model.props.onSetNotice = value => notices.push(value)
   let view
-  await act(async () => { view = TestRenderer.create(React.createElement(createSettingsRow(React), model.props)) })
+  await act(async () => { view = TestRenderer.create(React.createElement(SettingsRow, model.props)) })
   try {
     const select = view.root.findByProps({'data-novel-preset':'title'})
     await act(async () => { select.props.onChange({currentTarget:{value:'思考'}}) })
@@ -110,6 +115,69 @@ test('预设保存失败仍保留自定义模式，下拉值始终对应有效�
     assert.ok(select.findAllByType('option').some(option => option.props.value === select.props.value))
     assert.match(notices.at(-1), /模拟保存失败/u)
   } finally { await act(async () => view.unmount()) }
+})
+
+test('原生阅读开关保存时禁用并合并快速点击，不影响书籍进度', async () => {
+  const model = setup({ enabled: false })
+  let release, view
+  const saving = new Promise(resolve => { release = resolve })
+  model.props.onSetOption = async (key, value) => {
+    model.options.push([key, value])
+    await saving
+    model.state.settings[key] = value
+    view.update(React.createElement(SettingsRow, { ...model.props }))
+  }
+  await act(async () => { view = TestRenderer.create(React.createElement(SettingsRow, model.props)) })
+  try {
+    const toggle = () => view.root.findByProps({ role: 'switch' })
+    assert.equal(toggle().props['aria-label'], zh.settings.enabled)
+    assert.equal(toggle().props['aria-checked'], false)
+    const change = view.root.findByType(HostSwitch).props.onChange
+    await act(async () => { change(true); change(true) })
+    assert.deepEqual(model.options, [['enabled', true]])
+    assert.equal(toggle().props.disabled, true)
+    assert.equal(toggle().props['aria-checked'], false)
+    await act(async () => { release() })
+    assert.equal(toggle().props.disabled, false)
+    assert.equal(toggle().props['aria-checked'], true)
+    assert.equal(model.state.books[0].progress, 1)
+    assert.equal(model.state.settings.currentBookId, 'book-a')
+    assert.deepEqual(model.state.settings.targetTypes, DEFAULT_SETTINGS.targetTypes)
+  } finally { release(); await act(async () => view.unmount()) }
+})
+
+test('阅读开关保存失败不假装开启，报错后可以重试', async () => {
+  const model = setup({ enabled: false }), notices = []
+  model.props.onSetNotice = value => notices.push(value)
+  model.props.onSetOption = async () => { throw new Error('模拟存储失败') }
+  let view
+  await act(async () => { view = TestRenderer.create(React.createElement(SettingsRow, model.props)) })
+  try {
+    await act(async () => view.root.findByProps({ role: 'switch' }).props.onClick())
+    const toggle = view.root.findByProps({ role: 'switch' })
+    assert.equal(toggle.props.disabled, false)
+    assert.equal(toggle.props['aria-checked'], false)
+    assert.match(notices.at(-1), /操作失败.*模拟存储失败/u)
+    model.props.onSetOption = async (...values) => model.options.push(values)
+    await act(async () => { view.update(React.createElement(SettingsRow, { ...model.props })) })
+    await act(async () => view.root.findByProps({ role: 'switch' }).props.onClick())
+    assert.deepEqual(model.options, [['enabled', true]])
+  } finally { await act(async () => view.unmount()) }
+})
+
+test('书库未就绪或出错时阅读开关保持禁用，不写设置', async () => {
+  for (const state of [{ hydrated: false }, { error: '模拟书库错误' }]) {
+    const model = setup({ enabled: false })
+    Object.assign(model.state, state)
+    let view
+    await act(async () => { view = TestRenderer.create(React.createElement(SettingsRow, model.props)) })
+    try {
+      const toggle = view.root.findByProps({ role: 'switch' })
+      assert.equal(toggle.props.disabled, true)
+      await act(async () => toggle.props.onClick())
+      assert.deepEqual(model.options, [])
+    } finally { await act(async () => view.unmount()) }
+  }
 })
 
 test('中英文设置类型文案都有对应值，不再含位置选择翻译', () => {

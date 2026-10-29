@@ -26,8 +26,8 @@ const BUTTON = {
 const MAIN_TITLES = ['', '思考', '分析', '检查', 'Thinking']
 const EXTRA_TITLES = ['', 'Checking project structure', 'Analyzing the request', 'Reviewing implementation', 'Verifying results']
 
-/** 设置嵌入 DSH 通用设置，不提供独立阅读入口。 */
-export function createSettingsRow(React) {
+/** 设置嵌入本插件详情页，不提供独立阅读入口。 */
+export function createSettingsRow(React, Switch) {
   const h = React.createElement
 
   function PresetField({ t, label, value, choices, disabled, onChange, testId, maxLength }) {
@@ -61,11 +61,20 @@ export function createSettingsRow(React) {
     const ui = useNovelUi(value => value)
     const [busy, setBusy] = React.useState(false)
     const [savingTypes, setSavingTypes] = React.useState(false)
+    const [savingEnabled, setSavingEnabled] = React.useState(false)
+    const enabling = React.useRef(false)
     const selectedBook = state.books.find(book => book.id === state.settings.currentBookId)
     const disabled = busy || !state.hydrated || Boolean(state.error)
     const perform = async action => {
       try { await action(); return true }
       catch (error) { onSetNotice(t('settings.actionError', { message: errorMessage(error) })); return false }
+    }
+    const setEnabled = async enabled => {
+      if (disabled || enabling.current) return
+      enabling.current = true
+      setSavingEnabled(true)
+      try { await perform(() => onSetOption('enabled', enabled)) }
+      finally { enabling.current = false; setSavingEnabled(false) }
     }
     const setTypes = async types => {
       setSavingTypes(true)
@@ -96,9 +105,9 @@ export function createSettingsRow(React) {
       ),
       !state.hydrated && !state.error ? h('div', null, t('settings.storageLoading')) : null,
       state.error ? h('div', { role: 'alert' }, state.error) : null,
-      h('label', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-        h('input', { type: 'checkbox', disabled, checked: state.settings.enabled, onChange: event => { const enabled = event.currentTarget.checked; void perform(() => onSetOption('enabled', enabled)) } }),
-        t('settings.enabled'),
+      h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 } },
+        h('span', null, t('settings.enabled')),
+        h(Switch, { checked: state.settings.enabled, disabled: disabled || savingEnabled, label: t('settings.enabled'), onChange: enabled => { void setEnabled(enabled) } }),
       ),
       h('label', { style: LABEL },
         h('span', null, t('settings.bookSource')),
