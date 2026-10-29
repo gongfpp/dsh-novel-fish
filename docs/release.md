@@ -5,7 +5,12 @@
 - 设置统一使用宿主 Button、Switch、Input、Menu 和 Modal；移至本插件详情页，去掉浏览器默认文件按钮和重复外框，不改书库、进度或阅读逻辑。
 - `pnpm verify` 全量 **100/100** 通过（0 失败／跳过，1910.950958 ms），重建浏览器 bundle 和 10 项依赖许可；`git diff --check` 通过。
 - 真实 DSH 验证原生菜单、全选、自定义输入框和系统文件选择器。新控件的文件导入／切书／删除 GUI 全流程及真实聊天 A/B/C 没有重新完成，不能以组件测试代替；[详细验收与实拍](native-settings-update.md)。
-- npm 当前仍是 **0.1.4**。本机缺少 npm 发布登录态；本轮通过 GitHub 固定版本分发，不宣称已发布 npm 0.1.5。标签、产物、隔离安装和市场审核的实际回执后续列于本节。
+- [源码 PR #1](https://github.com/gongfpp/dsh-novel-fish/pull/1) 已合并，源码与标签 `v0.1.5` 固定为 `61a0e62d7caa06f3101b450277f3ef530e1561f8`；[PR CI](https://github.com/gongfpp/dsh-novel-fish/actions/runs/40887341400) 和[主分支 CI](https://github.com/gongfpp/dsh-novel-fish/actions/runs/40887491392) 均成功，功能分支已删除。
+- [GitHub Release](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.1.5) 于 `2026-10-29T14:06:33Z` 公开，包含安装包、源码 ZIP 和校验文件。三个附件匿名下载均 HTTP 200，包与源码 SHA-256 一致。
+- 安装包 `gongfpp-dsh-novel-fish-0.1.5.tgz`：`a6b52477815f6c1e5d5aa453cbf6366eda3438aa69d6001aea97701ab53e2392`；源码 ZIP：`3819e37020c4fa0cbe02e01512b1a007efc86939000764056281c9f9fa6f0deb`。归档分别为 74／90 项，无不安全路径，浏览器 bundle 与标签逐字一致。
+- 全新临时 `DSH_HOME` 的三个空 profile 中，README 标签、匿名下载的安装包、完整固定 SHA 三条路线均通过真实 DSH CLI 安装并列出 `0.1.5`，三个 bundle 哈希一致；未改日常 profile，不触发模型请求。[结构化回执](evidence/public-release-015-result.json)。
+- 按授权以 `launchctl kickstart -k gui/501/com.user.dsh-web` 重启原服务：PID 从 `72959` 变为 `71224`，仍监听 `127.0.0.1:3080`。匿名根请求返回预期的认证 `401`；通过 Cua 的官方启动链接进入真实详情页，再次看到 `0.1.5` 和原生设置，日常 profile 仍链接本项目。未新开替代服务，也未读取或改写私人书库。
+- npm 当前仍是 **0.1.4**。本机缺少 npm 发布登录态；本轮通过 GitHub 固定版本分发，不宣称已发布 npm 0.1.5。[各市场更新与待审状态](community-markets.md#015-更新) 分别记录，不把提交申请当成审核通过。
 
 
 ## npm 市场映射复核（2026-10-28）

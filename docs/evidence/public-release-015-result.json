@@ -1,0 +1,36 @@
+{
+  "version": "0.1.5",
+  "publishedAt": "2026-10-29T14:06:33Z",
+  "release": "https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.1.5",
+  "sourceCommit": "61a0e62d7caa06f3101b450277f3ef530e1561f8",
+  "sourcePr": "https://github.com/gongfpp/dsh-novel-fish/pull/1",
+  "sourcePrMerged": true,
+  "ci": { "prRun": 40887341400, "mainRun": 40887491392, "conclusion": "success" },
+  "tests": { "passed": 100, "failed": 0, "skipped": 0 },
+  "bundleSha256": "6d738419476fac97a0ae912cae38a12e8eb3789168f4baa31ed948273736aa44",
+  "archives": [
+    { "name": "gongfpp-dsh-novel-fish-0.1.5.tgz", "entries": 74, "httpStatus": 200, "sha256": "a6b52477815f6c1e5d5aa453cbf6366eda3438aa69d6001aea97701ab53e2392" },
+    { "name": "dsh-novel-fish-source-0.1.5.zip", "entries": 90, "httpStatus": 200, "sha256": "3819e37020c4fa0cbe02e01512b1a007efc86939000764056281c9f9fa6f0deb" },
+    { "name": "SHA256SUMS.txt", "httpStatus": 200, "sha256": "b08f88dee286bba3823d477f320d4020b8df088437a543eb55210f23c23691ac" }
+  ],
+  "anonymousDownloadsMatchLocal": true,
+  "unsafeArchivePaths": false,
+  "isolatedInstallations": [
+    { "requested": "github:gongfpp/dsh-novel-fish#v0.1.5", "installedVersion": "0.1.5", "exitCode": 0 },
+    { "requested": "downloaded release tarball", "installedVersion": "0.1.5", "exitCode": 0 },
+    { "requested": "github:gongfpp/dsh-novel-fish#61a0e62d7caa06f3101b450277f3ef530e1561f8", "installedVersion": "0.1.5", "exitCode": 0 }
+  ],
+  "npmLatestObserved": "0.1.4",
+  "npm015Published": false,
+  "marketUpdates": {
+    "awesome": "https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/10407",
+    "awesomeObservedState": "OPEN",
+    "dshopenReviewRequest": "https://github.com/polang233/dsh-plugin-index/issues/101#issuecomment-6498960335",
+    "workshopExistingPrUpdate": "https://github.com/zhu1090093659/dsh-community-plugins/pull/60#issuecomment-6498962198",
+    "thirdParty015IndexRefreshClaimed": false
+  },
+  "realUiVerified": ["native settings layout", "native menu items", "select all changes 1/5 to 5/5", "custom title input", "native import button opens system file picker"],
+  "notReverified": ["complete import and book-switch GUI flow", "delete modal GUI flow", "trusted chat A/B/C", "keyboard and hover"],
+  "dshRestart": { "service": "gui/501/com.user.dsh-web", "port": 3080, "beforePid": 72959, "afterPid": 71224, "status": "running", "anonymousHttpStatus": 401, "authenticationRequired": true, "postRestartGui": "real plugin detail shows 0.1.5 and native settings", "dailyProfileStillLinksProject": true },
+  "onlyDeclaredDshVersion": "0.2.1-rc.2"
+}
