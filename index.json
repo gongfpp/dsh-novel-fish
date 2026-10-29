@@ -23,6 +23,16 @@
       "metadata": { "keywords": ["dsh-plugin", "novel", "epub", "local-reading"] },
       "versions": [
         {
+          "version": "0.1.5",
+          "publishTimestamp": 1793282793,
+          "engines": { "dsh": "0.2.1-rc.2" },
+          "source": {
+            "type": "git",
+            "url": "https://github.com/gongfpp/dsh-novel-fish",
+            "commit": "61a0e62d7caa06f3101b450277f3ef530e1561f8"
+          }
+        },
+        {
           "version": "0.1.4",
           "publishTimestamp": 1793021943,
           "engines": { "dsh": "0.2.1-rc.2" },

@@ -1,6 +1,14 @@
 # 公共社区市场与收录进展
 
-最新复核：**2026-10-28**（npm、原生索引、1024 Store、dpharness、Workshop）。插件 `@gongfpp/dsh-novel-fish` **0.1.4**，仅声明适配 DSH Web **0.2.1-rc.2**。其他自动目录的历史快照保留原日期，不当作本日刷新结果。
+最新发布更新：**2026-10-29**，GitHub **0.1.5**；npm 仍为 **0.1.4**。仅声明适配 DSH Web **0.2.1-rc.2**。下方各站的 10 月 28 日及更早快照保留原日期，不当作本日刷新结果。
+
+## 0.1.5 更新
+
+- [GitHub Release](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.1.5) 已公开，源码固定为 `61a0e62d7caa06f3101b450277f3ef530e1561f8`；提供预构建安装包、源码和校验文件。npm 未发布 0.1.5，因此依赖 npm 的自动目录目前不能据此变成新版。
+- Awesome 仅更新本插件 YAML 中的固定 tarball：[PR #10407](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/10407)，提交 `38e844f78ef1517053decd493eda2d0af2e6bcce`，等待审核。未修改生成 README 或添加非法 `npm:`。
+- dshopen 按规则在[原申请 #101 留言请求复审](https://github.com/polang233/dsh-plugin-index/issues/101#issuecomment-6498960335)，提供新版本与完整 SHA；旧申请关闭不代表新版本已审核。
+- Workshop 在[原 PR #60 补充更新说明](https://github.com/zhu1090093659/dsh-community-plugins/pull/60#issuecomment-6498962198)，不重复申请。实际条目只有仓库和 npm 包名，没有固定 tarball，故无需改写清单；PR 仍待审。
+- 本轮未宣称这些第三方网站或原生安装索引已刷新到 0.1.5，也未扩大宿主兼容范围。
 
 ## 哪个来源优先
 
