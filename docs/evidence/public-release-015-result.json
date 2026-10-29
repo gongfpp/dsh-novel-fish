@@ -31,6 +31,6 @@
   },
   "realUiVerified": ["native settings layout", "native menu items", "select all changes 1/5 to 5/5", "custom title input", "native import button opens system file picker"],
   "notReverified": ["complete import and book-switch GUI flow", "delete modal GUI flow", "trusted chat A/B/C", "keyboard and hover"],
-  "dshRestart": { "service": "gui/501/com.user.dsh-web", "port": 3080, "beforePid": 72959, "status": "pending" },
+  "dshRestart": { "service": "gui/501/com.user.dsh-web", "port": 3080, "beforePid": 72959, "afterPid": 71224, "status": "running", "anonymousHttpStatus": 401, "authenticationRequired": true, "postRestartGui": "real plugin detail shows 0.1.5 and native settings", "dailyProfileStillLinksProject": true },
   "onlyDeclaredDshVersion": "0.2.1-rc.2"
 }
