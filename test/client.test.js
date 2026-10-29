@@ -8,9 +8,7 @@ import { IDBFactory, IDBKeyRange } from 'fake-indexeddb'
 import { IndexedDbStorage } from '../src/persistence.js'
 import { DEFAULT_SETTINGS } from '../src/store.js'
 
-function HostSwitch({ checked, disabled, label, onChange }) {
-  return React.createElement('button', { role: 'switch', 'aria-label': label, 'aria-checked': checked, disabled, onClick: () => onChange(!checked) })
-}
+import { HostSwitch, hostPrimitives } from './helpers/host-primitives.js'
 
 test('构建产物只在本包详情注册设置，复用宿主 Switch 与原有书库', async () => {
   const indexedDB = new IDBFactory()
@@ -29,7 +27,7 @@ test('构建产物只在本包详情注册设置，复用宿主 Switch 与原有
   const plugin = module.factory(name => {
     imports.push(name)
     if (name === 'react') return React
-    if (name === '@deepseek-ai/dsh-client-ui-primitives') return { Switch: HostSwitch }
+    if (name === '@deepseek-ai/dsh-client-ui-primitives') return hostPrimitives
     throw new Error(`Unexpected host import: ${name}`)
   })
   plugin.apply({

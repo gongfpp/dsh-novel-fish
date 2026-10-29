@@ -19,13 +19,13 @@ window.__ModuleLoader__.load({
   id: MODULE_ID,
   factory(require) {
     const React = require('react')
-    const { Switch } = require('@deepseek-ai/dsh-client-ui-primitives')
+    const primitives = require('@deepseek-ai/dsh-client-ui-primitives')
     return {
       inject: ['slots', 'locale'],
       apply(ctx) {
         const storage = new IndexedDbStorage()
         const store = new NovelStore(storage)
-        const SettingsRow = createSettingsRow(React, Switch)
+        const SettingsRow = createSettingsRow(React, primitives)
         const settingsActions = {
           onSetOption: (key, value) => store.setOption(key, value),
           onSetNotice: notice => store.setNotice(notice),
