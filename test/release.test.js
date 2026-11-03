@@ -9,7 +9,7 @@ test('public package identity matches the Host patch and browser module', async 
   const manifest = JSON.parse(await read('package.json'))
   assert.equal(manifest.name, '@gongfpp/dsh-novel-fish')
   assert.equal(manifest.repository.url, 'https://github.com/gongfpp/dsh-novel-fish.git')
-  assert.equal(manifest.engines.dsh, '0.2.1-rc.2')
+  assert.equal(manifest.engines.dsh, '>=0.2.1-rc.2 <0.3.0-0')
   assert.ok((await read('cordis.patch.yml')).includes(`name: '${manifest.name}'`))
   assert.ok((await read('src/client.js')).includes(`const MODULE_ID = '${manifest.name}'`))
   assert.ok((await read('lib/client.js')).includes(manifest.name))
@@ -39,7 +39,8 @@ test('市场索引保留固定提交来源、版本唯一和宿主兼容范围',
   for (const version of entry.versions) {
     assert.match(version.version, /^\d+\.\d+\.\d+$/u)
     assert.ok(Number.isSafeInteger(version.publishTimestamp) && version.publishTimestamp > 0)
-    assert.equal(version.engines.dsh, manifest.engines.dsh)
+    if (version.version === manifest.version) assert.equal(version.engines.dsh, manifest.engines.dsh)
+    else assert.match(version.engines.dsh, /^(?:\^|~|>=)?\d+\.\d+\.\d+(?:-[\w.-]+)?/u)
     assert.equal(version.source.type, 'git')
     assert.equal(version.source.url, entry.repository.url)
     assert.match(version.source.commit, /^[a-f0-9]{40}$/u)
