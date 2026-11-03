@@ -12,6 +12,7 @@
   - integrity `sha512-VUqcMZEar18bEvsHe48/CC+Hv2FERo8nXdQn0J7PBzMe87x+OkQ4tKaCa8sALwvVrOheX/+0uHa0wgdYIz4DBA==`
   - 本地 `npm pack @gongfpp/dsh-novel-fish@0.1.6` 取得的 tarball 与 registry shasum 一致，作为本次 Release 附件；该文件 SHA-256 为 `07e045ae43695cb82014cd25c00261ca52b361a321f311bfcff8a3ec1aa08d7e`（早前一次 npm 装依赖产出的本地包 SHA-256 为 `9ca23410…`，已废弃，不要用）。
 - 账号启用了 2FA，`npm publish` 首次返回 `EOTP`；改用带 `Bypass 2FA` 的 granular access token（权限 `Read and write (publish and stage)`、仅限本包、90 天）完成发布，未关闭账号 2FA。
+- [GitHub Release v0.1.6](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.1.6) 于 `2026-11-03T07:34:50Z` 公开（tag 指向 `16f7c31`，非 prerelease）。附件：安装包、源码 ZIP（`git archive` 取自标签，91 项、无不安全路径）、`SHA256SUMS`。三个附件匿名下载均 HTTP 200，下载后 `sha256sum -c SHA256SUMS` 两项 OK。
 - 索引条目 `source.commit` 固定为 `16f7c31e7747395af4dbc527f2717b759833b098`（源码提交）。**注意：`index.json` 和 `docs/**` 都在 `package.json` 的发布文件列表里**，所以已发布 tarball 内的 `index.json` 只到 `0.1.5`、`docs/release.md` 也没有本节。追加记录本身会改变包内容，因此不在本版内回填——tarball 与 registry 的对应关系以 shasum 为准，仓库主干另行补记。
 - `index.json` 的 `versions` 是「公开发布目录」，来源可以是 npm 也可以是 GitHub Release，**不等价于 npm 上存在该版本**：`0.1.0`、`0.1.5` 都从未出现在 npm。因此不能用它去校验 npm 安装能力。
 
