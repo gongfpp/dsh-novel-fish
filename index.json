@@ -11,7 +11,10 @@
   "plugins": [
     {
       "name": "@gongfpp/dsh-novel-fish",
-      "title": { "en": "Novel Fish", "zh": "小说摸鱼" },
+      "title": {
+        "en": "Novel Fish",
+        "zh": "小说摸鱼"
+      },
       "description": {
         "en": "Append a local novel passage after selected native thought or tool content on active expansion. Multi-select region types; no model requests.",
         "zh": "多选原生思考与工具区域，主动展开时保留原文，以分隔线追加章节和本地小说；不改会话、不发送给模型。"
@@ -19,13 +22,36 @@
       "icon": "./assets/icon.svg",
       "author": "gongfpp",
       "homepage": "https://github.com/gongfpp/dsh-novel-fish#readme",
-      "repository": { "url": "https://github.com/gongfpp/dsh-novel-fish" },
-      "metadata": { "keywords": ["dsh-plugin", "novel", "epub", "local-reading"] },
+      "repository": {
+        "url": "https://github.com/gongfpp/dsh-novel-fish"
+      },
+      "metadata": {
+        "keywords": [
+          "dsh-plugin",
+          "novel",
+          "epub",
+          "local-reading"
+        ]
+      },
       "versions": [
+        {
+          "version": "0.1.6",
+          "publishTimestamp": 1793690949,
+          "engines": {
+            "dsh": ">=0.2.1-rc.2 <0.3.0-0"
+          },
+          "source": {
+            "type": "git",
+            "url": "https://github.com/gongfpp/dsh-novel-fish",
+            "commit": "16f7c31e7747395af4dbc527f2717b759833b098"
+          }
+        },
         {
           "version": "0.1.5",
           "publishTimestamp": 1793282793,
-          "engines": { "dsh": "0.2.1-rc.2" },
+          "engines": {
+            "dsh": "0.2.1-rc.2"
+          },
           "source": {
             "type": "git",
             "url": "https://github.com/gongfpp/dsh-novel-fish",
@@ -35,7 +61,9 @@
         {
           "version": "0.1.4",
           "publishTimestamp": 1793021943,
-          "engines": { "dsh": "0.2.1-rc.2" },
+          "engines": {
+            "dsh": "0.2.1-rc.2"
+          },
           "source": {
             "type": "git",
             "url": "https://github.com/gongfpp/dsh-novel-fish",
@@ -45,7 +73,9 @@
         {
           "version": "0.1.0",
           "publishTimestamp": 1792668400,
-          "engines": { "dsh": "0.2.1-rc.2" },
+          "engines": {
+            "dsh": "0.2.1-rc.2"
+          },
           "source": {
             "type": "git",
             "url": "https://github.com/gongfpp/dsh-novel-fish",

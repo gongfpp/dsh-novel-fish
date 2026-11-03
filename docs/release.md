@@ -1,5 +1,20 @@
 # 公开发布记录
 
+## 0.1.6 宿主兼容区间与 npm 同步（2026-11-03）
+
+- 改动只有兼容声明：`engines.dsh` 从精确 `0.2.1-rc.2` 改为区间 `>=0.2.1-rc.2 <0.3.0-0`，使 rc.3 及之后的 0.2.x 宿主能通过 preflight。阅读行为、书库、进度和浏览器 bundle 未变。
+- npm 上此前只有 `0.1.4`（`0.1.5` 当时没有 npm 登录态，只走了 GitHub Release）。本次直接发 `0.1.6`，一次包含 0.1.5 的原生设置和本版兼容区间；没有单独补发 `0.1.5`，因为商店按 `latest` 取包，补一个只差兼容声明的中间版本只会让用户装到旧行为。`npm view` 现有版本为 `0.0.0-stage`、`0.1.4`、`0.1.6`。
+- **区间是准入策略，不是验收结论。** 真实宿主上完整跑过的仍只有 DSH Web `0.2.1-rc.2`；`0.2.1-rc.3` 及之后的 GUI 行为未实测，不以后续版本的真实表现为默认成立。
+- `pnpm verify`：`pnpm run build` 重建后 `lib/client.js` 与 HEAD 逐字一致（先用 npm 装依赖时出现过 `node_modules/.pnpm/...` 路径差异，已回滚并改用 pnpm 重装后重建，确认可复现），`pnpm test` **100/100** 通过。
+- 发布契约测试同步更新：清单断言改为新区间；索引契约从「每个历史条目都必须等于当前清单」改为「最新条目必须等于清单，历史条目保留各自声明」，否则 0.1.0/0.1.4 的精确声明会被追溯篡改。
+- npm 已发布 [@gongfpp/dsh-novel-fish@0.1.6](https://www.npmjs.com/package/@gongfpp/dsh-novel-fish)，registry 时间 `2026-11-03T07:29:09.855Z`，`dist-tags.latest` 指向 `0.1.6`，75 个文件。
+  - shasum（SHA-1）`2365afae37252ecc84e1ec6aa67b41765021eede`
+  - integrity `sha512-VUqcMZEar18bEvsHe48/CC+Hv2FERo8nXdQn0J7PBzMe87x+OkQ4tKaCa8sALwvVrOheX/+0uHa0wgdYIz4DBA==`
+  - 本地 `npm pack @gongfpp/dsh-novel-fish@0.1.6` 取得的 tarball 与 registry shasum 一致，作为本次 Release 附件；该文件 SHA-256 为 `07e045ae43695cb82014cd25c00261ca52b361a321f311bfcff8a3ec1aa08d7e`（早前一次 npm 装依赖产出的本地包 SHA-256 为 `9ca23410…`，已废弃，不要用）。
+- 账号启用了 2FA，`npm publish` 首次返回 `EOTP`；改用带 `Bypass 2FA` 的 granular access token（权限 `Read and write (publish and stage)`、仅限本包、90 天）完成发布，未关闭账号 2FA。
+- 索引条目 `source.commit` 固定为 `16f7c31e7747395af4dbc527f2717b759833b098`（源码提交）。**注意：`index.json` 和 `docs/**` 都在 `package.json` 的发布文件列表里**，所以已发布 tarball 内的 `index.json` 只到 `0.1.5`、`docs/release.md` 也没有本节。追加记录本身会改变包内容，因此不在本版内回填——tarball 与 registry 的对应关系以 shasum 为准，仓库主干另行补记。
+- `index.json` 的 `versions` 是「公开发布目录」，来源可以是 npm 也可以是 GitHub Release，**不等价于 npm 上存在该版本**：`0.1.0`、`0.1.5` 都从未出现在 npm。因此不能用它去校验 npm 安装能力。
+
 ## 0.1.5 原生设置（2026-10-29）
 
 - 设置统一使用宿主 Button、Switch、Input、Menu 和 Modal；移至本插件详情页，去掉浏览器默认文件按钮和重复外框，不改书库、进度或阅读逻辑。
