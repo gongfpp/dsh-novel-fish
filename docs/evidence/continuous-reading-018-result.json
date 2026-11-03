@@ -24,21 +24,48 @@
     ],
     "claims": 0
   },
+  "browserAcceptance": {
+    "date": "2026-11-03",
+    "hostVersion": "0.2.2-alpha.2",
+    "method": "headless Chrome over CDP against the running http://127.0.0.1:3080 server, separate temporary browser profile",
+    "install": "plugin_manager install_bundle replaced the installed 0.1.7 file tarball with the 0.1.8 local tarball",
+    "pageReloaded": false,
+    "hmr": {
+      "clientArtifact": "@gongfpp/dsh-novel-fish/client.js",
+      "revBefore": "0ade15c36a55",
+      "revAfter": "107c001d69b8",
+      "timeOriginUnchanged": true
+    },
+    "serverPidUnchanged": 97856,
+    "panelVersion": "0.1.8",
+    "baseline": "0.1.7: first trusted expand of 14:assistant-step2:1 rendered 第1段 and reopening kept it",
+    "observed": [
+      "the new switch defaulted to off and stayed on after closing and reopening the plugin panel",
+      "switch on: repeated collapse and reopen of the same region rendered 第2段, 第3段, 第4段",
+      "switch off: three repeated reopens stayed at 第4段",
+      "another region 14:assistant-step2:2 rendered 第5段",
+      "reading progress 1/8 passages survived the package swap and the client hot swap"
+    ],
+    "evidenceType": "DOM assertions; screenshots contained personal data (balance, avatar, session titles) and were not committed",
+    "userBrowserTabInspected": false,
+    "userBookStorageAccessed": false
+  },
   "changedBehavior": [
     "settings: continueOnReopen, default off; only a trusted reopen advances the same region",
     "store: continuePassage advances in place while claimPassage keeps the cached page",
     "adapter: MutationObserver bursts merged into one frame or microtask rescan"
   ],
   "browserPageRefreshed": false,
-  "installedProfileVersion": "0.1.7 (client code of this candidate is not installed)",
+  "installedProfileVersion": "0.1.8",
   "userBookStorageAccessed": false,
   "notVerified": [
-    "real browser rendering and trusted click/keyboard/hover",
-    "presentation mode switch, turn-process fold/reset and virtualized remount",
-    "the new settings switch in a real page"
+    "keyboard, hover and touch expand paths",
+    "presentation mode switch and turn-process fold/reset",
+    "virtualized remount",
+    "the user's own already-open browser tab (this run used a separate temporary profile)"
   ],
-  "tarballSha256": "33ee86fa2beb4933073a15f773d642308ce0f498cd0edfbb3d9e846b300c477a",
-  "tarballBytes": 1415951,
+  "tarballSha256": "9d2c7b99285a0c292d7289d60ff08a7961ea49f0b03a9f0a17ec84a85daaf20f",
+  "tarballBytes": 1417337,
   "libClientSha256": "edcec4efccacbfddf598151371e3cbb5ca46a158484a0ff91c5dd20bb29f6689",
   "tarballNote": "dist/gongfpp-dsh-novel-fish-0.1.8.tgz was packed before this record was written, so the copy inside the tarball does not carry these fields; the sha256/bytes/libClientSha256 above match the file in dist/. Re-packing after this edit would change the sha."
 }
