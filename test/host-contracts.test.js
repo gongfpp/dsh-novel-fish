@@ -27,5 +27,6 @@ test('host-contract probe exercises a real installation when HOST_ROOT is suppli
   assert.equal(report.claims, 0)
   assert.ok(report.checks.some(check => check.name === 'real SlotCore registrations'))
   assert.ok(report.checks.some(check => check.name === 'real ReasoningRow / DisclosureRow / TextShimmer'))
+  assert.ok(report.checks.some(check => check.name === 'adapter anchors for title layers and fold state'))
   assert.ok(report.limitations.some(limit => limit.includes('trusted-user-event')))
 })

@@ -214,6 +214,17 @@ try {
   assert.ok(header.textContent.includes('message.think'), 'Disabling must restore native title')
   assert.equal(mount.querySelector('[data-novel-target]'), null)
   check('restore on disable', 'native title restored and adapter target marker removed')
+  // The adapter keeps the native row and only rewrites its text, so it depends on the
+  // shipped title layers, disclosure row and folding anchors staying put.
+  const anchors = {
+    chat: { source: chat, markers: ['data-chat-flow-key', 'data-turn-process-member', 'data-turn-process-hidden', 'data-shimmer-decoration'] },
+    conversation: { source: conversation, markers: ['data-conversation-session'] },
+    shell: { source: frontend, markers: ['data-shimmer-text', 'data-disclosure-row'] },
+  }
+  for (const [name, { source, markers }] of Object.entries(anchors)) {
+    for (const marker of markers) assert.ok(source.includes(`"${marker}"`), `Missing ${name} adapter anchor: ${marker}`)
+  }
+  check('adapter anchors for title layers and fold state', 'shimmer text/decoration, disclosure row, session identity and turn-process fold markers still ship; ambient DOM rescan has a contract to rescan')
   flush(() => root.unmount())
   for (const dispose of disposers.reverse()) dispose()
   assert.deepEqual(errors, [], 'Unexpected host/JSDOM runtime errors')

@@ -73,9 +73,11 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
     const [busy, setBusy] = React.useState(false)
     const [savingTypes, setSavingTypes] = React.useState(false)
     const [savingEnabled, setSavingEnabled] = React.useState(false)
+    const [savingContinue, setSavingContinue] = React.useState(false)
     const [removeBook, setRemoveBook] = React.useState(null)
     const [removeError, setRemoveError] = React.useState(null)
     const enabling = React.useRef(false)
+    const continuing = React.useRef(false)
     const changingTypes = React.useRef(false)
     const importing = React.useRef(false)
     const removing = React.useRef(false)
@@ -92,6 +94,13 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
       setSavingEnabled(true)
       try { await perform(() => onSetOption('enabled', enabled)) }
       finally { enabling.current = false; setSavingEnabled(false) }
+    }
+    const setContinue = async enabled => {
+      if (disabled || continuing.current) return
+      continuing.current = true
+      setSavingContinue(true)
+      try { await perform(() => onSetOption('continueOnReopen', enabled)) }
+      finally { continuing.current = false; setSavingContinue(false) }
     }
     const setTypes = async types => {
       if (disabled || changingTypes.current) return
@@ -171,6 +180,11 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
           }),
           h('p', { className: 'novel-fish-hint' }, t('settings.typeHint')),
         ),
+        h('div', { className: 'novel-fish-row' },
+          h('span', null, t('settings.continueOnReopen')),
+          h(Switch, { checked: state.settings.continueOnReopen === true, disabled: disabled || savingContinue, label: t('settings.continueOnReopen'), onChange: enabled => { void setContinue(enabled) } }),
+        ),
+        h('p', { className: 'novel-fish-hint' }, t('settings.continueOnReopenHint')),
       ),
       h('section', { className: 'novel-fish-section' },
         h('h3', null, t('settings.appearance')),

@@ -34,6 +34,8 @@
     "allTypes": "Select all",
     "clearTypes": "Deselect all",
     "typeHint": "A different region’s first active expansion continues reading. Select none to stop reading.",
+    "continueOnReopen": "Continue in the same region",
+    "continueOnReopenHint": "When on, collapsing and actively reopening the same region reads the next passage; when off, reopening only shows the passage already there.",
     "books": "Books",
     "importBook": "Import book",
     "reading": "Reading in chat",

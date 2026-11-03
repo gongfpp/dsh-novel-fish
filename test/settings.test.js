@@ -198,10 +198,10 @@ test('原生阅读开关保存时禁用并合并快速点击，不影响书籍�
   }
   view = await mount(model)
   try {
-    const toggle = () => view.root.findByProps({ role: 'switch' })
+    const toggle = () => view.root.findByProps({ 'aria-label': t('settings.enabled') })
     assert.equal(toggle().props['aria-label'], zh.settings.enabled)
     assert.equal(toggle().props['aria-checked'], false)
-    const change = view.root.findByType(HostSwitch).props.onChange
+    const change = view.root.findAllByType(HostSwitch).find(node => node.props.label === t('settings.enabled')).props.onChange
     await act(async () => { change(true); change(true) })
     assert.deepEqual(model.options, [['enabled', true]])
     assert.equal(toggle().props.disabled, true)
@@ -220,14 +220,14 @@ test('阅读开关保存失败不假装开启，报错后可以重试', async ()
   model.props.onSetOption = async () => { throw new Error('模拟存储失败') }
   const view = await mount(model)
   try {
-    await act(async () => view.root.findByProps({ role: 'switch' }).props.onClick())
-    const toggle = view.root.findByProps({ role: 'switch' })
+    await act(async () => view.root.findByProps({ 'aria-label': t('settings.enabled') }).props.onClick())
+    const toggle = view.root.findByProps({ 'aria-label': t('settings.enabled') })
     assert.equal(toggle.props.disabled, false)
     assert.equal(toggle.props['aria-checked'], false)
     assert.match(model.notices.at(-1), /操作失败.*模拟存储失败/u)
     model.props.onSetOption = async (...values) => model.options.push(values)
     await act(async () => view.update(React.createElement(SettingsRow, { ...model.props })))
-    await act(async () => view.root.findByProps({ role: 'switch' }).props.onClick())
+    await act(async () => view.root.findByProps({ 'aria-label': t('settings.enabled') }).props.onClick())
     assert.deepEqual(model.options, [['enabled', true]])
   } finally { await act(async () => view.unmount()) }
 })
@@ -238,7 +238,7 @@ test('书库未就绪或出错时原生控件禁用，不写设置', async () =>
     Object.assign(model.state, state)
     const view = await mount(model)
     try {
-      const toggle = view.root.findByProps({ role: 'switch' })
+      const toggle = view.root.findByProps({ 'aria-label': t('settings.enabled') })
       assert.equal(toggle.props.disabled, true)
       assert.equal(control(view, 'data-novel-import').props.disabled, true)
       assert.equal(menu(view, 'data-novel-type-select').props.items.every(item => item.disabled), true)
@@ -246,6 +246,19 @@ test('书库未就绪或出错时原生控件禁用，不写设置', async () =>
       assert.deepEqual(model.options, [])
     } finally { await act(async () => view.unmount()) }
   }
+})
+
+test('同一区域续读是默认关闭的设置项，开启后写入 continueOnReopen', async () => {
+  const model = setup()
+  const view = await mount(model)
+  try {
+    const toggle = view.root.findByProps({ 'aria-label': t('settings.continueOnReopen') })
+    assert.equal(toggle.props['aria-checked'], false)
+    assert.equal(view.root.findAllByType(HostSwitch).length, 2)
+    await act(async () => toggle.props.onClick())
+    assert.deepEqual(model.options.at(-1), ['continueOnReopen', true])
+    assert.equal(model.state.settings.continueOnReopen, true)
+  } finally { await act(async () => view.unmount()) }
 })
 
 test('中英文设置文案键一致，不再含位置选择翻译', () => {

@@ -575,3 +575,43 @@ test('end of book does not wrap and target settings contain no passage binding',
   assert.equal(Object.hasOwn(store.getSettingsSnapshot(), 'targets'), false)
   assert.equal(Object.hasOwn(storage.settings, 'targets'), false)
 })
+
+test('续读设置默认关闭、按布尔归一化，未知设置项仍被拒绝', async () => {
+  const { store } = makeStore()
+  await store.ready
+  assert.equal(store.getSettingsSnapshot().continueOnReopen, false)
+  await store.setOption('continueOnReopen', 'yes')
+  assert.equal(store.getSettingsSnapshot().continueOnReopen, true)
+  await store.setOption('continueOnReopen', 0)
+  assert.equal(store.getSettingsSnapshot().continueOnReopen, false)
+  await assert.rejects(() => store.setOption('unknown', true), /未知设置项/u)
+  store.dispose()
+})
+
+test('claimPassage 保留该区域已读段，continuePassage 才在同一区域推进', async () => {
+  const { store, storage } = makeStore()
+  await store.ready
+  assert.equal((await store.claimPassage('A')).passage.text, 'A')
+  assert.equal((await store.claimPassage('A')).passage.text, 'A', '重复展开仍显示这一页')
+  assert.equal((await store.continuePassage('A')).passage.text, 'B')
+  assert.equal(storage.books.get('book-a').progress, 2)
+  assert.equal((await store.claimPassage('A')).passage.text, 'B', '关闭续读后显示该区域最后读到的段落')
+  assert.equal((await store.continuePassage('A')).passage.text, 'C')
+  assert.equal(storage.books.get('book-a').progress, 3)
+  assert.equal((await store.continuePassage('A')).kind, 'end')
+  assert.equal((await store.continuePassage('A')).kind, 'end', '读完后不再推进')
+  store.dispose()
+})
+
+test('continuePassage 对未读区域等同首次读取，并遵守停读与切书', async () => {
+  const { store, storage } = makeStore()
+  await store.ready
+  assert.equal((await store.continuePassage('A')).passage.text, 'A')
+  await store.setOption('enabled', false)
+  assert.equal((await store.continuePassage('A')).kind, 'empty')
+  assert.equal(storage.books.get('book-a').progress, 1, '停读后续读不再推进进度')
+  await store.setOption('enabled', true)
+  await store.selectBook('book-b')
+  assert.equal((await store.continuePassage('A')).passage.text, 'X', '切书后从新书自己的进度续读')
+  store.dispose()
+})

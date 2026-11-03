@@ -98,6 +98,23 @@ export function registerChatAdapter(ctx, store, React, locale) {
       }
     }
 
+    // Streaming text mutates the DOM far more often than a frame; merge observer
+    // bursts into one scan so a long session cannot turn every token into a full
+    // rescan. Settings/passage updates still refresh immediately.
+    let queued = null
+    const coalescedRefresh = () => {
+      if (!queued) return
+      queued = null
+      if (!disposed) refresh()
+    }
+    const scheduleRefresh = () => {
+      if (queued) return
+      const entry = { frame: null }
+      queued = entry
+      if (view?.requestAnimationFrame) entry.frame = view.requestAnimationFrame(coalescedRefresh)
+      else queueMicrotask(coalescedRefresh)
+    }
+
     const activate = event => {
       if (!event.isTrusted || event.defaultPrevented) return
       if (event.type === 'keydown' && (event.repeat || !['Enter', ' '].includes(event.key))) return
@@ -125,13 +142,14 @@ export function registerChatAdapter(ctx, store, React, locale) {
         if (!disposed && toggle.isConnected && toggle.getAttribute('aria-expanded') === 'true'
           && current.enabled && current.currentBookId === bookId && isTarget(current, currentId)
           && store.cacheGeneration === intent.generation && readingKey(currentId) === intent.key) {
-          void store.claimPassage(readingKey(id), id.type)
+          if (current.continueOnReopen === true) void store.continuePassage(readingKey(id), id.type)
+          else void store.claimPassage(readingKey(id), id.type)
         }
       }
       if (view?.requestAnimationFrame) intent.frame = view.requestAnimationFrame(verify)
       else queueMicrotask(verify)
     }
-    const observer = new MutationObserver(refresh)
+    const observer = new MutationObserver(scheduleRefresh)
     observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true,
       attributeFilter: ['data-shimmer-text', 'aria-expanded', 'data-tool', 'data-state'] })
     document.addEventListener('click', activate, true)
@@ -144,6 +162,8 @@ export function registerChatAdapter(ctx, store, React, locale) {
       observer.disconnect(); stopSettings(); stopPassages()
       document.removeEventListener('click', activate, true)
       document.removeEventListener('keydown', activate, true)
+      if (queued && queued.frame !== null && view?.cancelAnimationFrame) view.cancelAnimationFrame(queued.frame)
+      queued = null
       for (const intent of pending.values()) if (intent.frame !== null) view.cancelAnimationFrame(intent.frame)
       pending.clear()
       for (const root of decorated.keys()) restore(root)

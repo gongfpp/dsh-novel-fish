@@ -34,6 +34,8 @@
     "allTypes": "全选",
     "clearTypes": "取消全选",
     "typeHint": "首次主动展开另一个区域才续读；空选时不读取。",
+    "continueOnReopen": "同一区域再次展开续读",
+    "continueOnReopenHint": "开启后，收起再主动展开同一区域会接着读下一段；关闭时重复展开只显示这一段。",
     "books": "书籍",
     "importBook": "导入书籍",
     "reading": "聊天内阅读",

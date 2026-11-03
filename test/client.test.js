@@ -63,10 +63,11 @@ test('构建产物只在本包详情注册设置，复用宿主 Switch 与原有
       useNovelUi: select => select(React.useSyncExternalStore(injected.hooks.novelUi.subscribe, injected.hooks.novelUi.getSnapshot)),
     }
     await act(async () => { view = TestRenderer.create(React.createElement(own.Component, props)) })
-    assert.equal(view.root.findByType(HostSwitch).props.checked, false)
+    const enabledSwitch = () => view.root.findAllByType(HostSwitch).find(node => node.props.label === 'settings.enabled')
+    assert.equal(enabledSwitch().props.checked, false)
     assert.equal(source.getSnapshot().books[0].progress, 1)
     await act(async () => { await injected.onSetOption('enabled', true) })
-    assert.equal(view.root.findByType(HostSwitch).props.checked, true)
+    assert.equal(enabledSwitch().props.checked, true)
     const saved = await storage.load()
     assert.equal(saved.settings.enabled, true)
     assert.equal(saved.settings.currentBookId, book.id)

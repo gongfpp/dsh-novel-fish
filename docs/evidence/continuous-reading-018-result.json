@@ -1,0 +1,44 @@
+{
+  "candidate": "@gongfpp/dsh-novel-fish@0.1.8",
+  "date": "2026-11-03",
+  "hostVersionUsed": "0.2.2-alpha.2",
+  "automated": {
+    "command": "pnpm verify",
+    "tests": 110,
+    "pass": 109,
+    "fail": 0,
+    "skip": 1,
+    "skipReason": "real-host integration needs HOST_ROOT"
+  },
+  "hostProbe": {
+    "command": "HOST_ROOT=<installed dsh> node scripts/check-host-contracts.mjs",
+    "ok": true,
+    "checks": [
+      "static host markers and bundle-config seat",
+      "real SlotCore registrations",
+      "real ReasoningRow / DisclosureRow / TextShimmer",
+      "untrusted-event guard",
+      "real body Factory props and settings primitives",
+      "restore on disable",
+      "adapter anchors for title layers and fold state"
+    ],
+    "claims": 0
+  },
+  "changedBehavior": [
+    "settings: continueOnReopen, default off; only a trusted reopen advances the same region",
+    "store: continuePassage advances in place while claimPassage keeps the cached page",
+    "adapter: MutationObserver bursts merged into one frame or microtask rescan"
+  ],
+  "browserPageRefreshed": false,
+  "installedProfileVersion": "0.1.7 (client code of this candidate is not installed)",
+  "userBookStorageAccessed": false,
+  "notVerified": [
+    "real browser rendering and trusted click/keyboard/hover",
+    "presentation mode switch, turn-process fold/reset and virtualized remount",
+    "the new settings switch in a real page"
+  ],
+  "tarballSha256": "33ee86fa2beb4933073a15f773d642308ce0f498cd0edfbb3d9e846b300c477a",
+  "tarballBytes": 1415951,
+  "libClientSha256": "edcec4efccacbfddf598151371e3cbb5ca46a158484a0ff91c5dd20bb29f6689",
+  "tarballNote": "dist/gongfpp-dsh-novel-fish-0.1.8.tgz was packed before this record was written, so the copy inside the tarball does not carry these fields; the sha256/bytes/libClientSha256 above match the file in dist/. Re-packing after this edit would change the sha."
+}

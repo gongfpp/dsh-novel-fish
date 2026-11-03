@@ -10,6 +10,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   targetTypes: Object.freeze(['reasoning']),
   mainTitle: '',
   extraTitle: '',
+  continueOnReopen: false,
 })
 
 const EMPTY_STATUS = Object.freeze({ kind: 'empty' })
@@ -76,15 +77,17 @@ export class NovelStore {
   }
 
   async setOption(key, value) {
-    if (!['enabled', 'targetTypes', 'mainTitle', 'extraTitle'].includes(key)) throw new Error('未知设置项')
+    if (!['enabled', 'targetTypes', 'mainTitle', 'extraTitle', 'continueOnReopen'].includes(key)) throw new Error('未知设置项')
     let normalized
     if (key === 'targetTypes') {
       if (!Array.isArray(value) || value.some(type => !TARGET_TYPES.includes(type)) || new Set(value).size !== value.length) {
         throw new Error('阅读类型必须是有效且不重复的类型数组')
       }
       normalized = Object.freeze([...value])
+    } else if (key === 'enabled' || key === 'continueOnReopen') {
+      normalized = Boolean(value)
     } else {
-      normalized = key === 'enabled' ? Boolean(value) : String(value)
+      normalized = String(value)
     }
     // Invalidate at intent time, not after a queued settings write finishes.
     // Any type update also covers removals from settings writes still in flight.
@@ -142,7 +145,22 @@ export class NovelStore {
     })
   }
 
+  /** Reopening a region shows the passage it already holds; a first expansion reads the next one. */
   async claimPassage(stepKey, targetType = 'reasoning') {
+    return this.#readPassage(stepKey, targetType, false)
+  }
+
+  /**
+   * Same contract as claimPassage, except a region that already shows a passage
+   * advances to the next one. Only an explicit reopen can reach this path, so a
+   * repeated expansion still cannot paginate by accident while long reads
+   * continue inside the same native row.
+   */
+  async continuePassage(stepKey, targetType = 'reasoning') {
+    return this.#readPassage(stepKey, targetType, true)
+  }
+
+  async #readPassage(stepKey, targetType, advance) {
     if (this.disposed) return EMPTY_STATUS
     const generation = this.cacheGeneration
     const requestKey = `${generation}\u0000${targetType}\u0000${stepKey}`
@@ -156,7 +174,8 @@ export class NovelStore {
       bookId = this.state.settings.currentBookId
       if (!bookId) return EMPTY_STATUS
       const existing = this.getPassageStatus(bookId, stepKey)
-      if (existing.kind === 'ready' || existing.kind === 'end') return existing
+      if (existing.kind === 'end') return existing
+      if (!advance && existing.kind === 'ready') return existing
       const book = this.state.books.find(item => item.id === bookId)
       if (!book || book.progress >= book.segmentCount) {
         return this.#writePassageStatus(bookId, stepKey, { kind: 'end', bookId })

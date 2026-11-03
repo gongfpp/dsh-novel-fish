@@ -34,8 +34,8 @@ function installDom(dom) {
 function adapterFixture(content = thought('node-a'), session = 'session-a') {
   const dom = new JSDOM(`<body><div data-conversation-session="${session}">${content}</div></body>`)
   const restoreDom = installDom(dom)
-  let settings = { enabled: true, currentBookId: 'book', targetTypes: ['reasoning'], mainTitle: '思考', extraTitle: 'Checking project structure' }
-  const claims = [], types = [], effects = [], actions = {}
+  let settings = { enabled: true, currentBookId: 'book', targetTypes: ['reasoning'], mainTitle: '思考', extraTitle: 'Checking project structure', continueOnReopen: false }
+  const claims = [], continues = [], types = [], effects = [], actions = {}
   const statuses = new Map()
   let passagesChanged
   const add = document.addEventListener.bind(document)
@@ -48,10 +48,11 @@ function adapterFixture(content = thought('node-a'), session = 'session-a') {
     subscribePassages: callback => { passagesChanged = callback; return () => {} },
     getPassageStatus: (_book, key) => statuses.get(key) ?? ({ kind: 'empty' }),
     claimPassage: (key, type) => { claims.push(key); types.push(type); return Promise.resolve() },
+    continuePassage: (key, type) => { continues.push(key); types.push(type); return Promise.resolve() },
   }
   const ctx = { slots: { inject: (_key, fn) => fn(), register: () => () => {} }, effect: fn => { effects.push(fn()) } }
   return {
-    dom, claims, types, actions, start: () => registerChatAdapter(ctx, store, React, 'novel'),
+    dom, claims, continues, types, actions, start: () => registerChatAdapter(ctx, store, React, 'novel'),
     passage: (key, status) => { statuses.set(key, status); passagesChanged() },
     invalidate: () => { store.cacheGeneration += 1 },
     settings: patch => { settings = { ...settings, ...patch }; settingsChanged() },
@@ -372,4 +373,61 @@ test('native thought remains visible when its DOM identity is unavailable', asyn
     assert.match(JSON.stringify(view.toJSON()), /REAL THOUGHT BEFORE IDENTITY/u)
     assert.equal(view.root.findAllByProps({ 'data-novel-append': true }).length, 0)
   } finally { await act(async () => view?.unmount()); dom.window.close() }
+})
+
+test('默认关闭续读时同一区域重复主动展开仍走缓存 claim', async () => {
+  const f = adapterFixture(thought('node-a'))
+  try {
+    f.start()
+    const header = document.querySelector('[data-disclosure-row]')
+    for (let index = 0; index < 2; index += 1) {
+      header.setAttribute('aria-expanded', 'false')
+      f.actions.click(trustedClick(header))
+      header.setAttribute('aria-expanded', 'true')
+      await settle()
+    }
+    assert.equal(f.continues.length, 0)
+    assert.deepEqual(f.claims, [readingKey('session-a', 'node-a'), readingKey('session-a', 'node-a')])
+  } finally { f.close() }
+})
+
+test('开启续读后同一区域主动展开改为继续下一段，非可信事件仍不读', async () => {
+  const f = adapterFixture(thought('node-a'))
+  try {
+    f.start()
+    f.settings({ continueOnReopen: true })
+    const header = document.querySelector('[data-disclosure-row]')
+    header.setAttribute('aria-expanded', 'false')
+    f.actions.click({ ...trustedClick(header), isTrusted: false })
+    header.setAttribute('aria-expanded', 'true')
+    await settle()
+    assert.equal(f.continues.length, 0, '未验证的用户事件不推进阅读')
+    for (let index = 0; index < 2; index += 1) {
+      header.setAttribute('aria-expanded', 'false')
+      f.actions.click(trustedClick(header))
+      header.setAttribute('aria-expanded', 'true')
+      await settle()
+    }
+    assert.deepEqual(f.continues, [readingKey('session-a', 'node-a'), readingKey('session-a', 'node-a')])
+    assert.equal(f.claims.length, 0)
+  } finally { f.close() }
+})
+
+test('流式文本和属性变更在同一帧内只合并成一次重扫', async () => {
+  const f = adapterFixture(thought('node-a'))
+  const frames = []
+  let cancelled = 0
+  f.dom.window.requestAnimationFrame = callback => { frames.push(callback); return frames.length }
+  f.dom.window.cancelAnimationFrame = () => { cancelled += 1 }
+  try {
+    f.start()
+    const title = document.querySelector('.native-title')
+    for (let index = 0; index < 4; index += 1) title.firstChild.nodeValue = `stream ${index}`
+    document.querySelector('[data-disclosure-row]').setAttribute('data-state', 'open')
+    await settle()
+    assert.equal(frames.length, 1, '一帧内的多次变更共享一次刷新，而不是每个 token 全量扫描')
+    frames[0]()
+    assert.equal(title.textContent, '思考')
+    assert.equal(cancelled, 0)
+  } finally { f.close() }
 })
