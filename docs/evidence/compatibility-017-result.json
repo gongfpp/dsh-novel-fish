@@ -1,0 +1,48 @@
+{
+  "date": "2026-11-02",
+  "candidate": "@gongfpp/dsh-novel-fish@0.1.7",
+  "hostRange": ">=0.2.1-rc.2 <=0.2.2-alpha.2",
+  "published": false,
+  "sourceBehaviorChanged": false,
+  "rootCause": "Previous metadata rejected alpha.2 before the otherwise matching client contracts could load.",
+  "regression": {
+    "command": "HOST_ROOT=<installed-alpha.2-package-root> pnpm verify",
+    "tests": 103,
+    "passed": 103,
+    "failed": 0,
+    "skipped": 0
+  },
+  "hostMatrix": [
+    { "host": "0.2.1-rc.2", "checks": 6, "passed": true, "untrustedExpansionBookProgress": 0 },
+    { "host": "0.2.1-rc.3", "checks": 6, "passed": true, "untrustedExpansionBookProgress": 0 },
+    { "host": "0.2.1-rc.4", "checks": 6, "passed": true, "untrustedExpansionBookProgress": 0 },
+    { "host": "0.2.1-rc.5", "checks": 6, "passed": true, "untrustedExpansionBookProgress": 0 },
+    { "host": "0.2.2-alpha.2", "checks": 6, "passed": true, "untrustedExpansionBookProgress": 0 }
+  ],
+  "matrixMethod": "JSDOM loading each shipped frontend's actual React, SlotCore and primitives; actual registerChatNodeRenderers and current plugin apply; in-memory IndexedDB only.",
+  "historicalArtifactIntegrity": "28 npm tarballs verified against registry SHA-512 integrity; alpha.2 used existing local installation.",
+  "install": {
+    "profile": "web",
+    "previous": "0.1.6 (local rc5 worktree link)",
+    "version": "0.1.7",
+    "source": "dist/gongfpp-dsh-novel-fish-0.1.7.tgz",
+    "tarballSha256": "64ed34e0bfc471a47e89f88fa5d3e1796071d722ca6b985c6d1e144adc7d5cd8",
+    "managerApplication": "applied",
+    "warnings": [],
+    "installedClientMatchesRebuiltClient": true,
+    "unrelatedProfileMetadataUnchanged": true,
+    "userPatchUnchanged": true,
+    "versionExemptionGranted": false,
+    "userBookStorageAccessed": false,
+    "browserPageRefreshed": false
+  },
+  "limitations": [
+    "Not all past/future DSH versions are supported; range is bounded to inspected published versions.",
+    "JSDOM is not a real browser and proves no trusted click, keyboard, hover, layout, focus or animation behavior.",
+    "Outer chat.node/config seats are statically checked then bridged; full host boot/apply and UI renderer are not started.",
+    "Tool/Bash DOM markers are statically checked, not rendered; settings menus and modal are closed.",
+    "Display-mode changes, turn-process collapse/reset and virtualization require additional full-browser integration acceptance.",
+    "Local tgz installation does not participate in third-party npm update detection; public npm/GitHub/index publishing was not performed.",
+    "An unrelated installed dsh-subagent-codex rc.2 remains incompatible with alpha.2 and was not modified."
+  ]
+}
