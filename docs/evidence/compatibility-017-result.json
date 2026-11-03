@@ -26,7 +26,9 @@
     "previous": "0.1.6 (local rc5 worktree link)",
     "version": "0.1.7",
     "source": "dist/gongfpp-dsh-novel-fish-0.1.7.tgz",
-    "tarballSha256": "64ed34e0bfc471a47e89f88fa5d3e1796071d722ca6b985c6d1e144adc7d5cd8",
+    "tarballSha256": "33fd76323275862947e7aaba889a0f8d00525502009a6358890d33dcf1b00fb0",
+    "tarballBytes": 1411515,
+    "repackNote": "Repacked after adding the live-slot verification record; lib/client.js is unchanged (6d738419476fac97a0ae912cae38a12e8eb3789168f4baa31ed948273736aa44), so the installed 0.1.7 client still matches this build.",
     "managerApplication": "applied",
     "warnings": [],
     "installedClientMatchesRebuiltClient": true,
@@ -35,6 +37,21 @@
     "versionExemptionGranted": false,
     "userBookStorageAccessed": false,
     "browserPageRefreshed": false
+  },
+  "liveSlotInspection": {
+    "date": "2026-11-03",
+    "host": "0.2.2-alpha.2",
+    "method": "Client Inspect Slots.listSubTree on conversation.chat.reasoning.body, plus plugins.bundle.config seat, on the DSH page already running in the user profile.",
+    "reasoningBodyOccupants": [
+      { "registrant": "novel-fish client (priority -10)", "priority": -10, "active": true },
+      { "registrant": "official body (priority 100)", "priority": 100, "active": false }
+    ],
+    "ownerProps": ["text", "running"],
+    "configSeatActive": true,
+    "browserLaunchedByAgent": false,
+    "userProfileRead": false,
+    "pageModified": false,
+    "note": "Proves the 0.1.7 client loaded and replaced the reasoning body slot in the live page; does not prove rendered layout, trusted interaction or passage claiming."
   },
   "limitations": [
     "Not all past/future DSH versions are supported; range is bounded to inspected published versions.",
