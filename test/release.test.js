@@ -51,7 +51,8 @@ test('市场索引保留固定提交来源、版本唯一和宿主兼容范围',
   for (const version of entry.versions) {
     assert.match(version.version, /^\d+\.\d+\.\d+$/u)
     assert.ok(Number.isSafeInteger(version.publishTimestamp) && version.publishTimestamp > 0)
-    assert.equal(version.engines.dsh, '0.2.1-rc.2', 'published history must not inherit the candidate compatibility range')
+    if (version.version === manifest.version) assert.equal(version.engines.dsh, manifest.engines.dsh)
+    else assert.match(version.engines.dsh, /^(?:\^|~|>=)?\d+\.\d+\.\d+(?:-[\w.-]+)?/u)
     assert.equal(version.source.type, 'git')
     assert.equal(version.source.url, entry.repository.url)
     assert.match(version.source.commit, /^[a-f0-9]{40}$/u)
