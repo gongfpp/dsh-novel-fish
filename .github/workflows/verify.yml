@@ -23,3 +23,27 @@ jobs:
       - name: Check committed browser bundle and notices
         run: git diff --exit-code -- lib/client.js THIRD-PARTY-NOTICES.txt
       - run: pnpm pack --pack-destination /tmp/novel-fish-package
+
+  host-contracts:
+    runs-on: ubuntu-latest
+    env:
+      # Pinned DSH build the compatibility matrix claims. Bump together with
+      # engines.dsh and docs/compatibility-017.md when the host changes.
+      DSH_HOST_VERSION: 0.2.2-alpha.2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+      - run: npm install --global pnpm@12.11.2
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: dsh-host-${{ env.DSH_HOST_VERSION }}
+      - name: Install pinned DSH host for the contract probe
+        run: npm install --prefix "$RUNNER_TEMP/host" "@deepseek-ai/dsh@$DSH_HOST_VERSION" --ignore-scripts --no-audit --no-fund
+      - name: Run the read-only host contract probe
+        run: HOST_ROOT="$RUNNER_TEMP/host/node_modules/@deepseek-ai/dsh" node scripts/check-host-contracts.mjs
+      - name: Assert the probe checklist
+        run: HOST_ROOT="$RUNNER_TEMP/host/node_modules/@deepseek-ai/dsh" node --test test/host-contracts.test.js

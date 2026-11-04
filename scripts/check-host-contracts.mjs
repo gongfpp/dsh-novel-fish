@@ -2,6 +2,7 @@
 // Read-only, offline probe of an installed DSH build. No server or user profile.
 // Usage: node scripts/check-host-contracts.mjs /absolute/path/to/@deepseek-ai/dsh
 import assert from 'node:assert/strict'
+import { existsSync } from 'node:fs'
 import { readFile, readdir } from 'node:fs/promises'
 import { isAbsolute, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -27,7 +28,13 @@ let dom
 try {
   assert.ok(host && isAbsolute(host), 'Pass an absolute DSH installation path (or HOST_ROOT).')
   report.hostVersion = JSON.parse(await read(join(host, 'package.json'))).version
-  const packageDir = name => join(host, 'node_modules/@deepseek-ai', `dsh-${name}`)
+  // Global installs nest the client packages under the dsh package, while a plain
+  // `npm install @deepseek-ai/dsh` hoists them next to it. Accept both layouts.
+  const siblingScope = dirname(host)
+  const packageDir = name => {
+    const nested = join(host, 'node_modules/@deepseek-ai', `dsh-${name}`)
+    return existsSync(nested) ? nested : join(siblingScope, `dsh-${name}`)
+  }
   const client = name => read(join(packageDir(name), 'lib/client.js'))
   const [chat, tool, conversation, manager] = await Promise.all([
     client('client-ui-chat'), client('client-ui-tool'), client('client-ui-conversation'), client('client-ui-plugin-manager'),
