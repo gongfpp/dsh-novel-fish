@@ -48,7 +48,7 @@
 GitHub 固定版本安装：
 
 ```sh
-dsh plugin --profile web add github:gongfpp/dsh-novel-fish#v0.2.1
+dsh plugin --profile web add github:gongfpp/dsh-novel-fish#v1.0.0
 ```
 
 也可以从 [发布页](https://github.com/gongfpp/dsh-novel-fish/releases) 下载 `gongfpp-dsh-novel-fish-1.0.0.tgz` 后离线安装：

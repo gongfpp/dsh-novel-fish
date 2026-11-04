@@ -1,5 +1,18 @@
 # 公开发布记录
 
+## 1.0.0：功能定稿与面向用户的发布（2026-11-04）
+
+- 范围：1.0 按 0.2.0 的功能基线定稿，阅读行为（书库、区域类型多选、进度记忆、跨区域续读、同一区域续读开关、标题自定义）此后不再改动；本版只做验证覆盖、文档与发布收敛。0.2.1 的图标元信息修正继续沿用（512×512、62056 字节、显式 `icon` 字段）。
+- 交互路径补验：在运行中的 `127.0.0.1:3080` 实例、独立临时浏览器 profile 上，用可信事件补验了鼠标点击、悬停、键盘 Enter、触屏点按与拖动滚动、展示模式（`transcriptView` 各档位与 `collapseTiming`）、过程分组折叠与重新展开。结论：各路径的追加、折叠与去重行为一致；过程分组折叠时附录随成员一起隐藏，重新展开后宿主会重置逐行展开状态，插件只保证同一步骤重新展开返回同一段、不重复领取。记录见 [真实页面交互验收](interaction-paths-020.md)。
+- 宿主契约探针进 CI：`verify.yml` 新增 `host-contracts` 作业，安装固定版本宿主（`DSH_HOST_VERSION=0.2.2-alpha.2`）后运行 7 项探针，兼容全局嵌套与 npm 提升两种安装布局；首次运行 1 分 10 秒通过，`verify` 15 秒通过。
+- 文档与素材：README 重写为面向普通用户的说明（横幅、阅读效果、设置页截图、安装步骤、常见问题、兼容与限制），新增 `docs/evidence/banner-100.png`、`reading-demo-100.png`、`settings-100.png`；截图来自演示书 `骆驼祥子·节选` 与演示会话，不含账号、额度、私人会话或本机绝对路径。
+- 校验：带 `HOST_ROOT` 的 `pnpm verify` 为 110 项测试、110 通过、0 失败、0 跳过（含真实宿主集成）；不带 `HOST_ROOT` 为 110 项、109 通过、1 跳过。`build` 后 `lib/client.js` 无变化。
+- [GitHub Release v1.0.0](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v1.0.0) 于 `2026-11-04T15:11:11Z` 公开（tag 指向源码提交 `248d3b4fd1a891d18d8fe683cf43d4c0eaf27967`，非 prerelease）。附件：安装包 `gongfpp-dsh-novel-fish-1.0.0.tgz`（SHA-256 `99161880f0863bfc5b8032c54c50a2f4fd81a40331306d3245d4045d4f7191f1`，1970426 字节）、源码 ZIP `dsh-novel-fish-source-1.0.0.zip`（SHA-256 `c7c63152f5ee5f3da66a37bfde0de236c07b86944d6be984186e583e6e98a004`，2011207 字节）、`SHA256SUMS.txt`；tgz 匿名下载 HTTP 200。
+- 索引条目：`version` 1.0.0、`publishTimestamp` 1793805071、`engines.dsh` 与包内声明一致（`>=0.2.1-rc.2 <=0.2.2-alpha.2`）、`source.commit` 固定为 `248d3b4fd1a891d18d8fe683cf43d4c0eaf27967`；`docs/marketplace.md` 推荐版本同步为 1.0.0。
+- **npm 未发布 1.0.0。** 本机没有 npm 登录态（`npm whoami` 返回 `ENEEDAUTH`，`npm publish` 在 `total files: 86` 后以 `ENEEDAUTH` 失败），`latest` 仍为 `0.1.6`。补发需要在源码提交 `248d3b4` 上用一个具备 publish 权限的 token（账号 2FA 下需 Bypass 2FA）发布，再更新本节与索引的 `publishTimestamp`。
+- 真实页面：1.0.0 安装包已替换 web profile 中原有的 0.2.1，客户端热替换后详情页显示 v1.0.0，宿主进程未重启。
+- 安装包在本节记录写入前打包，包内 `docs/**` 是 `248d3b4` 工作树的内容，不含本节与索引的前几行发布事实；对应关系以 SHA-256 为准。
+
 ## 0.2.1：修正插件图标元信息（2026-11-04）
 
 - 修复 0.2.0 插件管理页的「包元信息错误」：`assets/icon.png` 为 380984 字节（372 KiB），超过宿主 `MAX_ICON_BYTES`（256 KiB）上限；`package.json` 也没有显式 `icon` 字段，只有 `./icon` 导出。宿主读取元信息时会因超限或旧路径失效报错，插件卡片回退到默认图标。
