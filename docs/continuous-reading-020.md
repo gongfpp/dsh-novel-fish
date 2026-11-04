@@ -2,7 +2,7 @@
 
 ## 范围与状态
 
-本地候选版：`@gongfpp/dsh-novel-fish@0.2.0`。公开 npm、GitHub Release 和市场索引尚未发布本版。
+已发布：GitHub Release [v0.2.0](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.2.0)（2026-11-04）。npm 尚未发布 0.2.0；自建市场索引已收录。
 
 本版包含 0.1.7 的 alpha.2 兼容修正（0.1.7 未单独发布，兼容矩阵与限制见 [0.1.7 宿主兼容验证](compatibility-017.md)），以及本轮两组改动：同一区域续读、宿主 DOM 观察的帧合并。宿主范围仍为 `>=0.2.1-rc.2 <=0.2.2-alpha.2`，不因本轮改动扩大或缩小。
 

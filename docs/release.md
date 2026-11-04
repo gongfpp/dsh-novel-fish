@@ -9,6 +9,11 @@
 - 真实页面验收：在运行中的 127.0.0.1:3080 实例上，用独立临时浏览器 profile 先以 0.1.7 得到第 1 段基线，再安装 0.2.0 候选包；页面未刷新即完成客户端热更新（timeOrigin、会话与展开状态不变），插件详情页版本更新，服务 PID 97856 未重启。续读开关默认关闭，开启后同一区域依次得到第 2、3、4 段；关闭后重复展开保持第 4 段；另一区域读到第 5 段；进度保留。证据见 [0.2.0 验收证据](evidence/continuous-reading-020-result.json)。
 - 尚未验证：真实聊天中的键盘、悬停、触屏展开路径，展示模式切换与 turn-process 折叠 reset，虚拟化重挂载，以及用户已打开的浏览器标签页。
 
+- [GitHub Release v0.2.0](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.2.0) 于 `2026-11-04T02:33:32Z` 公开（tag 指向源码提交 `e4fd3675bc6629cd7da141d036389d41270be9d2`，非 prerelease）。附件：安装包 `gongfpp-dsh-novel-fish-0.2.0.tgz`（SHA-256 `739073aa3810066ba68a71083d0e8001c58c62469160fe7979774147939752b6`，1802222 字节）、源码 ZIP `dsh-novel-fish-source-0.2.0.zip`（SHA-256 `c857e1b6ae802cc5ddfec1f34bb35bf0792cd77db673843d589779cc8b03a405`）、`SHA256SUMS.txt`；三个附件匿名下载均 HTTP 200。
+- 索引条目 `source.commit` 固定为 `e4fd3675bc6629cd7da141d036389d41270be9d2`；0.2.0 条目的 `engines.dsh` 与包内声明一致（`>=0.2.1-rc.2 <=0.2.2-alpha.2`），已发布的历史条目保留各自当时的声明，不追溯改写。
+- **npm 未发布 0.2.0。** 本机没有 npm 登录态；账号 2FA 下发布需要上一版记录的 90 天 Bypass 2FA granular token。npm `latest` 仍为 `0.1.6`。补发时需在源码提交 `e4fd367` 上 `npm publish`，再同步更新 `index.json` 的 `publishTimestamp` 与本节记录。
+- 安装包在本节记录写入前打包，因此包内 `docs/**` 是 `e4fd367` 工作树的内容，不含最后几行发布事实；安装包与 registry/附件对应关系以 SHA-256 为准。
+
 ## 0.1.6 宿主兼容区间与 npm 同步（2026-11-03）
 
 - 改动只有兼容声明：`engines.dsh` 从精确 `0.2.1-rc.2` 改为区间 `>=0.2.1-rc.2 <0.3.0-0`，使 rc.3 及之后的 0.2.x 宿主能通过 preflight。阅读行为、书库、进度和浏览器 bundle 未变。
