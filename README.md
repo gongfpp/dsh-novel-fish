@@ -57,7 +57,13 @@ dsh plugin --profile web add github:gongfpp/dsh-novel-fish#v1.0.0
 dsh plugin --profile web add ./gongfpp-dsh-novel-fish-1.0.0.tgz
 ```
 
-`web` 是 profile 名称，用别的 profile 时替换。npm 上的 `latest` 还停在 0.1.6（旧版本行为），想用新版本请走 GitHub 固定版本或发布页安装包。
+`web` 是 profile 名称，用别的 profile 时替换。
+
+也可以从 npm 安装固定版本：
+
+```sh
+dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.0.0
+```
 
 ## 常见问题
 
