@@ -1,6 +1,6 @@
 {
   "name": "@gongfpp/dsh-novel-fish",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/gongfpp/dsh-novel-fish.git"
@@ -18,6 +18,7 @@
   ],
   "author": "gongfpp",
   "description": "多选原生思考与工具区域，主动展开时保留原文并以分隔线追加本地小说；不改会话、不发送给模型。",
+  "icon": "./assets/icon.png",
   "type": "module",
   "exports": {
     ".": "./index.js",
