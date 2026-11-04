@@ -22,3 +22,18 @@
 ## 探针进 CI
 
 `.github/workflows/verify.yml` 新增 `host-contracts` 任务：安装固定版本 `@deepseek-ai/dsh@0.2.2-alpha.2`（`--ignore-scripts`），用 `HOST_ROOT` 跑 `scripts/check-host-contracts.mjs` 与 `test/host-contracts.test.js`。探针原本只认全局安装的嵌套布局，现在同时兼容 `npm install` 的提升布局（`existsSync` 判断，同级 `@deepseek-ai` 目录兜底）。首次运行 `host-contracts` 1m10s 通过，`verify` 15s 通过。
+
+## 展示模式与过程分组折叠
+
+补验日期：2026-11-04。沿用同一 headless Chrome + 临时 profile；宿主的聊天展示设置是服务端 `ui-chat` 命名空间，先读基线值，再临时改档位观察页面，最后按原值写回。
+
+| 场景 | 观察 |
+| --- | --- |
+| 工作步骤展示 `transcriptView` 依次设为 `compact`、`verbose`、`expanded`、`standard`，再取消设置回到默认 | 已追加的小说段落一直保留，行仍是展开状态；没有新增 `data-novel-append`，也没有重复领取；取消设置后值与基线一致。改档位会让宿主重渲染行，插件按同一步骤标识恢复原段落。 |
+| 收起时机 `collapseTiming` 从 `next-input` 临时改为 `completion` 再写回 | 已完成回合的折叠状态与已渲染段落都不变（该设置作用于之后新回合的折叠时机）；写回后用户值仍为 `next-input`。 |
+| 折叠整个回合的过程分组（`button[data-turn-process]` 由 `aria-expanded=true` 点成 `false`） | 117 个过程行和 2 处小说附录一起隐藏；再次展开后过程行恢复，但宿主重置了逐行展开状态，小说附录不自动重现。 |
+| 展开状态被重置后，重新主动展开曾读过的同一步骤 | 显示的是同一段（缓存命中，`小说 · 第1章…`），书进度没有前进，没有重复领取。 |
+
+需要说明的边界：逐行展开状态是宿主在重挂载时重置的，插件不篡改它；插件保证的是同一步骤重新展开时返回同一段而非新段。折叠分组后隐藏附录属于宿主分组行为，符合“隐藏行需先展开分组”的既有说明。`ui-chat` 设置是账号级、会实时作用到任何打开的页面，全部改动都在观察后立即按原值恢复；临时 profile 读完即删，没有触碰用户书库。
+
+仍未验证：不同窗口尺寸下的虚拟化重挂载，以及用户自己已打开浏览器标签页里的表现（需要用户在场操作）。
