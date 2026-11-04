@@ -22,7 +22,7 @@
   "exports": {
     ".": "./index.js",
     "./client": "./lib/client.js",
-    "./icon": "./assets/icon.svg",
+    "./icon": "./assets/icon.png",
     "./locale/*.json": "./locale/*.json",
     "./package.json": "./package.json"
   },
@@ -34,7 +34,7 @@
     "src/**",
     "scripts/**",
     "test/**",
-    "assets/icon.svg",
+    "assets/icon.png",
     "locale/*.json",
     "docs/**",
     "pnpm-lock.yaml",

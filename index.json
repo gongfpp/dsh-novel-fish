@@ -16,7 +16,7 @@
         "en": "Append a local novel passage after selected native thought or tool content on active expansion. Multi-select region types; no model requests.",
         "zh": "多选原生思考与工具区域，主动展开时保留原文，以分隔线追加章节和本地小说；不改会话、不发送给模型。"
       },
-      "icon": "./assets/icon.svg",
+      "icon": "./assets/icon.png",
       "author": "gongfpp",
       "homepage": "https://github.com/gongfpp/dsh-novel-fish#readme",
       "repository": { "url": "https://github.com/gongfpp/dsh-novel-fish" },

@@ -14,7 +14,7 @@ test('public package identity matches the Host patch and browser module', async 
   assert.ok((await read('cordis.patch.yml')).includes(`name: '${manifest.name}'`))
   assert.ok((await read('src/client.js')).includes(`const MODULE_ID = '${manifest.name}'`))
   assert.ok((await read('lib/client.js')).includes(manifest.name))
-  for (const path of ['./index.js', './lib/client.js', './assets/icon.svg', './locale/en.json', './locale/zh.json']) {
+  for (const path of ['./index.js', './lib/client.js', './assets/icon.png', './locale/en.json', './locale/zh.json']) {
     await access(new URL(path, root))
   }
 })
