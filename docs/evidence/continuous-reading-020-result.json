@@ -1,6 +1,6 @@
 {
-  "candidate": "@gongfpp/dsh-novel-fish@0.1.8",
-  "date": "2026-11-03",
+  "candidate": "@gongfpp/dsh-novel-fish@0.2.0",
+  "date": "2026-11-04",
   "hostVersionUsed": "0.2.2-alpha.2",
   "automated": {
     "command": "pnpm verify",
@@ -28,7 +28,7 @@
     "date": "2026-11-03",
     "hostVersion": "0.2.2-alpha.2",
     "method": "headless Chrome over CDP against the running http://127.0.0.1:3080 server, separate temporary browser profile",
-    "install": "plugin_manager install_bundle replaced the installed 0.1.7 file tarball with the 0.1.8 local tarball",
+    "install": "plugin_manager install_bundle replaced the installed 0.1.7 file tarball with the 0.1.8 candidate tarball; that build has the same lib/client.js as the 0.2.0 tarball, which only changes the version string and docs",
     "pageReloaded": false,
     "hmr": {
       "clientArtifact": "@gongfpp/dsh-novel-fish/client.js",
@@ -48,7 +48,8 @@
     ],
     "evidenceType": "DOM assertions; screenshots contained personal data (balance, avatar, session titles) and were not committed",
     "userBrowserTabInspected": false,
-    "userBookStorageAccessed": false
+    "userBookStorageAccessed": false,
+    "panelVersionNote": "The plugin panel showed 0.1.8 because that candidate build was installed; 0.2.0 renames the same runtime code."
   },
   "changedBehavior": [
     "settings: continueOnReopen, default off; only a trusted reopen advances the same region",
@@ -56,7 +57,7 @@
     "adapter: MutationObserver bursts merged into one frame or microtask rescan"
   ],
   "browserPageRefreshed": false,
-  "installedProfileVersion": "0.1.8",
+  "installedProfileVersion": "0.1.8 candidate (0.2.0 = same lib/client.js, version string and docs only)",
   "userBookStorageAccessed": false,
   "notVerified": [
     "keyboard, hover and touch expand paths",
@@ -64,8 +65,8 @@
     "virtualized remount",
     "the user's own already-open browser tab (this run used a separate temporary profile)"
   ],
-  "tarballSha256": "9d2c7b99285a0c292d7289d60ff08a7961ea49f0b03a9f0a17ec84a85daaf20f",
-  "tarballBytes": 1417337,
+  "tarballSha256": "739073aa3810066ba68a71083d0e8001c58c62469160fe7979774147939752b6",
+  "tarballBytes": 1802222,
   "libClientSha256": "edcec4efccacbfddf598151371e3cbb5ca46a158484a0ff91c5dd20bb29f6689",
-  "tarballNote": "dist/gongfpp-dsh-novel-fish-0.1.8.tgz was packed before this record was written, so the copy inside the tarball does not carry these fields; the sha256/bytes/libClientSha256 above match the file in dist/. Re-packing after this edit would change the sha."
+  "tarballNote": "dist/gongfpp-dsh-novel-fish-0.2.0.tgz was packed before this record was written, so the copy inside the tarball does not carry these fields; the sha256/bytes/libClientSha256 above match that file. Re-packing after later doc edits would change the sha; the tarball handed to the release is the one these values describe."
 }

@@ -2,7 +2,7 @@
 
 ## 范围与状态
 
-本地候选版：`@gongfpp/dsh-novel-fish@0.1.7`。公开 npm、GitHub Release 和市场索引尚未发布本版；0.1.7 未单独发布，其修正随 0.1.8 一起发布（新增行为见 [0.1.8 记录](continuous-reading-018.md)）。
+本地候选版：`@gongfpp/dsh-novel-fish@0.1.7`。公开 npm、GitHub Release 和市场索引尚未发布本版；0.1.7 未单独发布，其修正随 0.2.0 一起发布（新增行为见 [0.2.0 记录](continuous-reading-020.md)）。
 
 宿主声明为 `>=0.2.1-rc.2 <=0.2.2-alpha.2`。DSH 安装预检使用 `includePrerelease: true`；范围覆盖目前发布的 rc.2、rc.3、rc.4、rc.5、0.2.2-alpha.2。早于 rc.2 的版本缺少本项目最初验证的接口基础；晚于 alpha.2 的版本未验证。不移除版本检查，不授予版本豁免，不承诺任意未来版本。
 
@@ -10,13 +10,13 @@
 
 ## 本地安装（非公开发布入口）
 
-0.1.7 未单独发布；当前源码已是 0.1.8，安装入口与 tgz 文件名以 [0.1.8 记录](continuous-reading-018.md)为准。以下命令保留 0.1.7 候选当时的形状：
+0.1.7 未单独发布；当前源码已是 0.2.0，安装入口与 tgz 文件名以 [0.2.0 记录](continuous-reading-020.md)为准。以下命令保留 0.1.7 候选当时的形状：
 
 ```sh
 pnpm install --frozen-lockfile --ignore-scripts
 pnpm verify
 pnpm pack --pack-destination dist
-dsh plugin --profile web add ./dist/gongfpp-dsh-novel-fish-0.1.8.tgz
+dsh plugin --profile web add ./dist/gongfpp-dsh-novel-fish-0.2.0.tgz
 ```
 
 书库及进度仍使用同一站点的 IndexedDB，不迁移或清空。刷新原有 DSH 页面以加载客户端代码；若宿主提示需要重启，重启原有服务，不另开服务器。
@@ -39,9 +39,9 @@ dsh plugin --profile web add ./dist/gongfpp-dsh-novel-fish-0.1.8.tgz
 | 0.2.1-rc.3 | 6 项通过 | 0 |
 | 0.2.1-rc.4 | 6 项通过 | 0 |
 | 0.2.1-rc.5 | 6 项通过 | 0 |
-| 0.2.2-alpha.2 | 7 项通过（0.1.8 复跑） | 0 |
+| 0.2.2-alpha.2 | 7 项通过（0.2.0 复跑） | 0 |
 
-0.1.8 起探针新增第 7 项 `adapter anchors for title layers and fold state`（标题 shimmer 文字/装饰、DisclosureRow、会话身份和 turn-process 折叠锚点仍在），只在 alpha.2 上复跑通过；下表中 rc.2–rc.5 的「6 项通过」仍是 0.1.7 时的六项结果，未重跑历史构件。
+0.2.0 起探针新增第 7 项 `adapter anchors for title layers and fold state`（标题 shimmer 文字/装饰、DisclosureRow、会话身份和 turn-process 折叠锚点仍在），只在 alpha.2 上复跑通过；下表中 rc.2–rc.5 的「6 项通过」仍是 0.1.7 时的六项结果，未重跑历史构件。
 
 历史版本取自 npm 对应正式构建，28 个构件下载均校验 registry 的 SHA-512 integrity；alpha.2 使用本机现有安装。各版本在 JSDOM 内加载其自身前端静态模块表里的 React、SlotCore 和原生控件，并调用真实 `registerChatNodeRenderers` 及当前插件源码的 `apply`。验证正文插槽优先级接管且默认实现仍保留、真实 ReasoningRow / DisclosureRow / TextShimmer 双层标题及图标保留、`text/running` 原样交给官方正文 Factory、真实设置控件挂载、非可信展开不消耗书籍以及关闭恢复。
 
