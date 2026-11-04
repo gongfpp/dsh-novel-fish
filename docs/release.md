@@ -4,7 +4,10 @@
 
 - 修复 0.2.0 插件管理页的「包元信息错误」：`assets/icon.png` 为 380984 字节（372 KiB），超过宿主 `MAX_ICON_BYTES`（256 KiB）上限；`package.json` 也没有显式 `icon` 字段，只有 `./icon` 导出。宿主读取元信息时会因超限或旧路径失效报错，插件卡片回退到默认图标。
 - 0.2.1 把图标重采样为 512×512 调色板 PNG（保留透明圆角，62056 字节），并在 `package.json` 增加 `"icon": "./assets/icon.png"`；`lib/client.js` 与阅读行为、宿主范围均与 0.2.0 相同。
-- `pnpm verify` 与宿主契约探针结果见下节补充；细节与宿主实现依据见 [图标元信息修正记录](icon-metadata-021.md)。
+- `pnpm verify`：110 项测试、109 通过、0 失败、1 跳过（HOST_ROOT 缺省时跳过真实宿主集成）。`HOST_ROOT` 探针：`ok=true`、7 项检查、claims=0（宿主 DSH 0.2.2-alpha.2）。细节与宿主实现依据见 [图标元信息修正记录](icon-metadata-021.md)。
+- 真实页面：在运行中的 `127.0.0.1:3080` 实例上把 0.2.0 替换为 0.2.1，插件详情页显示版本 0.2.1、图标为鲸鱼读书图，包元信息错误消失；宿主进程未重启。
+- [GitHub Release v0.2.1](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.2.1) 于 `2026-11-04T08:17:32Z` 公开（tag 指向源码提交 `a88f119f2eaf7e6b9cf6b1cb1f2bc4ffd0ef9e2e`，非 prerelease）。附件：安装包 `gongfpp-dsh-novel-fish-0.2.1.tgz`（SHA-256 `bb45a9ad10a965f9d7f6dd20ffa021613f1134da9061aa190e105ab7ff34ae66`，1483460 字节）、源码 ZIP `dsh-novel-fish-source-0.2.1.zip`（SHA-256 `ef0885f94eb10f4b641abf964c74b04e9b713adb4796471d49725d148e4d1c00`）、`SHA256SUMS.txt`；附件匿名下载均 HTTP 200。
+- 索引条目 `source.commit` 固定为 `a88f119f2eaf7e6b9cf6b1cb1f2bc4ffd0ef9e2e`。**npm 未发布 0.2.1**，`latest` 仍为 `0.1.6`。安装包在本节发布事实写入前打包，因此包内 `docs/**` 是修复提交的内容，不含最后几行；对应关系以 SHA-256 为准。
 
 ## 0.2.0：1.0 功能定稿（2026-11-04）
 
