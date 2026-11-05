@@ -10,7 +10,7 @@ test('public package identity matches the Host patch and browser module', async 
   const manifest = JSON.parse(await read('package.json'))
   assert.equal(manifest.name, '@gongfpp/dsh-novel-fish')
   assert.equal(manifest.repository.url, 'https://github.com/gongfpp/dsh-novel-fish.git')
-  assert.equal(manifest.engines.dsh, '>=0.2.1-rc.2 <=0.2.2-alpha.2')
+  assert.equal(manifest.engines.dsh, '>=0.2.1-rc.2 <0.3.0-0')
   assert.ok((await read('cordis.patch.yml')).includes(`name: '${manifest.name}'`))
   assert.ok((await read('src/client.js')).includes(`const MODULE_ID = '${manifest.name}'`))
   assert.ok((await read('lib/client.js')).includes(manifest.name))
@@ -19,13 +19,25 @@ test('public package identity matches the Host patch and browser module', async 
   }
 })
 
-test('host compatibility includes rc.2–rc.5 and alpha.2 but does not promise unknown releases', async () => {
+test('host compatibility covers the whole 0.2.x line but not earlier work or 0.3', async () => {
   const { engines } = JSON.parse(await read('package.json'))
   // DSH preflight evaluates prereleases explicitly, unlike npm's default semver rules.
-  for (const version of ['0.2.1-rc.2', '0.2.1-rc.3', '0.2.1-rc.4', '0.2.1-rc.5', '0.2.2-alpha.2']) {
+  // A ceiling of the form `<=0.2.2-alpha.2` sorts below `0.2.2-rc.1`, which is how
+  // 1.0.0 locked out the rc hosts it was meant to serve; `<0.3.0-0` keeps every
+  // 0.2.x prerelease admissible and still rejects 0.3.0's own prereleases.
+  for (const version of [
+    '0.2.1-rc.2',
+    '0.2.1-rc.3',
+    '0.2.1-rc.4',
+    '0.2.1-rc.5',
+    '0.2.2-alpha.2',
+    '0.2.2-alpha.3',
+    '0.2.2-rc.1',
+    '0.2.2',
+  ]) {
     assert.equal(semver.satisfies(version, engines.dsh, { includePrerelease: true }), true, version)
   }
-  for (const version of ['0.2.0', '0.2.1-alpha.5', '0.2.1-rc.1', '0.2.2-alpha.3', '0.2.2', '0.3.0', '1.0.0']) {
+  for (const version of ['0.2.0', '0.2.1-alpha.5', '0.2.1-rc.1', '0.3.0-rc.1', '0.3.0', '1.0.0']) {
     assert.equal(semver.satisfies(version, engines.dsh, { includePrerelease: true }), false, version)
   }
 })

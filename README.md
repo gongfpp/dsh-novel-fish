@@ -6,7 +6,7 @@
 
 不写会话、不发给模型、不占上下文——等 AI 思考的空档，翻一页书。
 
-**v1.0.0** · DSH Web 插件 · MIT 许可 · 数据只存本地
+**v1.0.1** · DSH Web 插件 · MIT 许可 · 数据只存本地
 
 ## 效果
 
@@ -43,18 +43,18 @@
 
 ## 安装
 
-需要 DSH Web `>=0.2.1-rc.2 <=0.2.2-alpha.2`（0.2.1-rc.2 至 rc.5、0.2.2-alpha.2）。
+需要 DSH Web `>=0.2.1-rc.2 <0.3.0-0`（0.2.1-rc.2 起，含 0.2.2 各 rc 与预发布版本）。
 
 GitHub 固定版本安装：
 
 ```sh
-dsh plugin --profile web add github:gongfpp/dsh-novel-fish#v1.0.0
+dsh plugin --profile web add github:gongfpp/dsh-novel-fish#v1.0.1
 ```
 
-也可以从 [发布页](https://github.com/gongfpp/dsh-novel-fish/releases) 下载 `gongfpp-dsh-novel-fish-1.0.0.tgz` 后离线安装：
+也可以从 [发布页](https://github.com/gongfpp/dsh-novel-fish/releases) 下载 `gongfpp-dsh-novel-fish-1.0.1.tgz` 后离线安装：
 
 ```sh
-dsh plugin --profile web add ./gongfpp-dsh-novel-fish-1.0.0.tgz
+dsh plugin --profile web add ./gongfpp-dsh-novel-fish-1.0.1.tgz
 ```
 
 `web` 是 profile 名称，用别的 profile 时替换。
@@ -62,7 +62,7 @@ dsh plugin --profile web add ./gongfpp-dsh-novel-fish-1.0.0.tgz
 也可以从 npm 安装固定版本：
 
 ```sh
-dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.0.0
+dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.0.1
 ```
 
 ## 常见问题
@@ -84,7 +84,7 @@ dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.0.0
 
 ## 兼容与限制
 
-- 声明范围 `>=0.2.1-rc.2 <=0.2.2-alpha.2`；真实页面验收在 `0.2.2-alpha.2` 完成，其余版本由宿主契约探针验证
+- 声明范围 `>=0.2.1-rc.2 <0.3.0-0`；真实页面验收在 `0.2.2-alpha.2` 完成，`0.2.1-rc.2` 至 rc.5 与 `0.2.2-rc.1` 由宿主契约探针（7 项）验证。区间是准入策略，不等于逐版本页面验收
 - 没有独立阅读页、阅读工具栏或章节跳转，阅读就发生在对话里
 - 依赖宿主公开的可访问性锚点；宿主大版本更新后如果锚点变了，插件会检测不到而不是错误追加
 - 键盘、悬停、触屏、展示模式切换等交互路径的补验记录见下方文档

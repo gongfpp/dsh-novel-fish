@@ -29,7 +29,7 @@ jobs:
     env:
       # Pinned DSH build the compatibility matrix claims. Bump together with
       # engines.dsh and docs/compatibility-017.md when the host changes.
-      DSH_HOST_VERSION: 0.2.2-alpha.2
+      DSH_HOST_VERSION: 0.2.2-rc.1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

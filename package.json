@@ -1,6 +1,6 @@
 {
   "name": "@gongfpp/dsh-novel-fish",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/gongfpp/dsh-novel-fish.git"
@@ -64,7 +64,7 @@
   },
   "engines": {
     "node": ">=22",
-    "dsh": ">=0.2.1-rc.2 <=0.2.2-alpha.2"
+    "dsh": ">=0.2.1-rc.2 <0.3.0-0"
   },
   "license": "MIT",
   "dsh": {
