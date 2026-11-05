@@ -2,6 +2,16 @@
 
 最新发布更新：**2026-11-05**，GitHub **1.0.1**，npm **1.0.1**（`latest`）。声明适配 DSH Web **`>=0.2.1-rc.2 <0.3.0-0`**（真实页面验收在 `0.2.2-alpha.2`，`0.2.2-rc.1` 由契约探针验证，见 [1.0.1 兼容区间修正](compatibility-101.md)）。下方各站的 10 月 28 日及更早快照保留原日期，不当作本日刷新结果。
 
+## 1.0.1 市场跟进（2026-11-05）
+
+本日实读各站索引：Awesome 官网 `index.json` 已显示 `versions: ["1.0.0"]`（npm 映射）；dshopen 仍为 `0.1.5`；dshfind.com 与 dshmarketplace.dev 没有根 `index.json`（HTTP 404，不能据此判断未收录）；dsh.market 与 brade 的 registry 有本仓库提及，但没有可解析的 format-1 版本条目。npm `latest` 为 `1.0.1`。
+
+- [Awesome 主目录](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin)：新建 [PR #12228](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/12228)，只改本插件 YAML：固定 tarball 从 v0.1.5 换到 v1.0.1（`gongfpp-dsh-novel-fish-1.0.1.tgz`，1,969,943 字节，SHA-256 `ad46fd15c71feafe38af7c578da6eb50405763aa18d8283e20f6a5b727d2d8c3`），描述里「仅 0.2.1-rc.2」改成 `>=0.2.1-rc.2 <0.3.0-0`。CI `check` 通过，等待维护者审核。
+- [dshopen](https://dshopen.org/)：按「更新与更正」规则在原申请 [#101 留言](https://github.com/polang233/dsh-plugin-index/issues/101#issuecomment-6652035768)，请求按 1.0.1 复审，附 npm latest、tag `v1.0.1` 的提交 `dafb60699491a1fe76647edf4be08a2e08cf00d8`、tarball SHA-256 与新的 `engines.dsh`。维护者上次（10 月 30 日）把索引更到 0.1.5，本次尚未刷新。
+- [dsh-web 社区目录](https://github.com/zhu1090093659/dsh-community-plugins)：在原 [PR #60 留言](https://github.com/zhu1090093659/dsh-community-plugins/pull/60#issuecomment-6652036584)，说明 1.0.1 已把 `engines.dsh` 上限修成 `<0.3.0-0`，并列出 `semver.satisfies(..., { includePrerelease: true })` 的逐版本实测；分支条目已同步为 1.0.1。PR 仍待人工复核，`reviewDecision` 仍是 `CHANGES_REQUESTED`，不算已合并。
+
+以上是投稿与留言记录，不代表已收录；各站是否刷新以索引实际内容为准。
+
 ## 0.1.5 更新
 
 - [GitHub Release](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.1.5) 已公开，源码固定为 `61a0e62d7caa06f3101b450277f3ef530e1561f8`；提供预构建安装包、源码和校验文件。npm 未发布 0.1.5，因此依赖 npm 的自动目录目前不能据此变成新版。
