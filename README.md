@@ -97,6 +97,11 @@ dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.0.1
 - [兼容验证矩阵](docs/compatibility-017.md)
 - [插件市场与自建索引](docs/marketplace.md)
 
+## 相关插件
+
+- **[谢谢卡尔 · dsh-thanks-carl](https://github.com/gongfpp/dsh-thanks-carl)** — 任务完成后让卡尔从屏幕边缘探头道谢，顺带提醒喝水、吃饭、休息；纯本地，不调用模型。
+- **[每轮扣款语音播报 · dsh-cost-voice](https://github.com/gongfpp/dsh-cost-voice)** — 每轮结束用支付宝或「大白饭」的声音报一句本轮花了多少钱。
+
 ## 开发
 
 ```sh
