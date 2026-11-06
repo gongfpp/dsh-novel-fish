@@ -1,0 +1,58 @@
+{
+  "verifiedOn": "2026-11-06",
+  "books": [
+    {
+      "id": "million-pound-bank-note",
+      "title": "百万英镑及其他新故事（英文）",
+      "author": "Mark Twain（马克·吐温，1835–1910）",
+      "format": "txt",
+      "file": "million-pound-bank-note-pg61522.txt",
+      "source": "https://www.gutenberg.org/ebooks/61522",
+      "download": "https://www.gutenberg.org/cache/epub/61522/pg61522.txt",
+      "bytes": 394538,
+      "sha256": "4f36f8ce3837afd6c28a23684153a946e39c8970a27486d36f6f4c64b92bb0d2",
+      "license": "Project Gutenberg License；1893 英文原作公版",
+      "edition": "Unmodified original download of the 1893 collection The £1,000,000 bank-note, and other new stories. Contains the full title story and eight other stories; not a standalone title-story edition.",
+      "redistribution": {
+        "status": "permitted-with-conditions",
+        "packageByDefault": true,
+        "license": "Project Gutenberg License, complete text retained in original TXT and LICENSE.md",
+        "licenseUrl": "https://www.gutenberg.org/policy/license.html",
+        "authorDeathYear": 1910,
+        "publicDomainBasis": "1893 English original, not a modern translation. PG lists public domain in the USA; author died in 1910. Check destination laws; not a worldwide legal warranty.",
+        "conditions": "Retain all PG header, credits, complete license and prominent §1.E.1 notice with immediate full-license access. Fee-bearing redistribution requires additional PG terms. Not MIT and not endorsed by PG."
+      }
+    },
+    {
+      "id": "aq-zheng-zhuan",
+      "title": "阿Q正传",
+      "author": "鲁迅（1881–1936）",
+      "format": "md",
+      "file": "aq-zheng-zhuan-wikisource.md",
+      "source": "https://zh.wikisource.org/wiki/阿Q正傳",
+      "download": "https://ws-export.wmcloud.org/?lang=zh&format=txt&page=%E9%98%BFQ%E6%AD%A3%E5%82%B3",
+      "bytes": 68170,
+      "sha256": "228f5e9504caecc97460e815461df7ac60de80ea311f289f7de23760c69c9643",
+      "license": "原作公版；数字导出声明 CC BY-SA 3.0 / GFDL，原样保留",
+      "edition": "Local Markdown derivative of the official Wikisource TXT export, 2026-11-06: only a Markdown title heading was prefixed; the complete original export remains byte-for-byte unchanged after the heading. Original Chinese (traditional characters), complete nine chapters from 第一章 序 to 第九章 大團圓, followed by source copyright notices, digital-edition license and all contributor credits. No modern translation or added commentary.",
+      "redistribution": {
+        "status": "permitted-with-conditions",
+        "packageByDefault": true,
+        "license": "Wikisource export states CC BY-SA 3.0 Unported or GFDL; retain the original notices and contributor list. Current source-site terms may additionally apply.",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "sourceSiteLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "authorDeathYear": 1936,
+        "publicDomainBasis": "Original serialized 1921-12-04 through 1922-02-12, author died 1936. Source explicitly marks original public domain in China/Taiwan and the USA. This is not permission to copy protected modern commentary or translations; destination law still applies.",
+        "attribution": "魯迅; Wikisource contributors, complete contributor list retained at end of Markdown. Source/history: https://zh.wikisource.org/w/index.php?title=阿Q正傳&action=history .",
+        "conditions": "Keep full exported attribution, source and license links, applicable copyright notices and ShareAlike requirements; no DRM or additional restrictions. Only a Markdown heading added; full unchanged source export retained as the Markdown suffix, recoverable by removing the documented prefix. Not relicensed MIT."
+      },
+      "derivation": {
+        "originalFormat": "txt",
+        "originalBytes": 68156,
+        "originalSha256": "15a60f2d6e105c0869c4a11516eaba0d6726e6df68a91c40836dad51c1016b51",
+        "prefix": "# 阿Q正傳\n\n",
+        "modifications": "Prefixed one Markdown title heading only. Remove that UTF-8 prefix to recover the complete original official TXT export byte-for-byte; no text, source notices, licenses or contributor credits removed."
+      }
+    }
+  ]
+}

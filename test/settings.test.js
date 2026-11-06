@@ -7,6 +7,7 @@ import { DEFAULT_SETTINGS } from '../src/store.js'
 import { HostSwitch, HostMenu, HostModal, hostPrimitives } from './helpers/host-primitives.js'
 import zh from '../locale/zh.json' with { type: 'json' }
 import en from '../locale/en.json' with { type: 'json' }
+import manifest from '../samples/ebooks/sources.json' with { type: 'json' }
 
 const t = (key, vars = {}) => key.split('.').reduce((value, field) => value?.[field], zh)?.replace(/\{(\w+)\}/gu, (_, key) => String(vars[key])) ?? key
 const SettingsRow = createSettingsRow(React, hostPrimitives)
@@ -79,7 +80,7 @@ test('图标跟随 DSH，标题使用原生菜单，自定义后才出现宿主 
   try {
     assert.equal(view.root.findAllByType('input').filter(node => node.props.type !== 'file').length, 0)
     assert.equal(view.root.findAllByProps({ 'data-novel-preset': 'icon' }).length, 0)
-    assert.match(JSON.stringify(view.toJSON()), /图标与折叠交互跟随 DSH/u)
+    assert.doesNotMatch(JSON.stringify(view.toJSON()), /图标与折叠交互跟随 DSH/u)
     assert.deepEqual(model.options, [])
     await act(async () => menu(view, 'data-novel-preset', 'title').props.onSelect('__custom'))
     await act(async () => control(view, 'data-novel-title').props.onChange({ currentTarget: { value: '我的标题' } }))
@@ -154,6 +155,42 @@ test('原生导入按钮触发隐藏文件选择；导入失败清空文件值�
     assert.equal(attempts, 2)
     assert.match(model.notices.at(-1), /导入完成：2 段/u)
     assert.equal(model.state.books[0].progress, 1)
+  } finally { await act(async () => view.unmount()) }
+})
+
+test('书籍统一选择和删除，默认无说明块，书源许可只在菜单次级弹窗内', async () => {
+  const model = setup()
+  model.props.sampleBooks = manifest.books
+  model.props.getSampleLicenseHref = () => 'data:text/plain;charset=utf-8,Combined%20licenses%20and%20attribution'
+  model.state.books.push(...manifest.books.map(book => ({ ...book, id: `bundled:${book.id}`, bundledId: book.id, progress: 0, segmentCount: 8 })))
+  const view = await mount(model)
+  try {
+    assert.equal(view.root.findAllByType('h3').length, 3)
+    assert.equal(menu(view, 'data-novel-sample-select'), undefined)
+    assert.equal(view.root.findAllByType('a').length, 0, 'No ordinary source/license links')
+    assert.equal(view.root.findAllByType('progress')[0].props.value, 1)
+    assert.doesNotMatch(JSON.stringify(view.toJSON()), /离线按需导入|各书许可|This eBook|预设，无需打字/u)
+    const picker = () => menu(view, 'data-novel-book-select')
+    assert.deepEqual(picker().props.items.map(item => item.id), ['', 'book-a', ...manifest.books.map(book => `bundled:${book.id}`)])
+    const id = `bundled:${manifest.books[0].id}`
+    await act(async () => picker().props.onSelect(id))
+    assert.deepEqual(model.books, [id])
+    assert.equal(model.state.books.find(book => book.id === id).progress, 0)
+    await act(async () => view.update(React.createElement(SettingsRow, model.props)))
+    await act(async () => control(view, 'data-novel-delete').props.onClick())
+    assert.equal(view.root.findByType(HostModal).props.open, true, 'Bundled books use the normal deletion modal')
+    await act(async () => view.root.findByType(HostModal).props.onClose())
+    assert.deepEqual(picker().props.footer.map(item => item.id), ['__book-info'])
+    await act(async () => picker().props.onSelect('__book-info'))
+    assert.deepEqual(model.books, [id], 'Information is not a book selection')
+    const info = view.root.findAllByType(HostModal).find(modal => modal.props.title === t('settings.bookInfo'))
+    assert.equal(info.props.open, true)
+    const links = view.root.findAllByType('a')
+    assert.equal(links.find(link => link.props.download)?.props.href, model.props.getSampleLicenseHref())
+    for (const book of manifest.books) assert.equal(links.find(link => link.props.href === book.source)?.children.join(''), book.title)
+    assert.match(control(view, 'data-novel-sample-license').children.join(''), /This eBook/u)
+    await act(async () => info.props.onClose())
+    assert.equal(view.root.findAllByType('a').length, 0)
   } finally { await act(async () => view.unmount()) }
 })
 
@@ -268,4 +305,8 @@ test('中英文设置文案键一致，不再含位置选择翻译', () => {
     assert.equal(typeof en.settings[key], 'string')
   }
   assert.equal(Object.hasOwn(zh.settings, 'targetKey'), false)
+  for (const key of ['bookInfo', 'close', 'readingProgress']) assert.ok(zh.settings[key] && en.settings[key])
+  assert.equal(zh.settings.sampleHint, undefined)
+  assert.equal(en.settings.sampleHint, undefined)
+  assert.match(en.settings.samplePgNotice, /only to the English collection.*not to the other bundled books/u)
 })

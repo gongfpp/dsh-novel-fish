@@ -5,6 +5,13 @@ export const NOVEL_STYLE = {
   color: 'var(--dsw-alias-label-tertiary)',
   whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
 }
+// 只约束新增的小说正文，不裁剪原生思考/工具输出。窄屏与旧书的长段落
+// 仍保留全部文字，可滚动/键盘阅读，避免把宿主折叠控件推得过远。
+export const PASSAGE_STYLE = {
+  maxHeight: 'min(40vh, 20.8em)',
+  overflowY: 'auto',
+  scrollbarGutter: 'stable',
+}
 export const SEPARATOR_STYLE = {
   border: 0, borderTop: '1px solid var(--dsw-alias-border-l2)', margin: '10px 0 8px',
 }
@@ -13,6 +20,7 @@ export function novelContent(status, hasBook, t) {
   if (status.kind === 'ready') return {
     label: t('chat.novel'), chapter: status.passage.chapterTitle || '',
     text: status.passage.text, index: status.index + 1,
+    projectGutenberg: status.projectGutenberg === true,
   }
   const message = status.kind === 'loading' ? 'chat.loading' : status.kind === 'end' ? 'chat.end'
     : status.kind === 'error' ? 'chat.readError' : hasBook ? 'chat.switchHint' : 'chat.noBook'

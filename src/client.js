@@ -2,6 +2,7 @@ import { IndexedDbStorage } from './persistence.js'
 import { NovelStore } from './store.js'
 import { registerChatAdapter } from './chat-adapter.js'
 import { createSettingsRow } from './settings.js'
+import { sampleBooks, bundledCatalog, createSampleFile, getSampleLicenseHref } from './bundled-books.js'
 import zh from '../locale/zh.json'
 import en from '../locale/en.json'
 
@@ -24,7 +25,10 @@ window.__ModuleLoader__.load({
       inject: ['slots', 'locale'],
       apply(ctx) {
         const storage = new IndexedDbStorage()
-        const store = new NovelStore(storage)
+        const store = new NovelStore(storage, {
+          bundledBooks: sampleBooks.map(book => ({ ...book, createFile: () => createSampleFile(book.id) })),
+          bundledCatalog,
+        })
         const SettingsRow = createSettingsRow(React, primitives)
         const settingsActions = {
           onSetOption: (key, value) => store.setOption(key, value),
@@ -32,6 +36,8 @@ window.__ModuleLoader__.load({
           onSelectBook: bookId => store.selectBook(bookId),
           onDeleteBook: bookId => store.deleteBook(bookId),
           onImportFile: file => store.importFile(file),
+          sampleBooks,
+          getSampleLicenseHref,
         }
 
         ctx.effect(() => ctx.locale.register(LOCALE, { zh: flatten(zh), en: flatten(en) }), 'novel-fish: locale')
@@ -48,7 +54,7 @@ window.__ModuleLoader__.load({
             ...settingsActions,
           }),
         }, SettingsRow))
-        registerChatAdapter(ctx, store, React, LOCALE)
+        registerChatAdapter(ctx, store, React, LOCALE, { getSampleLicenseHref })
       },
     }
   },

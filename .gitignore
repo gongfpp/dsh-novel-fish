@@ -9,3 +9,8 @@ dist/
 *.log
 *.pem
 *.key
+# Local acquisition drafts, including editions not cleared for redistribution.
+# Only samples/ebooks/ is the reviewed, packaged corpus.
+samples/ebooks-next/
+samples/aq-candidate/
+samples/ebooks-alternatives/

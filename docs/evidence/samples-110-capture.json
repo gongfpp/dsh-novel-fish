@@ -1,0 +1,49 @@
+{
+  "date": "2026-11-06",
+  "host": "DSH Web 0.2.2-alpha.2",
+  "plugin": "1.1.0 local candidate",
+  "origin": "http://127.0.0.1:3080",
+  "method": "Native Cua screenshot of existing logged-in Chrome window after user granted a brief exclusive operation window; rectangular crops only, no text editing/compositing.",
+  "scope": "Actual AQ sample import and reasoning-row reading. No model messages. Other books and geometry have separate isolated-browser evidence.",
+  "privacy": "Only cropped plugin/main content published. Raw window captures remain temporary local files and are not packaged.",
+  "images": [
+    {
+      "file": "settings-110.png",
+      "rawWindowSize": [
+        1567,
+        983
+      ],
+      "rawSha256": "3175166a12cc9482d400dc68799f200ab0807a12aa36b79eea62bc91fc84211e",
+      "cropLeftTopRightBottom": [
+        403,
+        111,
+        1455,
+        916
+      ],
+      "size": [
+        1052,
+        805
+      ],
+      "sha256": "996968d3933a7e788f2d4d9fc2030b3c7c37d64e7667ccf918871c4f0d633a08"
+    },
+    {
+      "file": "reading-demo-110.png",
+      "rawWindowSize": [
+        1567,
+        983
+      ],
+      "rawSha256": "d67d25f978918f78c2d452d983f8d94e2ae7324ab9506e8233ad07fabae25ed4",
+      "cropLeftTopRightBottom": [
+        470,
+        477,
+        1401,
+        835
+      ],
+      "size": [
+        931,
+        358
+      ],
+      "sha256": "d5590a67b14926e437e0ee2046d02b075b42d9fd4b55c99fb414e7c494cd513c"
+    }
+  ]
+}

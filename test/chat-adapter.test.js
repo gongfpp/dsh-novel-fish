@@ -5,6 +5,12 @@ import React from 'react'
 import TestRenderer, { act } from 'react-test-renderer'
 import { passageSnapshotKey } from '../src/store.js'
 import { registerChatAdapter } from '../src/chat-adapter.js'
+import { PG_NOTICE, PG_LICENSE_DOWNLOAD } from '../src/pg-notice.js'
+import { readFile } from 'node:fs/promises'
+
+const fullLicense = await readFile(new URL('../samples/ebooks/LICENSE.md', import.meta.url), 'utf8')
+const licenseHref = `data:text/plain;charset=utf-8,${encodeURIComponent(fullLicense)}`
+const getSampleLicenseHref = () => licenseHref
 
 // Mirrors CURRENT 0.2.1-rc.2 DisclosureRow/TextShimmer nesting, not a replacement
 // renderer. Trusted events below are handler-contract probes, NOT browser evidence.
@@ -52,7 +58,7 @@ function adapterFixture(content = thought('node-a'), session = 'session-a') {
   }
   const ctx = { slots: { inject: (_key, fn) => fn(), register: () => () => {} }, effect: fn => { effects.push(fn()) } }
   return {
-    dom, claims, continues, types, actions, start: () => registerChatAdapter(ctx, store, React, 'novel'),
+    dom, claims, continues, types, actions, start: () => registerChatAdapter(ctx, store, React, 'novel', { getSampleLicenseHref }),
     passage: (key, status) => { statuses.set(key, status); passagesChanged() },
     invalidate: () => { store.cacheGeneration += 1 },
     settings: patch => { settings = { ...settings, ...patch }; settingsChanged() },
@@ -240,7 +246,7 @@ function bodyFixture() {
   dom.window.document.querySelector('[data-variant="think"]').append(marker)
   let Body
   const ctx = { slots: { inject: (_key, fn) => fn(), register: (_options, component) => { Body = component; return () => {} } }, effect: () => {} }
-  registerChatAdapter(ctx, {}, React, 'novel')
+  registerChatAdapter(ctx, {}, React, 'novel', { getSampleLicenseHref })
   return { dom, marker, Body }
 }
 
@@ -262,6 +268,11 @@ test('纯文本小说和章节位于原思考后的分隔线下；重挂载和�
     await act(async () => { view = TestRenderer.create(React.createElement(Body, props), { createNodeMock: () => marker }) })
     assert.equal(view.root.findByProps({ 'data-novel-original': true }).findByType('p').children.join(''), props.text)
     assert.equal(view.root.findByProps({ 'data-novel-passage': 1 }).children.join(''), 'A cached passage')
+    const passage = view.root.findByProps({ 'data-novel-passage': 1 })
+    assert.equal(passage.props.style.maxHeight, 'min(40vh, 20.8em)')
+    assert.equal(passage.props.style.overflowY, 'auto')
+    assert.equal(passage.props.tabIndex, 0, '溢出的完整正文支持键盘滚动')
+    assert.equal(view.root.findByProps({ 'data-novel-original': true }).props.style, undefined, '不约束宿主原始正文')
     assert.equal(view.root.findByProps({ 'data-novel-label': true }).children.join(''), 'chat.novel · 第一章')
     assert.equal(view.root.findAllByType('hr').length, 1)
     assert.equal(view.toJSON().children[0].props['data-novel-original'], true)
@@ -329,6 +340,9 @@ test('五类区域独立定位，工具原正文保持且分隔线下只追加�
       assert.ok(append.previousElementSibling.hasAttribute('data-native-output'), '小说位于原生工具正文之后')
       assert.match(append.querySelector('[data-novel-label]').textContent, /章节甲/u)
       assert.equal(append.lastElementChild.textContent, literal)
+      assert.equal(append.lastElementChild.style.maxHeight, 'min(40vh, 20.8em)')
+      assert.equal(append.lastElementChild.style.overflowY, 'auto')
+      assert.equal(append.lastElementChild.tabIndex, 0)
       assert.equal(append.querySelector('a, img, script, pre, h1'), null)
     }
     assert.deepEqual(outputs.map(node => node.outerHTML), originalOutputs)
@@ -429,5 +443,76 @@ test('流式文本和属性变更在同一帧内只合并成一次重扫', async
     frames[0]()
     assert.equal(title.textContent, '思考')
     assert.equal(cancelled, 0)
+  } finally { f.close() }
+})
+
+test('PG reasoning has a full readable §1.E.1 notice and offline license outside the clipped passage', async () => {
+  const { dom, marker, Body } = bodyFixture()
+  const settings = { enabled: true, currentBookId: 'legacy-arbitrary-id', targetTypes: ['reasoning'] }
+  let status = { kind: 'ready', index: 12, projectGutenberg: true, passage: { text: 'PG prose <img src=x> $100' } }
+  const props = {
+    text: 'REAL HOST THOUGHT', running: true, sessionId: 'session-a',
+    useNovelSettings: select => select(settings),
+    useNovelPassages: select => select({ [passageSnapshotKey(settings.currentBookId, readingKey('session-a', '14:assistant-step1:1'))]: status }),
+    renderFactorySlot: (_name, input) => React.createElement('p', null, input.text), t: key => key,
+  }
+  let view
+  try {
+    await act(async () => { view = TestRenderer.create(React.createElement(Body, props), { createNodeMock: () => marker }) })
+    const notice = view.root.findByProps({ 'data-novel-pg-notice': true })
+    const passage = view.root.findByProps({ 'data-novel-passage': 13 })
+    assert.equal(notice.parent, passage.parent, 'notice is a sibling, never inside the scroll viewport')
+    assert.equal(notice.findByType('p').children.join(''), PG_NOTICE)
+    assert.equal(notice.props.style.maxHeight, undefined)
+    assert.equal(notice.props.style.overflowY, undefined)
+    assert.equal(notice.props.style.whiteSpace, 'normal')
+    assert.equal(view.root.findAllByType('details').length, 0)
+    const license = notice.findByType('a')
+    assert.equal(license.props.href, licenseHref)
+    assert.equal(license.props.download, PG_LICENSE_DOWNLOAD)
+    assert.equal(decodeURIComponent(license.props.href.split(',').slice(1).join(',')), fullLicense)
+    assert.equal(passage.children.join(''), status.passage.text, 'novel stays literal text')
+    assert.equal(view.root.findAllByType('img').length, 0)
+    assert.equal(view.root.findByProps({ 'data-novel-original': true }).findByType('p').children.join(''), props.text)
+    for (const next of [{ ...status, projectGutenberg: false }, { kind: 'loading' }, { kind: 'end' }, { kind: 'error' }]) {
+      status = next
+      await act(async () => view.update(React.createElement(Body, props)))
+      assert.equal(view.root.findAllByProps({ 'data-novel-pg-notice': true }).length, 0)
+      assert.equal(view.root.findAllByType('a').length, 0, 'AQ/unrelated books and status messages have no PG notice')
+    }
+  } finally { await act(async () => view?.unmount()); dom.window.close() }
+})
+
+test('PG tool append exposes identical full notice/offline license without touching host output', async () => {
+  const f = adapterFixture(toolRow('read', 'read', 'pg-call') + commandRow())
+  try {
+    f.start(); f.settings({ targetTypes: ['read-file', 'command'] })
+    const outputs = [...document.querySelectorAll('[data-native-output]')]
+    const originalOutputs = outputs.map(node => node.outerHTML)
+    for (const header of document.querySelectorAll('[data-disclosure-row], [data-sample="bash"]')) {
+      f.actions.click(trustedClick(header)); header.setAttribute('aria-expanded', 'true')
+    }
+    await settle()
+    for (const key of f.claims) f.passage(key, { kind: 'ready', index: 3, projectGutenberg: true, passage: { text: 'Literal PG <script> & prose' } })
+    await settle()
+    assert.equal(document.querySelectorAll('[data-novel-pg-notice]').length, 2)
+    for (const append of document.querySelectorAll('[data-novel-append]')) {
+      const notice = append.querySelector('[data-novel-pg-notice]')
+      const passage = append.querySelector('[data-novel-passage]')
+      assert.equal(notice.parentElement, passage.parentElement)
+      assert.equal(notice.querySelector('p').textContent, PG_NOTICE)
+      assert.equal(notice.style.maxHeight, '')
+      assert.equal(notice.style.overflowY, '')
+      assert.equal(append.querySelector('details, script'), null)
+      assert.equal(notice.querySelector('a').getAttribute('href'), licenseHref)
+      assert.equal(notice.querySelector('a').download, PG_LICENSE_DOWNLOAD)
+      assert.equal(passage.textContent, 'Literal PG <script> & prose')
+    }
+    assert.deepEqual(outputs.map(node => node.outerHTML), originalOutputs)
+    f.settings({ mainTitle: 'New title' })
+    assert.equal(document.querySelectorAll('[data-novel-pg-notice]').length, 2, 'refresh never duplicates notices')
+    for (const key of f.claims) f.passage(key, { kind: 'ready', index: 4, projectGutenberg: false, passage: { text: 'AQ or unrelated prose' } })
+    assert.equal(document.querySelector('[data-novel-pg-notice], [data-novel-append] a'), null)
+    assert.deepEqual(outputs.map(node => node.outerHTML), originalOutputs)
   } finally { f.close() }
 })

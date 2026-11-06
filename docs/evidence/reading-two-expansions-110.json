@@ -1,0 +1,89 @@
+{
+  "capturedOn": "2026-11-07",
+  "host": "DSH Web 0.2.2-alpha.2",
+  "source": "Actual running DSH GUI, native Cua window captures; not a mock Host.",
+  "method": "Paced native before/after window frames; not continuous desktop video. No interpolated or fabricated UI frames.",
+  "interaction": "Expand first thought, scroll, collapse; expand a different thought, scroll, collapse. No model messages sent.",
+  "book": "Existing user-imported AQ TXT, 98 segments, intentionally preserved by migration. New bundled AQ MD is independently tested.",
+  "crop": {
+    "x": 0,
+    "y": 94,
+    "width": 1567,
+    "height": 856
+  },
+  "redaction": {
+    "x": 0,
+    "y": 541,
+    "width": 298,
+    "height": 442,
+    "scope": "Original capture pixels; opaque mask over unrelated sidebar sessions, quota and account."
+  },
+  "unchanged": "No rewriting of the reasoning, novel, plugin controls, logo or current project/session.",
+  "frames": [
+    {
+      "capture": 41,
+      "sha256": "73dbb60ea1f139861fd4edcf75881a9cd48ba6772c8284ed912d3f2b2c065883",
+      "seconds": 2,
+      "action": "Both thoughts collapsed"
+    },
+    {
+      "capture": 43,
+      "sha256": "089061ed97671b1ea878c2f5be02ea276153cb24448bd6e6faf6dea20306f9a1",
+      "seconds": 1.2,
+      "action": "First thought expanded; original reasoning precedes novel"
+    },
+    {
+      "capture": 45,
+      "sha256": "550bbc7ad38079785593ce7b68d127859d85858d9c4bc6da134db107ca6f6e6d",
+      "seconds": 0.7,
+      "action": "Scroll within the actual conversation"
+    },
+    {
+      "capture": 47,
+      "sha256": "c8bcc23585f16a4ac5f482fdf079f42d295f42da0a845482c98e06dad9df1b97",
+      "seconds": 0.5,
+      "action": "Adjust viewport without altering content"
+    },
+    {
+      "capture": 49,
+      "sha256": "43ff4301a7b82aa110a38534e16f8a9924c0b3f27a5b2af503346996ddce80e4",
+      "seconds": 5,
+      "action": "First thought and first novel passage readable"
+    },
+    {
+      "capture": 51,
+      "sha256": "36ae148b1b1f12e66152ae632f1be191c66635e419ebccab363553a1af3ab7e0",
+      "seconds": 1.5,
+      "action": "First thought collapsed"
+    },
+    {
+      "capture": 53,
+      "sha256": "6d68383df298dbbefdd2cad08ed79cf3a847bce00fb2fabe776a0737c753b50d",
+      "seconds": 2,
+      "action": "Second distinct thought expanded; next novel passage"
+    },
+    {
+      "capture": 55,
+      "sha256": "a8b0381936a164951e5469d43ebb47e2327b1e9f1483bd0a932d9f41fbf228fd",
+      "seconds": 5,
+      "action": "Scroll to read the second passage"
+    },
+    {
+      "capture": 59,
+      "sha256": "d0b1387a3a43b260ae51a313aa4fbc23ed0de79b6eb978e7e96320ee82f01f7e",
+      "seconds": 2,
+      "action": "Second thought collapsed"
+    }
+  ],
+  "output": {
+    "file": "docs/evidence/reading-two-expansions-110.gif",
+    "bytes": 1304583,
+    "sha256": "6950fd061b3c4c1c3252d9afcc79d7c842b6626f5c744a3a0d70304c9e284b41",
+    "width": 1567,
+    "height": 856
+  },
+  "testedBundle": {
+    "bytes": 1380122,
+    "sha256": "48678d32b97fcac1d321c36fe833fd32dd2311f695a7c0083eb70a1c2015775b"
+  }
+}

@@ -1,4 +1,5 @@
 import { TARGET_TYPES } from './store.js'
+import { PG_NOTICE } from './pg-notice.js'
 
 const TYPE_LABELS = { reasoning: 'typeReasoning', 'tool-call': 'typeToolCall', 'read-file': 'typeReadFile', command: 'typeCommand', 'file-search': 'typeFileSearch' }
 const MAIN_TITLES = ['', '思考', '分析', '检查', 'Thinking']
@@ -6,7 +7,7 @@ const EXTRA_TITLES = ['', 'Checking project structure', 'Analyzing the request',
 
 // Only layout belongs to the plugin. Controls, menus, focus and dialogs belong to DSH.
 const STYLES = `
-.novel-fish-settings{display:flex;flex-direction:column;gap:32px;min-width:0;font-size:14px;line-height:1.6;color:var(--dsw-alias-label-primary)}
+.novel-fish-settings{display:flex;flex-direction:column;gap:24px;min-width:0;font-size:14px;line-height:1.6;color:var(--dsw-alias-label-primary)}
 .novel-fish-settings .novel-fish-section{display:flex;flex-direction:column;gap:16px;min-width:0}
 .novel-fish-settings .novel-fish-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .novel-fish-settings h3{margin:0;font:inherit;font-weight:600}
@@ -17,6 +18,13 @@ const STYLES = `
 .novel-fish-settings .novel-fish-selection{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .novel-fish-settings .novel-fish-hint{margin:0;color:var(--dsw-alias-label-tertiary);font-size:13px;line-height:1.6}
 .novel-fish-settings .novel-fish-error{color:var(--dsw-alias-state-error-primary)}
+.novel-fish-settings .novel-fish-progress{width:100%;height:4px;border:0;border-radius:4px;overflow:hidden;accent-color:var(--dsw-alias-label-secondary);appearance:none}
+.novel-fish-progress::-webkit-progress-bar{background:var(--dsw-alias-border-l2)}
+.novel-fish-progress::-webkit-progress-value{background:var(--dsw-alias-label-secondary)}
+.novel-fish-progress::-moz-progress-bar{background:var(--dsw-alias-label-secondary)}
+.novel-fish-book-info{display:flex;flex-direction:column;gap:20px;max-height:60vh;overflow-y:auto;font-size:13px;line-height:1.6}
+.novel-fish-book-info .novel-fish-field{display:flex;flex-direction:column;gap:4px}
+.novel-fish-book-info p{margin:0}
 `
 
 /** Embedded in this bundle's official configuration slot; never a reading page. */
@@ -67,7 +75,7 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
     )
   }
 
-  function SettingsRow({ t, useNovelState, useNovelUi, onSetOption, onSetNotice, onSelectBook, onDeleteBook, onImportFile }) {
+  function SettingsRow({ t, useNovelState, useNovelUi, onSetOption, onSetNotice, onSelectBook, onDeleteBook, onImportFile, sampleBooks = [], getSampleLicenseHref }) {
     const state = useNovelState(value => value)
     const ui = useNovelUi(value => value)
     const [busy, setBusy] = React.useState(false)
@@ -76,6 +84,7 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
     const [savingContinue, setSavingContinue] = React.useState(false)
     const [removeBook, setRemoveBook] = React.useState(null)
     const [removeError, setRemoveError] = React.useState(null)
+    const [bookInfoOpen, setBookInfoOpen] = React.useState(false)
     const enabling = React.useRef(false)
     const continuing = React.useRef(false)
     const changingTypes = React.useRef(false)
@@ -149,13 +158,18 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
         ),
         h('input', { ref: fileInput, hidden: true, type: 'file', accept: '.epub,.txt,.md,application/epub+zip,text/plain,text/markdown', onChange: event => { void importFile(event) }, disabled, 'data-novel-file-input': true }),
         h('div', { className: 'novel-fish-field' },
-          h('span', null, t('settings.selectBook')),
           h(SelectMenu, {
-            label: t('settings.selectBook'), value: state.settings.currentBookId ?? '', disabled: disabled || !state.books.length,
+            label: t('settings.selectBook'), value: state.settings.currentBookId ?? '', disabled,
             marker: { 'data-novel-book-select': true },
             items: [{ id: '', label: t('settings.noBook') }, ...state.books.map(book => ({ id: book.id, label: `${book.title} · ${book.format.toUpperCase()}` }))],
-            onChange: id => { void perform(() => onSelectBook(id)) },
+            footer: sampleBooks.length ? [{ id: '__book-info', label: t('settings.bookInfo') }] : undefined,
+            onChange: id => {
+              if (id === '__book-info') setBookInfoOpen(true)
+              else void perform(() => onSelectBook(id))
+            },
           }),
+          selectedBook ? h('progress', { className: 'novel-fish-progress', value: selectedBook.progress,
+            max: selectedBook.segmentCount, 'aria-label': t('settings.readingProgress') }) : null,
         ),
         selectedBook ? h('div', { className: 'novel-fish-row' },
           h('span', { className: 'novel-fish-hint', 'data-novel-progress': true }, t('settings.progressValue', { progress: selectedBook.progress, total: selectedBook.segmentCount, percent: Math.floor(selectedBook.progress / selectedBook.segmentCount * 100) })),
@@ -178,13 +192,11 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
             footer: [{ id: '__all', label: t(state.settings.targetTypes.length === TARGET_TYPES.length ? 'settings.clearTypes' : 'settings.allTypes') }],
             onChange: type => { void setTypes(type === '__all' ? (state.settings.targetTypes.length === TARGET_TYPES.length ? [] : [...TARGET_TYPES]) : TARGET_TYPES.filter(value => value === type ? !state.settings.targetTypes.includes(type) : state.settings.targetTypes.includes(value))) },
           }),
-          h('p', { className: 'novel-fish-hint' }, t('settings.typeHint')),
         ),
         h('div', { className: 'novel-fish-row' },
           h('span', null, t('settings.continueOnReopen')),
           h(Switch, { checked: state.settings.continueOnReopen === true, disabled: disabled || savingContinue, label: t('settings.continueOnReopen'), onChange: enabled => { void setContinue(enabled) } }),
         ),
-        h('p', { className: 'novel-fish-hint' }, t('settings.continueOnReopenHint')),
       ),
       h('section', { className: 'novel-fish-section' },
         h('h3', null, t('settings.appearance')),
@@ -197,9 +209,21 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
             onChange: value => perform(() => onSetOption(key, value)),
           })),
         ),
-        h('p', { className: 'novel-fish-hint' }, t('settings.nativeControls')),
       ),
       ui.notice ? h('div', { role: 'status', 'data-novel-notice': true }, ui.notice) : null,
+      bookInfoOpen ? h(Modal, {
+        open: true, onClose: () => setBookInfoOpen(false), title: t('settings.bookInfo'), closeLabel: t('settings.close'),
+      }, h('div', { className: 'novel-fish-book-info', 'data-novel-book-info': true },
+        ...sampleBooks.map(book => h('div', { key: book.id, className: 'novel-fish-field' },
+          h('a', { href: book.source, target: '_blank', rel: 'noreferrer' }, book.title),
+          h('span', null, book.author), h('span', null, book.license),
+        )),
+        h('a', { href: getSampleLicenseHref?.(), download: 'bundled-ebooks-notices.txt' }, t('settings.sampleLicense')),
+        h('p', { 'data-novel-sample-license': true }, t('settings.samplePgNotice'), ' ',
+          PG_NOTICE, ' ',
+          h('a', { href: 'https://www.gutenberg.org/policy/license.html', target: '_blank', rel: 'noreferrer' }, 'www.gutenberg.org'),
+        ),
+      )) : null,
       h(Modal, {
         open: Boolean(removeBook), onClose: closeRemove, title: t('settings.deleteBook'), closeLabel: t('settings.cancel'),
         description: removeBook ? t('settings.removeConfirm', { title: removeBook.title }) : '',

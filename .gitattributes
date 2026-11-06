@@ -1,0 +1,5 @@
+# Preserve reviewed source bytes (including original CRLF/trailing whitespace).
+# The works and verbatim license are reviewed inputs, not formatter-owned source.
+samples/ebooks/million-pound-bank-note-pg61522.txt -text -whitespace
+samples/ebooks/aq-zheng-zhuan-wikisource.md -text -whitespace
+samples/ebooks/LICENSE.md -text -whitespace

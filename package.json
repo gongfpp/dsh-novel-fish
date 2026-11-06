@@ -1,6 +1,6 @@
 {
   "name": "@gongfpp/dsh-novel-fish",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/gongfpp/dsh-novel-fish.git"
@@ -38,6 +38,7 @@
     "assets/icon.png",
     "locale/*.json",
     "docs/**",
+    "samples/ebooks/**",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
     "README.md",

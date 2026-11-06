@@ -74,9 +74,11 @@ test('市场索引保留固定提交来源、版本唯一和宿主兼容范围',
 test('README local links resolve and installation contains no personal absolute path', async () => {
   const readme = await read('README.md')
   assert.doesNotMatch(readme, /\/Users\/|C:\\Users\\/u)
-  const index = JSON.parse(await read('index.json'))
-  const published = index.plugins.find(plugin => plugin.name === '@gongfpp/dsh-novel-fish').versions[0]
-  assert.ok(readme.includes(`github:gongfpp/dsh-novel-fish#v${published.version}`), 'installation uses an actually published version')
+  const manifest = JSON.parse(await read('package.json'))
+  // Source docs describe the version being built. The public index is appended
+  // only after release, when its immutable source SHA and timestamp are known.
+  assert.ok(readme.includes(`github:gongfpp/dsh-novel-fish#v${manifest.version}`), 'installation matches the release being built')
+  assert.ok(readme.includes(`@gongfpp/dsh-novel-fish@${manifest.version}`))
   for (const match of readme.matchAll(/\]\(([^)]+)\)/gu)) {
     const path = match[1].replace(/^<|>$/gu, '').split('#')[0]
     if (!path || /^[a-z]+:/iu.test(path)) continue

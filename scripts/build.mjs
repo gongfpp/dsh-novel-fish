@@ -11,6 +11,7 @@ const result = await build({
   absWorkingDir: root,
   entryPoints: [resolve(root, 'src/client.js')],
   bundle: true,
+  loader: { '.epub': 'base64', '.txt': 'base64', '.md': 'text' },
   platform: 'browser',
   format: 'iife',
   target: ['chrome120'],

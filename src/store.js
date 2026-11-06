@@ -1,6 +1,7 @@
 import { parseEpub } from './epub.js'
 import { DEFAULT_SEGMENT_LENGTH, parseTextBook } from './segments.js'
 import { decodeBookText } from './text-decoding.js'
+import { hasProjectGutenbergReference } from './pg-notice.js'
 
 export const TARGET_TYPES = Object.freeze(['reasoning', 'tool-call', 'read-file', 'command', 'file-search'])
 
@@ -21,8 +22,10 @@ export function passageSnapshotKey(bookId, stepKey) {
 
 /** Own persistent books/settings and page-only passage cache for Novel Fish. */
 export class NovelStore {
-  constructor(storage) {
+  constructor(storage, { bundledBooks = [], bundledCatalog = null } = {}) {
     this.storage = storage
+    this.bundledBooks = bundledBooks
+    this.bundledCatalog = bundledCatalog
     this.state = { books: [], settings: { ...DEFAULT_SETTINGS }, hydrated: false, error: null }
     this.ui = { notice: null }
     this.listeners = new Set()
@@ -36,6 +39,9 @@ export class NovelStore {
     this.uiSource = Object.freeze({ getSnapshot: this.getUiSnapshot, subscribe: this.subscribeUi })
     this.passageSource = Object.freeze({ getSnapshot: this.getPassageSnapshot, subscribe: this.subscribePassages })
     this.pendingReads = new Map()
+    // Page-only provenance, keyed by stored identity (including adopted legacy IDs).
+    // No library rewrite/migration and no dependence on mutable titles or filenames.
+    this.projectGutenbergBooks = new Map()
     this.cacheGeneration = 0
     this.disposed = false
     this.persistenceError = null
@@ -64,6 +70,7 @@ export class NovelStore {
     this.passageStates.clear()
     this.passageSnapshot = Object.freeze({})
     this.pendingReads.clear()
+    this.projectGutenbergBooks.clear()
     this.listeners.clear()
     this.settingsListeners.clear()
     this.uiListeners.clear()
@@ -140,6 +147,7 @@ export class NovelStore {
         await this.#restore(() => this.storage.saveSettings(previousSettings))
         throw error
       }
+      this.projectGutenbergBooks.delete(bookId)
       this.#setState({ books, settings })
       if (settings.currentBookId !== previousSettings.currentBookId) this.#clearPassages(false)
     })
@@ -187,6 +195,15 @@ export class NovelStore {
       const passage = await this.storage.getSegment(bookId, index)
       if (!passage?.text) throw new Error('当前段落为空或已损坏')
       if (!this.#canRead(generation, targetType)) return EMPTY_STATUS
+      if (!this.projectGutenbergBooks.has(bookId)) {
+        // A resumed book may be far beyond the header. Inspect segment zero once
+        // per book/page, reusing the claimed segment when starting at zero.
+        const first = index === 0 ? passage : await this.storage.getSegment(bookId, 0)
+        if (!this.#canRead(generation, targetType)) return EMPTY_STATUS
+        if (!first?.text) throw new Error('书籍首段为空或已损坏')
+        this.projectGutenbergBooks.set(bookId, hasProjectGutenbergReference(first.text))
+      }
+      const projectGutenberg = this.projectGutenbergBooks.get(bookId)
 
       const updated = { ...book, progress: index + 1 }
       await this.storage.updateBook(updated)
@@ -194,7 +211,7 @@ export class NovelStore {
         await this.#restore(() => this.storage.updateBook(book))
         return EMPTY_STATUS
       }
-      const result = { kind: 'ready', bookId, index, passage }
+      const result = { kind: 'ready', bookId, index, passage, projectGutenberg }
       this.#setState({ books: this.state.books.map(item => item.id === bookId ? updated : item) })
       return this.#writePassageStatus(bookId, stepKey, result)
     }).catch(error => {
@@ -217,7 +234,48 @@ export class NovelStore {
 
   async #hydrate() {
     try {
-      const stored = await this.storage.load()
+      let stored = await this.storage.load()
+      if (this.bundledBooks.length && !stored.bundledBooksInitialized) {
+        const entries = []
+        const bundledIds = new Set()
+        // Parse everything before opening the atomic transaction; any failure leaves
+        // both the library and its one-time marker untouched for a later retry.
+        for (const descriptor of this.bundledBooks) {
+          const { id, title, format, createFile } = descriptor
+          if (typeof id !== 'string' || !id || bundledIds.has(id) || typeof title !== 'string' || !title.trim()
+            || !['epub', 'txt', 'md'].includes(format) || typeof createFile !== 'function') {
+            throw new Error('内置书籍描述无效或重复')
+          }
+          bundledIds.add(id)
+          const file = await createFile()
+          const parsed = format === 'epub'
+            ? await parseEpub(file, DEFAULT_SEGMENT_LENGTH)
+            : parseTextBook(decodeBookText(await file.arrayBuffer()), format, DEFAULT_SEGMENT_LENGTH)
+          entries.push({
+            book: {
+              id: `bundled:${id}`, bundledId: id, title: title.trim(), format,
+              segmentCount: parsed.segments.length, progress: 0, importedAt: Date.now(),
+            },
+            segments: parsed.segments,
+          })
+        }
+        // Hydration must not enqueue a mutation that would itself await ready.
+        stored = await this.storage.initializeBundledBooks(entries, this.bundledCatalog?.version)
+      }
+      if (stored.bundledBooksInitialized && this.bundledCatalog
+        && (stored.bundledCatalogVersion ?? 0) < this.bundledCatalog.version) {
+        const updates = []
+        for (const update of this.bundledCatalog.updates ?? []) {
+          // An empty/partially deleted library does not need to parse removed
+          // defaults. The atomic migration rechecks identity and current content.
+          if (!(stored.books ?? []).some(book => (book.bundledId === update.id || book.id === `bundled:${update.id}`)
+            && book.format === update.fromFormat)) continue
+          const file = await update.createFile()
+          const parsed = parseTextBook(decodeBookText(await file.arrayBuffer()), update.fromFormat, DEFAULT_SEGMENT_LENGTH)
+          updates.push({ id: update.id, fromFormat: update.fromFormat, format: update.format, segments: parsed.segments })
+        }
+        stored = await this.storage.migrateBundledCatalog({ ...this.bundledCatalog, updates })
+      }
       const books = stored.books ?? []
       const storedSettings = stored.settings ?? {}
       const availableIds = new Set(books.map(book => book.id))

@@ -72,7 +72,8 @@ try {
     url: 'http://host-contract.invalid/', runScripts: 'outside-only', pretendToBeVisual: true, virtualConsole,
   })
   Object.assign(dom.window, {
-    TextEncoder, TextDecoder, indexedDB: new IDBFactory(), IDBKeyRange,
+    TextEncoder, TextDecoder, URL, Blob, setImmediate, clearImmediate,
+    indexedDB: new IDBFactory(), IDBKeyRange,
     fetch: () => { throw new Error('Network is forbidden in host-contract probe') },
     console: { ...console, error: error => { if (error?.message !== 'web app: missing #root') errors.push(String(error)) } },
   })
@@ -129,7 +130,7 @@ try {
   assert.ok(core.factory('conversation.chat.reasoning.content'))
   const originalBody = core.entriesOfSlot('conversation.chat.reasoning.body')[0]
   const plugin = await build({ entryPoints: [join(project, 'src/client.js')], bundle: true, write: false,
-    format: 'iife', logLevel: 'silent' })
+    loader: { '.epub': 'base64', '.txt': 'base64', '.md': 'text' }, format: 'iife', logLevel: 'silent' })
   capture(plugin.outputFiles[0].text, 'novel-client-source.js').apply(ctx)
   const body = core.entriesOfSlot('conversation.chat.reasoning.body')[0]
   assert.notEqual(body, originalBody, 'Plugin body must shadow, not replace/delete, host body')
