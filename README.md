@@ -101,6 +101,7 @@ dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.1.0
 ## 兼容与限制
 
 - 声明范围 `>=0.2.1-rc.2 <0.3.0-0`；真实页面验收在 `0.2.2-alpha.2` 完成，`0.2.1-rc.2` 至 rc.5 与 `0.2.2-rc.1` 由宿主契约探针（7 项）验证。区间是准入策略，不等于逐版本页面验收
+- `conversation.chat.reasoning.body` 是 `single` 作用域插槽：本插件与官方可选包 `cot-translation` 占同一个槽，同时启用只有优先级高的那个生效，请只装一个（详见[宿主适配与插槽说明](docs/host-adapter.md)）
 - 没有独立阅读页、阅读工具栏或章节跳转，阅读就发生在对话里
 - 依赖宿主公开的可访问性锚点；宿主大版本更新后如果锚点变了，插件会检测不到而不是错误追加
 - 键盘、悬停、触屏、展示模式切换等交互路径的补验记录见下方文档
@@ -112,6 +113,11 @@ dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.1.0
 - [宿主适配与插槽说明](docs/host-adapter.md)
 - [兼容验证矩阵](docs/compatibility-017.md)
 - [插件市场与自建索引](docs/marketplace.md)
+
+## 相关插件
+
+- **[谢谢卡尔 · dsh-thanks-carl](https://github.com/gongfpp/dsh-thanks-carl)** — 任务完成后让卡尔从屏幕边缘探头道谢，顺带提醒喝水、吃饭、休息；纯本地，不调用模型。
+- **[每轮扣款语音播报 · dsh-cost-voice](https://github.com/gongfpp/dsh-cost-voice)** — 每轮结束用支付宝或「大白饭」的声音报一句本轮花了多少钱。
 
 ## 开发
 
