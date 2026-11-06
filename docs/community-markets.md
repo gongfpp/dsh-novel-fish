@@ -12,6 +12,13 @@
 
 以上是投稿与留言记录，不代表已收录；各站是否刷新以索引实际内容为准。
 
+## 市场刷新结果（2026-11-06）
+
+- **Awesome 主目录：已合并。** [PR #12228](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/12228) 于 `2026-11-05T17:12:40Z` 合并，上游 YAML 现指向 v1.0.1 的固定 tarball 与区间描述；官网 `index.json` 实读本插件 `versions: ["1.0.1"]`、`source.type: npm`。
+- **dshopen：已刷新到 1.0.1，并改为跟随 npm `latest`。** 维护者在[原申请 #101](https://github.com/polang233/dsh-plugin-index/issues/101#issuecomment-6656070328) 回复「已更新到 1.0.1，并切换为跟随 npm latest」，实读 https://dshopen.org/index.json 现为 `1.0.1`、`source.type: npm`，描述已含 `>=0.2.1-rc.2 <0.3.0-0`。
+- **dsh-web 社区目录：仍在审核。** [PR #60](https://github.com/zhu1090093659/dsh-community-plugins/pull/60) 状态仍为 `OPEN` / `CHANGES_REQUESTED`。分支 head `0d696f2` 的 `community.json` 去掉本插件条目后与 `upstream/main`（`b05b86f`）逐条相同（104 条 → 104 条），本插件是第 105 条、在数组末尾，相对 upstream 的 diff 仍为 12 行；已再次留言说明并请复核。外部贡献者无法直接请求 review，只能评论提醒。
+- npm `latest` 仍为 `1.0.1`。
+
 ## 0.1.5 更新
 
 - [GitHub Release](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v0.1.5) 已公开，源码固定为 `61a0e62d7caa06f3101b450277f3ef530e1561f8`；提供预构建安装包、源码和校验文件。npm 未发布 0.1.5，因此依赖 npm 的自动目录目前不能据此变成新版。
