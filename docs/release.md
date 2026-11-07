@@ -12,8 +12,8 @@
 - README 已改为[1567 × 856 真实窗口 GIF](<evidence/reading-two-expansions-110.gif>)：保留 DeepSeek 框架，展开两条不同的思考并接续两段正文，再收起。经用户授权操作现有项目会话，没有发送模型消息；由真实操作前后帧顺序合成、压缩等待，不是连续桌面录像。浏览器外框/底部统计裁去，侧栏私密会话/账户遮挡；未改写正文。实拍沿用已有 AQ TXT，不冒称新版 MD 导入；[证据记录](<evidence/reading-two-expansions-110.json>)记载帧哈希和边界。历史三书截图只保留作历史材料。
 - [GitHub Release v1.1.0](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v1.1.0) 已于 `2026-11-06T21:26:03Z` 正式公开，非草稿/预发布；标签源码固定为 `698639ae76db57c4b0bce5b4ab1cab9fc8ee0d4e`。[源码 CI](https://github.com/gongfpp/dsh-novel-fish/actions/runs/42296100146) 两项作业通过。自建索引追加 1.1.0，时间戳 `1794000363` 来自实际 Release 时间；旧条目与来源提交不改写。
 - 安装包 `gongfpp-dsh-novel-fish-1.1.0.tgz`：4172803 字节，SHA-256 `a36e3afa5b05b7c5c205462fed13a5d1e3501c01ba8a0840d3857c9b2a1a3c35`；源码 ZIP：4229566 字节，SHA-256 `f89f2e5527e130b92d92fa2489cc75e4edf7ec88cfaf88294f1aa70740631e49`。两者及校验文件均匿名下载 HTTP 200、逐字节匹配。包内 107 文件与源码 ZIP 的 111 文件均对齐标签源码，受限候选、测试语料和未遮挡捕获不入包。
-- 在独立临时 `DSH_HOME` 的三个空 profile 中，用公开下载的 tarball、README 的标签 spec、市场使用的完整 SHA 三条路线安装，均得到 1.1.0，编译产物 SHA-256 全部等于 `6ffb7a11…`。不改日常 profile、不启动服务器或发起模型请求，不冒充市场卡片 GUI 验收。[结构化发布回执](<evidence/public-release-110-result.json>)。
-- npm 初始登录态为 `ENEEDAUTH`；用户完成 npm 登录与发布二次验证后，已将 GitHub 的同一个冻结 tarball 提交至官方 registry，CLI 返回 `+ @gongfpp/dsh-novel-fish@1.1.0` 并提示后台处理。registry 可见性、`latest` 与字节一致性仍待读回确认，不能把提交接受当作已经可安装；处理期间使用上面的 GitHub 路线。
+- 在独立临时 `DSH_HOME` 的四个空 profile 中，用公开下载的 tarball、README 的标签 spec、市场使用的完整 SHA、npm 固定版本四条路线安装，均得到 1.1.0，编译产物 SHA-256 全部等于 `6ffb7a11…`。不改日常 profile、不启动服务器或发起模型请求，不冒充市场卡片 GUI 验收。[结构化发布回执](<evidence/public-release-110-result.json>)。
+- **npm 1.1.0 已公开发布**：用户完成登录与发布二次验证后，发布 GitHub 的同一个冻结 tarball。registry 时间 `2026-11-07T05:36:41.063Z`，`latest` 已指向 1.1.0。匿名下载 HTTP 200，4172803 字节及 SHA-256 与 GitHub 附件完全一致；SHA-1 `915bcb576c80b23329764b86cb345ea9c81b59b6`，SHA-512 integrity `sha512-+Xao31FRfEGZ9YefhPXpboVD1dBhlp7t7PA2TqPEof6df/9w88HF/jDKIVpxH5sCQBytYFmpSJ80W+2F4tlEXw==` 均实算核对。空 profile 从 npm 固定版本安装得到相同 bundle；不是仅以 CLI 的后台处理提示作为上架证明。
 - 安装包与源码 ZIP 在本段发布事实及新索引写入前冻结；包内索引仍到 1.0.1，这是有意避免伪造尚未发生的时间和自引用提交。后续发布回执不回填或替换已有附件，实际对应关系以哈希为准。
 
 ## 1.0.0：功能定稿与面向用户的发布（2026-11-04）

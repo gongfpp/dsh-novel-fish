@@ -75,7 +75,7 @@ dsh plugin --profile web add ./gongfpp-dsh-novel-fish-1.1.0.tgz
 
 `web` 是 profile 名称，用别的 profile 时替换。
 
-npm 1.1.0 已通过发布验证并提交处理；registry 完成处理前请使用上面的 GitHub 或附件路线。上架后可安装固定版本：
+也可以从 npm 安装固定版本：
 
 ```sh
 dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.1.0

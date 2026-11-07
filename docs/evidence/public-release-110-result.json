@@ -64,7 +64,7 @@
   },
   "installation": {
     "isolatedHome": true,
-    "routesPassed": ["anonymous-release-tarball", "github-tag", "github-full-commit"],
+    "routesPassed": ["anonymous-release-tarball", "github-tag", "github-full-commit", "npm-fixed-version"],
     "installedVersion": "1.1.0",
     "allBundlesMatch": true,
     "userProfileChanged": false,
@@ -72,12 +72,21 @@
     "modelRequests": false
   },
   "npm": {
-    "status": "accepted-processing",
+    "status": "published",
     "publicationAccepted": true,
-    "registryVerified": false,
+    "registryVerified": true,
     "initialWhoamiError": "ENEEDAUTH",
     "userCompletedLoginAndPublishVerification": true,
-    "nextStep": "Verify registry visibility, latest tag, exact frozen tarball bytes and isolated npm installation."
+    "publishedAt": "2026-11-07T05:36:41.063Z",
+    "latest": "1.1.0",
+    "tarball": "https://registry.npmjs.org/@gongfpp/dsh-novel-fish/-/dsh-novel-fish-1.1.0.tgz",
+    "bytes": 4172803,
+    "sha256": "a36e3afa5b05b7c5c205462fed13a5d1e3501c01ba8a0840d3857c9b2a1a3c35",
+    "shasum": "915bcb576c80b23329764b86cb345ea9c81b59b6",
+    "integrity": "sha512-+Xao31FRfEGZ9YefhPXpboVD1dBhlp7t7PA2TqPEof6df/9w88HF/jDKIVpxH5sCQBytYFmpSJ80W+2F4tlEXw==",
+    "anonymousHttpStatus": 200,
+    "byteEqualToGitHub": true,
+    "isolatedInstallationPassed": true
   },
   "boundaries": [
     "The npm registry is a separate publication channel; GitHub success is not npm publication.",

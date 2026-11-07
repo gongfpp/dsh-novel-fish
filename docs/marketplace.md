@@ -21,7 +21,7 @@ DSH `0.2.1-rc.2` 的市场由用户信任并添加的静态 JSON 索引提供，
 
 目标 DSH 的发现页尚不提供原地升级：已安装旧版可用 README 的固定版本命令替换，或先卸载插件再从发现页安装。书库和进度属于当前站点的 IndexedDB，勿清除站点数据。
 
-自建索引推荐 1.1.0，来源固定为标签源码提交 `698639ae76db57c4b0bce5b4ab1cab9fc8ee0d4e`；GitHub Release 已公开（历史条目保留各自当时的记录）；0.1.4 的远端索引曾通过目标宿主官方解析器验证，推荐版本为 `0.1.4` 是当时的记录；固定提交安装、README 标签和公开 tarball 三条隔离安装均通过，见 [发布实测](release.md) 和 [分发结果](evidence/public-release-014-result.json)。本轮没有新版真实市场卡片截图；README 的真实阅读 GIF 不替代市场发现/安装全流程验收。npm 1.1.0 的状态以发布记录为准，Git 来源安装不依赖 npm。
+自建索引推荐 1.1.0，来源固定为标签源码提交 `698639ae76db57c4b0bce5b4ab1cab9fc8ee0d4e`；GitHub Release 已公开（历史条目保留各自当时的记录）；0.1.4 的远端索引曾通过目标宿主官方解析器验证，推荐版本为 `0.1.4` 是当时的记录；固定提交安装、README 标签和公开 tarball 三条隔离安装均通过，见 [发布实测](release.md) 和 [分发结果](evidence/public-release-014-result.json)。本轮没有新版真实市场卡片截图；README 的真实阅读 GIF 不替代市场发现/安装全流程验收。npm 1.1.0 与 GitHub 同一个安装包均已公开并完成隔离安装验证，详见发布记录；Git 来源安装不依赖 npm。
 
 索引里的 Git 来源固定为完整提交 SHA，不使用浮动分支或可移动 tag。索引可随发布追加版本，但已有版本的源码提交不会悄悄替换。GitHub 安装不要求 npm scope 所有权，也不需要先发布 npm 包。1.0.0 起同时提供 npm 包（`@gongfpp/dsh-novel-fish@1.0.0`，与 GitHub 附件同一个 tgz）。
 
