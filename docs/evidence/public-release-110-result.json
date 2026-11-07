@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "version": "1.1.0",
+  "verifiedOn": "2026-11-07",
+  "repository": "https://github.com/gongfpp/dsh-novel-fish",
+  "sourceCommit": "698639ae76db57c4b0bce5b4ab1cab9fc8ee0d4e",
+  "tag": "v1.1.0",
+  "release": {
+    "url": "https://github.com/gongfpp/dsh-novel-fish/releases/tag/v1.1.0",
+    "publishedAt": "2026-11-06T21:26:03Z",
+    "draft": false,
+    "prerelease": false
+  },
+  "indexEntry": {
+    "version": "1.1.0",
+    "publishTimestamp": 1794000363,
+    "sourceCommit": "698639ae76db57c4b0bce5b4ab1cab9fc8ee0d4e",
+    "engines": { "dsh": ">=0.2.1-rc.2 <0.3.0-0" }
+  },
+  "artifacts": [
+    {
+      "name": "gongfpp-dsh-novel-fish-1.1.0.tgz",
+      "bytes": 4172803,
+      "sha256": "a36e3afa5b05b7c5c205462fed13a5d1e3501c01ba8a0840d3857c9b2a1a3c35",
+      "anonymousHttpStatus": 200,
+      "byteEqualToLocal": true,
+      "files": 107,
+      "allFilesMatchSource": true
+    },
+    {
+      "name": "dsh-novel-fish-source-1.1.0.zip",
+      "bytes": 4229566,
+      "sha256": "f89f2e5527e130b92d92fa2489cc75e4edf7ec88cfaf88294f1aa70740631e49",
+      "anonymousHttpStatus": 200,
+      "byteEqualToLocal": true,
+      "files": 111,
+      "allFilesMatchSource": true
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "bytes": 197,
+      "sha256": "e1530b0edb46b9ea40482d51ef094c437b6feed05c47c1fbee3664b06836eafb",
+      "anonymousHttpStatus": 200,
+      "byteEqualToLocal": true
+    }
+  ],
+  "bundle": {
+    "bytes": 1382671,
+    "sha256": "6ffb7a11400540faccee721e1faa6e447d98f67ffecb02bd8a2a999aef7a952e"
+  },
+  "tests": {
+    "total": 165,
+    "passed": 165,
+    "failed": 0,
+    "skipped": 0,
+    "localHostVersion": "0.2.2-alpha.2",
+    "sourceCiUrl": "https://github.com/gongfpp/dsh-novel-fish/actions/runs/42296100146",
+    "sourceCiConclusion": "success",
+    "ciContractHostVersion": "0.2.2-rc.1",
+    "offlineBrowserContextsPassed": 4,
+    "browserVirtualRequests": 87,
+    "browserExternalRequests": 0,
+    "localCorpusCasesPassed": 7
+  },
+  "installation": {
+    "isolatedHome": true,
+    "routesPassed": ["anonymous-release-tarball", "github-tag", "github-full-commit"],
+    "installedVersion": "1.1.0",
+    "allBundlesMatch": true,
+    "userProfileChanged": false,
+    "serverStarted": false,
+    "modelRequests": false
+  },
+  "npm": {
+    "status": "accepted-processing",
+    "publicationAccepted": true,
+    "registryVerified": false,
+    "initialWhoamiError": "ENEEDAUTH",
+    "userCompletedLoginAndPublishVerification": true,
+    "nextStep": "Verify registry visibility, latest tag, exact frozen tarball bytes and isolated npm installation."
+  },
+  "boundaries": [
+    "The npm registry is a separate publication channel; GitHub success is not npm publication.",
+    "The frozen tag and tarball intentionally predate this receipt and the 1.1.0 public index entry; attachments were not replaced after publication.",
+    "Isolated browser tests use mock Host primitives, not the complete official GUI; the native GIF has its own capture-time bundle hash and provenance.",
+    "CLI installation verification does not constitute a new marketplace-card GUI or full reading E2E run.",
+    "Restricted candidates, local test corpus and unredacted native captures are excluded from distributed source and package."
+  ]
+}
