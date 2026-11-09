@@ -34,8 +34,9 @@ export async function parseEpub(file, targetLength = 600) {
     const packagePath = archivePath(container.packagePath)
     const packaging = new Packaging(await readXml(packagePath))
     const navPath = packaging.navPath || packaging.ncxPath
-    const navigation = navPath ? new Navigation(await readXml(archivePath(navPath, packagePath))) : null
-    const labels = tocLabels(navigation?.toc ?? [], packagePath)
+    const navigationPath = navPath ? archivePath(navPath, packagePath) : null
+    const navigation = navigationPath ? new Navigation(await readXml(navigationPath)) : null
+    const labels = tocLabels(navigation?.toc ?? [], navigationPath ?? packagePath)
     const chapters = []
     for (const item of packaging.spine) {
       if (item.linear === 'no') continue

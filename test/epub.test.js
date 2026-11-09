@@ -63,6 +63,22 @@ test('EPUB content follows linear spine order, extracts chapter text, and ignore
   assert.equal(parsed.segments.some(segment => segment.text.includes('Must be excluded.')), false)
 })
 
+for (const format of ['nav', 'ncx']) test(`nested ${format} labels resolve relative to navigation, not OPF`, async () => {
+  const file = await epubFile({ async edit(zip) {
+    let opf = await zip.file('OEBPS/content.opf').async('string')
+    opf = opf.replace('href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"',
+      format === 'nav' ? 'href="Navigation/nav.xhtml" media-type="application/xhtml+xml" properties="nav"' : 'href="Navigation/toc.ncx" media-type="application/x-dtbncx+xml"')
+    opf = opf.replace('href="chapter-one.xhtml"', 'href="Text/chapter-one.xhtml"')
+    zip.file('OEBPS/content.opf', opf)
+    zip.file('OEBPS/Text/chapter-one.xhtml', '<html xmlns="http://www.w3.org/1999/xhtml"><head/><body><p>没有标题的正文。</p></body></html>')
+    if (format === 'nav') zip.file('OEBPS/Navigation/nav.xhtml', '<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head/><body><nav epub:type="toc"><ol><li><a href="../Text/chapter-one.xhtml#start">真正的章节名称</a></li></ol></nav></body></html>')
+    else zip.file('OEBPS/Navigation/toc.ncx', '<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><navMap><navPoint id="one"><navLabel><text>真正的章节名称</text></navLabel><content src="../Text/chapter-one.xhtml#start"/></navPoint></navMap></ncx>')
+  } })
+  const parsed = await parseEpub(file)
+  assert.equal(parsed.chapters[0].title, '真正的章节名称')
+  assert.equal(parsed.chapters[0].text, '没有标题的正文。')
+})
+
 test('malformed EPUB fails with an explicit parsing error', async () => {
   await assert.rejects(parseEpub(await epubFile({ malformed: true })), /EPUB 无法解析/u)
 })

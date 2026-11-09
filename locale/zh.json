@@ -66,6 +66,21 @@
     "importDone": "导入完成：{count} 段",
     "importError": "无法导入：{message}",
     "actionError": "操作失败：{message}",
+    "switchImported": "开始读《{title}》",
+    "adjustProgress": "调整进度",
+    "jumpDescription": "《{title}》共 {total} 段。选择下一次展开要读的段落；填 {end} 表示已读完。确认后清空已显示的小说片段，不改 AI 原文。",
+    "nextPassage": "下次阅读的段落",
+    "backOne": "回退一段",
+    "restart": "从头开始",
+    "confirmProgress": "更新进度",
+    "invalidPosition": "请输入有效范围内的整数段落号",
+    "progressUpdated": "进度已更新，下次主动展开从新位置开始",
+    "exportBackup": "导出备份",
+    "restoreBackup": "恢复备份",
+    "exportDone": "备份已下载，包含书籍正文、进度和设置，请妥善保存",
+    "restoreDescription": "备份中有 {count} 本书。合并到当前书库，不删除已有书籍；相同正文保留当前进度，并恢复备份的选书和阅读设置。确认后清空当前页面的小说片段。",
+    "confirmRestore": "合并恢复",
+    "restoreDone": "恢复完成：新增 {added} 本，复用 {reused} 本（保留已有进度）",
     "removeConfirm": "删除《{title}》及其本地阅读进度？"
   }
 }

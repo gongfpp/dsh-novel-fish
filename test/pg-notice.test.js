@@ -61,7 +61,7 @@ test('adopted legacy PG with arbitrary ID/title resumes using cached segment-zer
     const next = await store.continuePassage('first')
     assert.equal(next.projectGutenberg, true)
     assert.deepEqual(indices, [8, 0, 9], 'header is loaded once; subsequent claims reuse provenance')
-    assert.deepEqual(storage.books.get(book.id), { ...book, progress: 10 }, 'only normal progress changes, not IDs, ownership or metadata')
+    assert.deepEqual(storage.books.get(book.id), { ...book, progress: 10, revision: 2 }, 'only progress and concurrency revision change, not IDs, ownership or metadata')
     assert.strictEqual(await store.claimPassage('first'), next)
     assert.deepEqual(indices, [8, 0, 9], 'cached remount does not read again')
   } finally { store.dispose() }

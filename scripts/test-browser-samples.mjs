@@ -10,7 +10,7 @@ import { createHash } from 'node:crypto'
 import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
-import { dirname, isAbsolute, join, resolve } from 'node:path'
+import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build } from 'esbuild'
 import { PG_NOTICE } from '../src/pg-notice.js'
@@ -377,6 +377,79 @@ async function deleteByClick(page, book, { cancelFirst = false } = {}) {
   assert.ok(stored.segments.every(segment => segment.bookId !== book.id), 'deletion removes book segments too')
   return stored
 }
+async function probeReliability(page, context) {
+  let value = await state(page)
+  const selected = value.books.find(book => book.id === value.settings.currentBookId)
+  await page.locator('[data-novel-jump]').click()
+  const jump = page.getByRole('dialog', { name: '调整进度', exact: true })
+  await jump.locator('[data-novel-restart]').click()
+  await jump.getByRole('button', { name: '取消', exact: true }).last().click()
+  assert.deepEqual(await state(page), value, 'canceling progress adjustment never writes')
+  await page.locator('[data-novel-jump]').click()
+  await jump.locator('[data-novel-restart]').click()
+  await jump.locator('[data-novel-jump-confirm]').click()
+  await jump.waitFor({ state: 'detached' })
+  await page.waitForFunction(id => window.__novelTest.state().books.find(book => book.id === id).progress === 0, selected.id)
+  const firstText = (await database(page)).segments.find(segment => segment.bookId === selected.id && segment.index === 0).text
+  await readByClick(page, { ...selected, progress: 0 }, firstText)
+  // Open a genuine second page with its own store but the same IndexedDB.
+  const peer = await context.newPage()
+  peer.on('pageerror', error => failures.push(`peer: ${error.message}`))
+  try {
+    await peer.goto(`${origin}/`)
+    await hydrated(peer)
+    const before = (await state(page)).books.find(book => book.id === selected.id).progress
+    await page.locator('#fixture-disclosure').click()
+    await Promise.all([page.locator('#fixture-disclosure').click(), peer.locator('#fixture-disclosure').click()])
+    // The first page reopens its cached passage; only the new peer consumes.
+    await page.waitForFunction(({ id, progress }) => window.__novelTest.state().books.find(book => book.id === id).progress === progress, { id: selected.id, progress: before + 1 })
+    await peer.waitForFunction(({ id, progress }) => window.__novelTest.state().books.find(book => book.id === id).progress === progress, { id: selected.id, progress: before + 1 })
+    await peer.locator('[data-novel-jump]').click()
+    await peer.locator('[data-novel-back-one]').click()
+    await peer.locator('[data-novel-jump-confirm]').click()
+    await page.waitForFunction(() => !document.querySelector('[data-novel-passage]'))
+    await page.waitForFunction(({ id, progress }) => window.__novelTest.state().books.find(book => book.id === id).progress === progress, { id: selected.id, progress: before })
+  } finally { await peer.close() }
+  const waiting = page.waitForEvent('download')
+  await page.locator('[data-novel-export]').click()
+  const download = await waiting
+  assert.match(download.suggestedFilename(), /^novel-fish-backup-.*\.json$/u)
+  const backupPath = join(temp, 'library-backup.json')
+  await download.saveAs(backupPath)
+  const backupBytes = await readFile(backupPath)
+  const backup = JSON.parse(backupBytes.toString('utf8'))
+  assert.equal(backup.format, 'dsh-novel-fish-backup')
+  assert.equal(backup.books.length, (await state(page)).books.length)
+  const beforeDelete = await state(page)
+  await deleteByClick(page, beforeDelete.books.find(book => book.id === beforeDelete.settings.currentBookId))
+  const afterDelete = await state(page)
+  await page.locator('[data-novel-backup-input]').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('not json') })
+  await page.waitForFunction(() => document.querySelector('[role="status"]')?.textContent.includes('JSON'))
+  assert.deepEqual(await state(page), afterDelete)
+  await page.locator('[data-novel-backup-input]').setInputFiles(backupPath)
+  let restore = page.getByRole('dialog', { name: '恢复备份', exact: true })
+  await restore.getByRole('button', { name: '取消', exact: true }).last().click()
+  assert.deepEqual(await state(page), afterDelete, 'canceling restoration never writes')
+  await page.locator('[data-novel-backup-input]').setInputFiles(backupPath)
+  await restore.locator('[data-novel-restore-confirm]').click()
+  await page.waitForFunction(() => !document.querySelector('[data-novel-restore-confirm]') || document.querySelector('[role="dialog"] [role="alert"]'))
+  assert.equal(await page.locator('[role="dialog"] [role="alert"]').count(), 0, await page.locator('[role="dialog"] [role="alert"]').allTextContents().then(lines => lines.join(' ')))
+  await restore.waitFor({ state: 'detached' })
+  value = await state(page)
+  assert.equal(value.books.length, beforeDelete.books.length)
+  assert.equal(value.books.find(book => book.id === value.settings.currentBookId).progress,
+    backup.books.find(entry => entry.book.id === backup.settings.currentBookId).book.progress)
+  await page.reload()
+  assert.deepEqual((await hydrated(page)).books, value.books)
+  await page.locator('[data-novel-backup-input]').setInputFiles(backupPath)
+  await restore.locator('[data-novel-restore-confirm]').click()
+  await page.waitForFunction(() => !document.querySelector('[data-novel-restore-confirm]') || document.querySelector('[role="dialog"] [role="alert"]'))
+  assert.equal(await page.locator('[role="dialog"] [role="alert"]').count(), 0, await page.locator('[role="dialog"] [role="alert"]').allTextContents().then(lines => lines.join(' ')))
+  await restore.waitFor({ state: 'detached' })
+  assert.equal((await state(page)).books.length, beforeDelete.books.length, 'repeated restoration reuses exact text')
+  return { cancelSafe: true, seekAndBack: true, crossTabRefresh: true, cachedReopen: true,
+    downloadedBackupBytes: backupBytes.length, validatedRestore: true, restoreReloadAndDedup: true }
+}
 async function downloadLicense(page, label) {
   const dialog = await openBookInfo(page)
   const anchor = dialog.locator('[data-novel-book-info] a[download]')
@@ -422,7 +495,7 @@ try {
       page.setDefaultTimeout(15000)
       page.on('pageerror', error => failures.push(`${label}: ${error.stack || error.message}`))
       page.on('console', message => { if (message.type() === 'error') failures.push(`${label}: console: ${message.text()}`) })
-      await page.route('**/*', async route => {
+      await context.route('**/*', async route => {
         const url = route.request().url()
         requestLog.push({ scenario: label, url })
         const paths = new Map([
@@ -634,7 +707,8 @@ try {
         savedV1.segments.push({ id: removedId + ':0', bookId: removedId, index: 0, text: 'Legacy default passage removed atomically.' })
 
       }
-      reports.push({ scenario: label, initialBooks: initialCount, actualFileImports,
+      const reliability = !seeded ? await probeReliability(page, context) : null
+      reports.push({ scenario: label, initialBooks: initialCount, actualFileImports, reliability,
         samples: samples.map(book => ({ id: book.id, title: book.title, format: book.format, segments: book.segmentCount, initialProgress: book.progress, readProgress: book.progress + 1 })),
         licenseBytes: license.bytes, licenseSha256: license.sha256,
         automaticSeed: !migrated && !upgraded, legacySamplesDeduplicated: migrated, v1CatalogMigrated: upgraded, markerSeparateFromSettings: true,
@@ -660,6 +734,6 @@ try {
   // Only remove the exact directory allocated by this script, never user data.
   const canonicalTemp = await realpath(temp)
   const canonicalParent = await realpath(tmpdir())
-  assert.ok(isAbsolute(canonicalTemp) && dirname(canonicalTemp) === canonicalParent && canonicalTemp.split('/').at(-1).startsWith('novel-browser-samples-'))
+  assert.ok(isAbsolute(canonicalTemp) && dirname(canonicalTemp) === canonicalParent && basename(canonicalTemp).startsWith('novel-browser-samples-'))
   await rm(canonicalTemp, { recursive: true, force: true })
 }

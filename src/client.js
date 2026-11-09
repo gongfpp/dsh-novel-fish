@@ -3,6 +3,7 @@ import { NovelStore } from './store.js'
 import { registerChatAdapter } from './chat-adapter.js'
 import { createSettingsRow } from './settings.js'
 import { sampleBooks, bundledCatalog, createSampleFile, getSampleLicenseHref } from './bundled-books.js'
+import { downloadBackup } from './download.js'
 import zh from '../locale/zh.json'
 import en from '../locale/en.json'
 
@@ -36,6 +37,10 @@ window.__ModuleLoader__.load({
           onSelectBook: bookId => store.selectBook(bookId),
           onDeleteBook: bookId => store.deleteBook(bookId),
           onImportFile: file => store.importFile(file),
+          onSetProgress: (bookId, progress) => store.setProgress(bookId, progress),
+          onExportBackup: async () => downloadBackup(await store.exportBackup()),
+          onReadBackup: file => store.readBackup(file),
+          onRestoreBackup: backup => store.restoreBackup(backup),
           sampleBooks,
           getSampleLicenseHref,
         }

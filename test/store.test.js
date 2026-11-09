@@ -248,12 +248,12 @@ test('a claim requested after a book-switch intent reads the newly selected book
   store.dispose()
 })
 
-test('failed selection persistence prevents deletion and leaves the selected book usable', async () => {
+test('failed atomic deletion leaves selection and the selected book usable', async () => {
   const { store, storage } = makeStore()
   await store.ready
   const first = await store.claimPassage('A')
-  storage.saveSettings = async () => { throw new Error('settings quota failure') }
-  await assert.rejects(store.deleteBook('book-a'), /settings quota failure/u)
+  storage.deleteBook = async () => { throw new Error('delete quota failure') }
+  await assert.rejects(store.deleteBook('book-a'), /delete quota failure/u)
   assert.equal(storage.books.has('book-a'), true)
   assert.equal(store.getSnapshot().books.some(book => book.id === 'book-a'), true)
   assert.equal(store.getSettingsSnapshot().currentBookId, 'book-a')

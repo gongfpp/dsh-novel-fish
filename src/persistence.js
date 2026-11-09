@@ -1,3 +1,6 @@
+import { settingsPatch } from './settings-data.js'
+import { randomId } from './random-id.js'
+
 const DATABASE_NAME = 'dsh-touch-fish-novel'
 const DATABASE_VERSION = 1
 const SETTINGS_KEY = 'settings'
@@ -12,7 +15,29 @@ export class IndexedDbStorage {
     this.database = undefined
   }
 
+  subscribe(listener) {
+    // Node's BroadcastChannel keeps test processes alive; only browser pages sync.
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function' || typeof document === 'undefined') return () => {}
+    const channel = typeof window.BroadcastChannel === 'function' ? new window.BroadcastChannel(DATABASE_NAME) : null
+    this.channel = channel
+    const refresh = () => listener()
+    channel?.addEventListener('message', refresh)
+    window.addEventListener('focus', refresh)
+    const visible = () => { if (document.visibilityState === 'visible') refresh() }
+    document.addEventListener('visibilitychange', visible)
+    return () => {
+      channel?.close()
+      if (this.channel === channel) this.channel = null
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', visible)
+    }
+  }
+
+  notify() { this.channel?.postMessage('changed') }
+
   close() {
+    this.channel?.close()
+    this.channel = null
     this.database?.close()
     this.database = undefined
   }
@@ -146,19 +171,30 @@ export class IndexedDbStorage {
     }
   }
 
-  async saveSettings(value) {
+  async saveSettings(patch) {
     const db = await this.#open()
-    const tx = db.transaction('settings', 'readwrite')
+    const tx = db.transaction(['settings', 'books'], 'readwrite')
     const done = transactionDone(tx)
-    tx.objectStore('settings').put({ key: SETTINGS_KEY, value })
+    done.catch(() => undefined)
+    const settings = tx.objectStore('settings')
+    const previous = await requestResult(settings.get(SETTINGS_KEY))
+    const value = settingsPatch({ ...previous?.value, ...patch })
+    if (value.currentBookId && !await requestResult(tx.objectStore('books').get(value.currentBookId))) {
+      await done
+      throw new Error('找不到这本书')
+    }
+    settings.put({ key: SETTINGS_KEY, value })
     await done
+    this.notify()
+    return value
   }
 
-  async addBook(book, segments) {
+  async addBook(book, segments, { selectIfEmpty = false } = {}) {
     const db = await this.#open()
-    const tx = db.transaction(['books', 'segments'], 'readwrite')
+    const tx = db.transaction(['books', 'segments', 'settings'], 'readwrite')
     const done = transactionDone(tx)
-    tx.objectStore('books').put(book)
+    done.catch(() => undefined)
+    tx.objectStore('books').add(book)
     const segmentStore = tx.objectStore('segments')
     segments.forEach((segment, index) => segmentStore.put({
       id: `${book.id}:${index}`,
@@ -166,21 +202,38 @@ export class IndexedDbStorage {
       index,
       ...segment,
     }))
+    if (selectIfEmpty) {
+      const settings = tx.objectStore('settings')
+      const previous = (await requestResult(settings.get(SETTINGS_KEY)))?.value ?? {}
+      if (!previous.currentBookId) settings.put({ key: SETTINGS_KEY, value: { ...previous, currentBookId: book.id } })
+    }
     await done
+    this.notify()
   }
 
-  async updateBook(book) {
+  async updateBook(book, { expectedRevision, targetType } = {}) {
     const db = await this.#open()
-    const tx = db.transaction('books', 'readwrite')
+    const tx = db.transaction(['books', 'settings'], 'readwrite')
     const done = transactionDone(tx)
+    done.catch(() => undefined)
     const books = tx.objectStore('books')
     const existing = await requestResult(books.get(book.id))
     if (!existing) {
       await done
+      if (expectedRevision !== undefined) return null
       throw new Error('找不到这本书，无法保存阅读进度')
     }
-    books.put(book)
+    if (expectedRevision !== undefined && (existing.revision ?? 0) !== expectedRevision) { await done; return null }
+    if (targetType) {
+      const settings = (await requestResult(tx.objectStore('settings').get(SETTINGS_KEY)))?.value ?? {}
+      if (settings.currentBookId !== book.id || settings.enabled === false
+        || !(settings.targetTypes ?? ['reasoning']).includes(targetType)) { await done; return null }
+    }
+    const updated = expectedRevision === undefined ? book : { ...book, revision: (existing.revision ?? 0) + 1 }
+    books.put(updated)
     await done
+    this.notify()
+    return updated
   }
 
   async getSegment(bookId, index) {
@@ -196,9 +249,16 @@ export class IndexedDbStorage {
 
   async deleteBook(bookId) {
     const db = await this.#open()
-    const tx = db.transaction(['books', 'segments'], 'readwrite')
+    const tx = db.transaction(['books', 'segments', 'settings'], 'readwrite')
     const done = transactionDone(tx)
+    done.catch(() => undefined)
     tx.objectStore('books').delete(bookId)
+    const settings = tx.objectStore('settings')
+    const previous = (await requestResult(settings.get(SETTINGS_KEY)))?.value
+    if (previous?.currentBookId === bookId) {
+      const books = await requestResult(tx.objectStore('books').getAll())
+      settings.put({ key: SETTINGS_KEY, value: { ...previous, currentBookId: books[0]?.id ?? null } })
+    }
     const cursorRequest = tx.objectStore('segments').index('bookId').openCursor(this.keyRange.only(bookId))
     cursorRequest.onsuccess = () => {
       const cursor = cursorRequest.result
@@ -207,6 +267,70 @@ export class IndexedDbStorage {
       cursor.continue()
     }
     await done
+    this.notify()
+  }
+
+  async exportLibrary() {
+    const db = await this.#open()
+    const tx = db.transaction(['books', 'segments', 'settings'], 'readonly')
+    const done = transactionDone(tx)
+    done.catch(() => undefined)
+    const [stored, records] = await Promise.all([readLibrary(tx), requestResult(tx.objectStore('segments').getAll())])
+    const byBook = new Map()
+    for (const { id: _id, bookId, index, ...segment } of records) {
+      if (!byBook.has(bookId)) byBook.set(bookId, [])
+      byBook.get(bookId)[index] = segment
+    }
+    await done
+    return { ...stored, books: stored.books.map(book => ({ book, segments: byBook.get(book.id) ?? [] })) }
+  }
+
+  /** Merge atomically; existing text/metadata/progress are never overwritten. */
+  async restoreLibrary(backup) {
+    const db = await this.#open()
+    const tx = db.transaction(['books', 'segments', 'settings'], 'readwrite')
+    const done = transactionDone(tx)
+    done.catch(() => undefined)
+    try {
+      const stored = await readLibrary(tx)
+      const books = tx.objectStore('books'), segments = tx.objectStore('segments')
+      const candidates = [...stored.books]
+      const idMap = new Map()
+      let added = 0
+      for (const entry of backup.books) {
+        let match
+        for (const candidate of candidates) {
+          if (candidate.title !== entry.book.title || candidate.format !== entry.book.format
+            || candidate.segmentCount !== entry.segments.length) continue
+          const records = await requestResult(segments.index('bookId').getAll(this.keyRange.only(candidate.id)))
+          const byIndex = new Map(records.map(segment => [segment.index, segment]))
+          if (records.length === entry.segments.length && entry.segments.every((segment, index) => sameSegment(byIndex.get(index), segment))) {
+            match = candidate
+            break
+          }
+        }
+        if (match) { idMap.set(entry.book.id, match.id); continue }
+        // Always allocate a new identity: a backup cannot impersonate bundled defaults.
+        const book = { ...entry.book, id: randomId() }
+        books.add(book)
+        entry.segments.forEach((segment, index) => segments.add({ ...segment, id: `${book.id}:${index}`, bookId: book.id, index }))
+        candidates.push(book)
+        idMap.set(entry.book.id, book.id)
+        added++
+      }
+      const settings = { ...stored.settings, ...backup.settings,
+        currentBookId: idMap.get(backup.settings.currentBookId) ?? null }
+      tx.objectStore('settings').put({ key: SETTINGS_KEY, value: settingsPatch(settings) })
+      // Restoring an empty library must not trigger bundled provisioning on reload.
+      tx.objectStore('settings').put({ key: BUNDLED_BOOKS_KEY, value: true })
+      await done
+      this.notify()
+      return { added, reused: backup.books.length - added }
+    } catch (error) {
+      try { tx.abort() } catch { /* Already settled. */ }
+      await done.catch(() => undefined)
+      throw error
+    }
   }
 
   async #open() {

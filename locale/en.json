@@ -66,6 +66,21 @@
     "importDone": "Imported: {count} passages",
     "importError": "Import failed: {message}",
     "actionError": "Action failed: {message}",
+    "switchImported": "Read {title}",
+    "adjustProgress": "Adjust progress",
+    "jumpDescription": "{title} has {total} passages. Choose the next passage to read; enter {end} to mark it finished. Confirming clears displayed novel passages, not the original AI content.",
+    "nextPassage": "Next passage to read",
+    "backOne": "Back one passage",
+    "restart": "Start over",
+    "confirmProgress": "Update progress",
+    "invalidPosition": "Enter a whole passage number within the allowed range",
+    "progressUpdated": "Progress updated; the next active expansion starts at the new position",
+    "exportBackup": "Export backup",
+    "restoreBackup": "Restore backup",
+    "exportDone": "Backup downloaded. It contains book text, progress and settings; keep it safe.",
+    "restoreDescription": "The backup contains {count} books. Merge without deleting existing books; identical books keep their current progress. Restore the backup selection and reading settings, and clear this page’s displayed novel passages.",
+    "confirmRestore": "Merge backup",
+    "restoreDone": "Restored: {added} added, {reused} reused (existing progress preserved)",
     "removeConfirm": "Delete {title} and its local reading progress?"
   }
 }

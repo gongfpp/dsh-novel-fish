@@ -298,6 +298,67 @@ test('同一区域续读是默认关闭的设置项，开启后写入 continueOn
   } finally { await act(async () => view.unmount()) }
 })
 
+test('进度调整打开/取消不写，校验整数、回退和从头开始后确认才保存', async () => {
+  const model = setup(), changes = []
+  model.props.onSetProgress = async (...args) => changes.push(args)
+  const view = await mount(model)
+  try {
+    await act(async () => control(view, 'data-novel-jump').props.onClick())
+    assert.deepEqual(changes, [])
+    assert.equal(control(view, 'data-novel-jump-input').props.value, '2')
+    await act(async () => control(view, 'data-novel-jump-input').props.onChange({ currentTarget: { value: '1.5' } }))
+    await act(async () => control(view, 'data-novel-jump-confirm').props.onClick())
+    assert.deepEqual(changes, [])
+    assert.match(JSON.stringify(view.toJSON()), /有效范围/u)
+    await act(async () => control(view, 'data-novel-back-one').props.onClick())
+    assert.equal(control(view, 'data-novel-jump-input').props.value, '1')
+    await act(async () => control(view, 'data-novel-jump-confirm').props.onClick())
+    assert.deepEqual(changes, [['book-a', 0]])
+    await act(async () => control(view, 'data-novel-jump').props.onClick())
+    await act(async () => control(view, 'data-novel-restart').props.onClick())
+    await act(async () => view.root.findAllByType(HostModal).find(modal => modal.props.title === zh.settings.adjustProgress).props.onClose())
+    assert.equal(changes.length, 1)
+  } finally { await act(async () => view.unmount()) }
+})
+
+test('备份恢复先校验与确认，取消不写；失败保留弹窗可重试', async () => {
+  const model = setup(), restored = [], backup = { books: [{ book: { title: 'Backup' } }] }
+  model.props.onReadBackup = async () => backup
+  model.props.onRestoreBackup = async value => { restored.push(value); throw new Error('quota') }
+  const view = await mount(model)
+  try {
+    const input = { files: [{ name: 'book.json' }], value: 'book.json' }
+    await act(async () => control(view, 'data-novel-backup-input').props.onChange({ currentTarget: input }))
+    assert.equal(input.value, '')
+    assert.equal(restored.length, 0)
+    const modal = () => view.root.findAllByType(HostModal).find(node => node.props.title === zh.settings.restoreBackup)
+    await act(async () => modal().props.onClose())
+    assert.equal(restored.length, 0)
+    await act(async () => control(view, 'data-novel-backup-input').props.onChange({ currentTarget: input }))
+    await act(async () => control(view, 'data-novel-restore-confirm').props.onClick())
+    assert.equal(restored.length, 1)
+    assert.match(JSON.stringify(view.toJSON()), /quota/u)
+    model.props.onRestoreBackup = async () => ({ added: 1, reused: 0 })
+    await act(async () => view.update(React.createElement(SettingsRow, { ...model.props })))
+    await act(async () => control(view, 'data-novel-restore-confirm').props.onClick())
+    assert.match(model.notices.at(-1), /新增 1 本/u)
+    assert.equal(view.root.findAllByProps({ 'data-novel-restore-confirm': true }).length, 0)
+  } finally { await act(async () => view.unmount()) }
+})
+
+test('导入完成可主动切换新书，不暗中切走当前书籍', async () => {
+  const model = setup(), book = { id: 'new', title: '新书', format: 'txt', segmentCount: 2, progress: 0 }
+  model.props.onImportFile = async () => { model.state.books.push(book); return book }
+  const view = await mount(model)
+  try {
+    const input = { files: [{ name: 'new.txt' }], value: 'new.txt' }
+    await act(async () => control(view, 'data-novel-file-input').props.onChange({ currentTarget: input }))
+    assert.equal(model.state.settings.currentBookId, 'book-a')
+    await act(async () => control(view, 'data-novel-switch-imported').props.onClick())
+    assert.deepEqual(model.books, ['new'])
+  } finally { await act(async () => view.unmount()) }
+})
+
 test('中英文设置文案键一致，不再含位置选择翻译', () => {
   assert.deepEqual(Object.keys(zh.settings).sort(), Object.keys(en.settings).sort())
   for (const key of ['targetType', 'typeReasoning', 'typeHint', 'importBook', 'cancel', 'confirmDelete']) {

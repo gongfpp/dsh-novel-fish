@@ -1,18 +1,12 @@
 import { parseEpub } from './epub.js'
+import { randomId } from './random-id.js'
 import { DEFAULT_SEGMENT_LENGTH, parseTextBook } from './segments.js'
 import { decodeBookText } from './text-decoding.js'
 import { hasProjectGutenbergReference } from './pg-notice.js'
 
-export const TARGET_TYPES = Object.freeze(['reasoning', 'tool-call', 'read-file', 'command', 'file-search'])
-
-export const DEFAULT_SETTINGS = Object.freeze({
-  enabled: true,
-  currentBookId: null,
-  targetTypes: Object.freeze(['reasoning']),
-  mainTitle: '',
-  extraTitle: '',
-  continueOnReopen: false,
-})
+import { BACKUP_FORMAT, MAX_BACKUP_BYTES, validateBackup } from './backup.js'
+import { TARGET_TYPES, DEFAULT_SETTINGS, normalizeSettings } from './settings-data.js'
+export { TARGET_TYPES, DEFAULT_SETTINGS } from './settings-data.js'
 
 const EMPTY_STATUS = Object.freeze({ kind: 'empty' })
 
@@ -47,6 +41,9 @@ export class NovelStore {
     this.persistenceError = null
     this.mutationQueue = Promise.resolve()
     this.ready = this.#hydrate()
+    this.unsubscribeStorage = storage.subscribe?.(() => {
+      void this.refresh().catch(error => this.setNotice(`同步书库失败：${messageOf(error)}`))
+    })
   }
 
   getSnapshot = () => this.state
@@ -75,6 +72,7 @@ export class NovelStore {
     this.settingsListeners.clear()
     this.uiListeners.clear()
     this.passageListeners.clear()
+    this.unsubscribeStorage?.()
     this.storage.close?.()
   }
 
@@ -108,7 +106,7 @@ export class NovelStore {
     return this.#enqueueMutation(async () => {
       if (nextId && !this.state.books.some(book => book.id === nextId)) throw new Error('找不到这本书')
       if (nextId === this.state.settings.currentBookId) return
-      await this.#saveSettings({ ...this.state.settings, currentBookId: nextId })
+      await this.#saveSettings({ currentBookId: nextId })
       this.#clearPassages(false)
     })
   }
@@ -133,23 +131,60 @@ export class NovelStore {
     if (bookId === this.state.settings.currentBookId) this.cacheGeneration += 1
     return this.#enqueueMutation(async () => {
       if (!this.state.books.some(item => item.id === bookId)) return
-      const books = this.state.books.filter(item => item.id !== bookId)
-      const previousSettings = this.state.settings
-      const settings = {
-        ...previousSettings,
-        currentBookId: previousSettings.currentBookId === bookId ? books[0]?.id ?? null : previousSettings.currentBookId,
-      }
-      // Save selection first: a failed settings write must not delete the selected book.
-      await this.storage.saveSettings(settings)
-      try {
-        await this.storage.deleteBook(bookId)
-      } catch (error) {
-        await this.#restore(() => this.storage.saveSettings(previousSettings))
-        throw error
-      }
+      // Deletion and fallback selection are one transaction, including across tabs.
+      await this.storage.deleteBook(bookId)
       this.projectGutenbergBooks.delete(bookId)
-      this.#setState({ books, settings })
-      if (settings.currentBookId !== previousSettings.currentBookId) this.#clearPassages(false)
+      await this.#refresh()
+    })
+  }
+
+  /** Set the next unread index (0 = beginning, segmentCount = finished). */
+  async setProgress(bookId, progress) {
+    if (!Number.isSafeInteger(progress) || progress < 0) throw new Error('段落位置无效')
+    this.#cancelPendingReads()
+    return this.#enqueueMutation(async () => {
+      for (let attempt = 0; attempt < 32; attempt++) {
+        const book = this.state.books.find(item => item.id === bookId)
+        if (!book || progress > book.segmentCount) throw new Error('段落位置无效或书籍已删除')
+        const updated = await this.storage.updateBook({ ...book, progress, positionToken: randomId() }, { expectedRevision: book.revision ?? 0 })
+        await this.#refresh()
+        if (updated) { this.#clearPassages(); return }
+      }
+      throw new Error('其他页面正在频繁更新进度，请稍后重试')
+    })
+  }
+
+  async exportBackup() {
+    return this.#enqueueMutation(async () => {
+      const library = await this.storage.exportLibrary()
+      const data = validateBackup({ format: BACKUP_FORMAT, version: 1, books: library.books,
+        settings: normalizeSettings(library.settings, library.books.map(entry => entry.book)) })
+      const json = JSON.stringify(data)
+      if (new TextEncoder().encode(json).byteLength > MAX_BACKUP_BYTES) throw new Error('书库超过 64 MiB，暂不支持整库备份')
+      return json
+    })
+  }
+
+  async readBackup(file) {
+    if (file.size > MAX_BACKUP_BYTES) throw new Error('备份文件不能超过 64 MiB')
+    const text = await file.text()
+    if (new TextEncoder().encode(text).byteLength > MAX_BACKUP_BYTES) throw new Error('备份文件不能超过 64 MiB')
+    try { return validateBackup(JSON.parse(text)) }
+    catch (error) {
+      if (error instanceof SyntaxError) throw new Error('不是有效的 JSON 备份文件')
+      throw error
+    }
+  }
+
+  async restoreBackup(backup) {
+    const validated = validateBackup(backup)
+    this.#cancelPendingReads()
+    return this.#enqueueMutation(async () => {
+      const result = await this.storage.restoreLibrary(validated)
+      this.projectGutenbergBooks.clear()
+      this.#clearPassages()
+      await this.#refresh()
+      return result
     })
   }
 
@@ -170,50 +205,58 @@ export class NovelStore {
 
   async #readPassage(stepKey, targetType, advance) {
     if (this.disposed) return EMPTY_STATUS
-    const generation = this.cacheGeneration
+    let generation = this.cacheGeneration
     const requestKey = `${generation}\u0000${targetType}\u0000${stepKey}`
     const inFlight = this.pendingReads.get(requestKey)
     if (inFlight) return inFlight
 
     let bookId
     let loadingStatus
-    const operation = this.#enqueueMutation(async () => {
+    const operation = this.#enqueueMutation(async generationBeforeRefresh => {
+      // Adopt changes discovered before this action starts, but never revive a
+      // request canceled by a local user intent while it was in the queue.
+      if (generation === generationBeforeRefresh) generation = this.cacheGeneration
       if (!this.#canRead(generation, targetType)) return EMPTY_STATUS
       bookId = this.state.settings.currentBookId
       if (!bookId) return EMPTY_STATUS
       const existing = this.getPassageStatus(bookId, stepKey)
       if (existing.kind === 'end') return existing
       if (!advance && existing.kind === 'ready') return existing
-      const book = this.state.books.find(item => item.id === bookId)
-      if (!book || book.progress >= book.segmentCount) {
-        return this.#writePassageStatus(bookId, stepKey, { kind: 'end', bookId })
-      }
-
       loadingStatus = { kind: 'loading' }
       this.#writePassageStatus(bookId, stepKey, loadingStatus)
-      const index = book.progress
-      const passage = await this.storage.getSegment(bookId, index)
-      if (!passage?.text) throw new Error('当前段落为空或已损坏')
-      if (!this.#canRead(generation, targetType)) return EMPTY_STATUS
-      if (!this.projectGutenbergBooks.has(bookId)) {
-        // A resumed book may be far beyond the header. Inspect segment zero once
-        // per book/page, reusing the claimed segment when starting at zero.
-        const first = index === 0 ? passage : await this.storage.getSegment(bookId, 0)
+      for (let attempt = 0; attempt < 32; attempt++) {
         if (!this.#canRead(generation, targetType)) return EMPTY_STATUS
-        if (!first?.text) throw new Error('书籍首段为空或已损坏')
-        this.projectGutenbergBooks.set(bookId, hasProjectGutenbergReference(first.text))
+        const book = this.state.books.find(item => item.id === bookId)
+        if (!book || book.progress >= book.segmentCount) {
+          return this.#writePassageStatus(bookId, stepKey, { kind: 'end', bookId })
+        }
+        const index = book.progress
+        const passage = await this.storage.getSegment(bookId, index)
+        if (!passage?.text) throw new Error('当前段落为空或已损坏')
+        if (!this.#canRead(generation, targetType)) return EMPTY_STATUS
+        if (!this.projectGutenbergBooks.has(bookId)) {
+          const first = index === 0 ? passage : await this.storage.getSegment(bookId, 0)
+          if (!this.#canRead(generation, targetType)) return EMPTY_STATUS
+          if (!first?.text) throw new Error('书籍首段为空或已损坏')
+          this.projectGutenbergBooks.set(bookId, hasProjectGutenbergReference(first.text))
+        }
+        const projectGutenberg = this.projectGutenbergBooks.get(bookId)
+        // Compare-and-swap inside IndexedDB, not an unsafe page-local read/put.
+        const updated = await this.storage.updateBook({ ...book, progress: index + 1 }, {
+          expectedRevision: book.revision ?? 0, targetType,
+        })
+        if (!updated) { await this.#refresh(); continue }
+        await this.#refresh()
+        if (!this.#canRead(generation, targetType)) {
+          // Never undo a newer claim/seek in another tab when canceling this one.
+          await this.#restore(() => this.storage.updateBook(book, { expectedRevision: updated.revision }))
+          await this.#refresh()
+          return EMPTY_STATUS
+        }
+        const result = { kind: 'ready', bookId, index, passage, projectGutenberg }
+        return this.#writePassageStatus(bookId, stepKey, result)
       }
-      const projectGutenberg = this.projectGutenbergBooks.get(bookId)
-
-      const updated = { ...book, progress: index + 1 }
-      await this.storage.updateBook(updated)
-      if (!this.#canRead(generation, targetType)) {
-        await this.#restore(() => this.storage.updateBook(book))
-        return EMPTY_STATUS
-      }
-      const result = { kind: 'ready', bookId, index, passage, projectGutenberg }
-      this.#setState({ books: this.state.books.map(item => item.id === bookId ? updated : item) })
-      return this.#writePassageStatus(bookId, stepKey, result)
+      throw new Error('其他页面正在频繁更新进度，请稍后重试')
     }).catch(error => {
       if (!this.persistenceError && !this.#canRead(generation, targetType)) return EMPTY_STATUS
       const failure = { kind: 'error', message: messageOf(error) }
@@ -277,17 +320,7 @@ export class NovelStore {
         stored = await this.storage.migrateBundledCatalog({ ...this.bundledCatalog, updates })
       }
       const books = stored.books ?? []
-      const storedSettings = stored.settings ?? {}
-      const availableIds = new Set(books.map(book => book.id))
-      const settings = {
-        ...Object.fromEntries(Object.entries(DEFAULT_SETTINGS).map(([key, fallback]) => [key, storedSettings[key] ?? fallback])),
-        currentBookId: availableIds.has(storedSettings.currentBookId) ? storedSettings.currentBookId : null,
-        // Migrate the old reasoning-only field once; never carry it into writes.
-        targetTypes: Object.freeze(Array.isArray(storedSettings.targetTypes)
-          ? [...new Set(storedSettings.targetTypes.filter(type => TARGET_TYPES.includes(type)))]
-          : [...DEFAULT_SETTINGS.targetTypes]),
-      }
-      this.#setState({ books, settings, hydrated: true, error: null })
+      this.#setState({ books, settings: normalizeSettings(stored.settings, books), hydrated: true, error: null })
     } catch (error) {
       this.persistenceError = error
       this.#setState({ hydrated: true, error: messageOf(error) })
@@ -305,18 +338,8 @@ export class NovelStore {
         progress: 0,
         importedAt: Date.now(),
       }
-      await this.storage.addBook(book, segments)
-      const settings = this.state.settings.currentBookId
-        ? this.state.settings
-        : { ...this.state.settings, currentBookId: book.id }
-      try {
-        if (settings !== this.state.settings) await this.storage.saveSettings(settings)
-      } catch (error) {
-        await this.#restore(() => this.storage.deleteBook(book.id))
-        throw error
-      }
-      if (settings !== this.state.settings) this.#clearPassages()
-      this.#setState({ books: [...this.state.books, book], settings })
+      await this.storage.addBook(book, segments, { selectIfEmpty: true })
+      await this.#refresh()
       return book
     })
   }
@@ -325,21 +348,42 @@ export class NovelStore {
     return this.#enqueueMutation(async () => {
       const patch = update(this.state.settings)
       if (!patch) return this.state.settings
-      return this.#saveSettings({ ...this.state.settings, ...patch })
+      return this.#saveSettings(patch)
     })
   }
 
-  async #saveSettings(settings) {
-    await this.storage.saveSettings(settings)
+  async #saveSettings(patch) {
+    const saved = await this.storage.saveSettings(patch)
+    const settings = normalizeSettings(saved, this.state.books)
     this.#setState({ settings })
     return settings
+  }
+
+  refresh() { return this.#enqueueMutation(() => undefined) }
+
+  async #refresh() {
+    const stored = await this.storage.load()
+    if (this.disposed) return
+    const books = stored.books ?? []
+    const settings = normalizeSettings(stored.settings, books)
+    const previous = this.state.settings
+    const selectionChanged = previous.currentBookId !== settings.currentBookId
+    const positionChanged = this.state.books.some(book => book.positionToken !== books.find(item => item.id === book.id)?.positionToken)
+    if (selectionChanged || positionChanged) this.#clearPassages()
+    else if (previous.enabled !== settings.enabled || JSON.stringify(previous.targetTypes) !== JSON.stringify(settings.targetTypes)) this.#cancelPendingReads()
+    const changes = {}
+    if (JSON.stringify(this.state.books) !== JSON.stringify(books)) changes.books = books
+    if (JSON.stringify(previous) !== JSON.stringify(settings)) changes.settings = settings
+    if (Object.keys(changes).length) this.#setState(changes)
   }
 
   #enqueueMutation(action) {
     const operation = this.mutationQueue.then(async () => {
       await this.ready
       this.#assertWritable()
-      return action()
+      const generationBeforeRefresh = this.cacheGeneration
+      await this.#refresh()
+      return action(generationBeforeRefresh)
     })
     this.mutationQueue = operation.catch(() => undefined)
     return operation
@@ -418,10 +462,6 @@ export class NovelStore {
     listeners.add(listener)
     return () => listeners.delete(listener)
   }
-}
-
-function randomId() {
-  return globalThis.crypto?.randomUUID?.() ?? `book-${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
 function messageOf(error) {

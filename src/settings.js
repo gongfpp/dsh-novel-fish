@@ -75,7 +75,7 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
     )
   }
 
-  function SettingsRow({ t, useNovelState, useNovelUi, onSetOption, onSetNotice, onSelectBook, onDeleteBook, onImportFile, sampleBooks = [], getSampleLicenseHref }) {
+  function SettingsRow({ t, useNovelState, useNovelUi, onSetOption, onSetNotice, onSelectBook, onDeleteBook, onImportFile, onSetProgress, onExportBackup, onReadBackup, onRestoreBackup, sampleBooks = [], getSampleLicenseHref }) {
     const state = useNovelState(value => value)
     const ui = useNovelUi(value => value)
     const [busy, setBusy] = React.useState(false)
@@ -85,6 +85,13 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
     const [removeBook, setRemoveBook] = React.useState(null)
     const [removeError, setRemoveError] = React.useState(null)
     const [bookInfoOpen, setBookInfoOpen] = React.useState(false)
+    const [importedBook, setImportedBook] = React.useState(null)
+    const [jumpBook, setJumpBook] = React.useState(null)
+    const [nextPassage, setNextPassage] = React.useState('1')
+    const [pendingBackup, setPendingBackup] = React.useState(null)
+    const [dialogError, setDialogError] = React.useState(null)
+    const backupInput = React.useRef(null)
+    const libraryAction = React.useRef(false)
     const enabling = React.useRef(false)
     const continuing = React.useRef(false)
     const changingTypes = React.useRef(false)
@@ -128,6 +135,7 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
       try {
         const book = await onImportFile(file)
         onSetNotice(t('settings.importDone', { count: book.segmentCount }))
+        setImportedBook(book)
       } catch (error) {
         onSetNotice(t('settings.importError', { message: errorMessage(error) }))
       } finally {
@@ -145,6 +153,30 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
       try { await onDeleteBook(removeBook.id); setRemoveBook(null) }
       catch (error) { setRemoveError(t('settings.actionError', { message: errorMessage(error) })) }
       finally { removing.current = false; setBusy(false) }
+    }
+
+    const runLibraryAction = async action => {
+      if (disabled || libraryAction.current) return
+      libraryAction.current = true
+      setBusy(true)
+      setDialogError(null)
+      try { await action() }
+      catch (error) {
+        const message = t('settings.actionError', { message: errorMessage(error) })
+        setDialogError(message)
+        onSetNotice(message)
+      } finally { libraryAction.current = false; setBusy(false) }
+    }
+    const readBackup = async event => {
+      const input = event.currentTarget, file = input.files?.[0]
+      if (!file) return
+      await runLibraryAction(async () => { setPendingBackup(await onReadBackup(file)) })
+      input.value = ''
+    }
+    const openJump = () => {
+      setDialogError(null)
+      setNextPassage(String(Math.min(selectedBook.progress + 1, selectedBook.segmentCount + 1)))
+      setJumpBook(selectedBook)
     }
 
     return h('section', { className: 'novel-fish-settings', 'data-novel-settings': true },
@@ -173,8 +205,23 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
         ),
         selectedBook ? h('div', { className: 'novel-fish-row' },
           h('span', { className: 'novel-fish-hint', 'data-novel-progress': true }, t('settings.progressValue', { progress: selectedBook.progress, total: selectedBook.segmentCount, percent: Math.floor(selectedBook.progress / selectedBook.segmentCount * 100) })),
+          h(Button, { variant: 'outline', disabled, 'data-novel-jump': true, onClick: openJump }, t('settings.adjustProgress')),
           h(Button, { variant: 'ghost', disabled, 'data-novel-delete': true, onClick: () => { setRemoveError(null); setRemoveBook(selectedBook) } }, t('settings.deleteBook')),
         ) : h('p', { className: 'novel-fish-hint' }, t('settings.emptyLibrary')),
+        importedBook?.id && importedBook.id !== state.settings.currentBookId && state.books.some(book => book.id === importedBook.id)
+          ? h(Button, { variant: 'outline', disabled, 'data-novel-switch-imported': true,
+            onClick: () => { void perform(() => onSelectBook(importedBook.id)) },
+          }, t('settings.switchImported', { title: importedBook.title })) : null,
+        h('div', { className: 'novel-fish-row' },
+          h(Button, { variant: 'outline', disabled, 'data-novel-export': true,
+            onClick: () => { void runLibraryAction(async () => { await onExportBackup(); onSetNotice(t('settings.exportDone')) }) },
+          }, t('settings.exportBackup')),
+          h(Button, { variant: 'outline', disabled, 'data-novel-restore': true,
+            onClick: () => backupInput.current?.click(),
+          }, t('settings.restoreBackup')),
+        ),
+        h('input', { ref: backupInput, hidden: true, type: 'file', accept: '.json,application/json', disabled,
+          'data-novel-backup-input': true, onChange: event => { void readBackup(event) } }),
       ),
       h('section', { className: 'novel-fish-section' },
         h('h3', null, t('settings.reading')),
@@ -211,6 +258,49 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
         ),
       ),
       ui.notice ? h('div', { role: 'status', 'data-novel-notice': true }, ui.notice) : null,
+      jumpBook ? h(Modal, {
+        open: true, title: t('settings.adjustProgress'), closeLabel: t('settings.cancel'),
+        onClose: () => { if (!busy) setJumpBook(null) },
+        description: t('settings.jumpDescription', { title: jumpBook.title, total: jumpBook.segmentCount, end: jumpBook.segmentCount + 1 }),
+        footer: h(React.Fragment, null,
+          h(Button, { variant: 'outline', disabled: busy, onClick: () => setJumpBook(null) }, t('settings.cancel')),
+          h(Button, { variant: 'primary', disabled, 'data-novel-jump-confirm': true,
+            onClick: () => { void runLibraryAction(async () => {
+              const next = Number(nextPassage)
+              if (!Number.isSafeInteger(next) || next < 1 || next > jumpBook.segmentCount + 1) throw new Error(t('settings.invalidPosition'))
+              await onSetProgress(jumpBook.id, next - 1)
+              setJumpBook(null)
+              onSetNotice(t('settings.progressUpdated'))
+            }) },
+          }, t('settings.confirmProgress')),
+        ),
+      },
+        h(Input, { type: 'number', min: 1, max: jumpBook.segmentCount + 1, step: 1, value: nextPassage,
+          disabled: busy, 'aria-label': t('settings.nextPassage'), 'data-novel-jump-input': true,
+          onChange: event => setNextPassage(event.currentTarget.value) }),
+        h('div', { className: 'novel-fish-row' },
+          h(Button, { variant: 'ghost', disabled: busy, 'data-novel-back-one': true,
+            onClick: () => setNextPassage(String(Math.max(1, jumpBook.progress))) }, t('settings.backOne')),
+          h(Button, { variant: 'ghost', disabled: busy, 'data-novel-restart': true,
+            onClick: () => setNextPassage('1') }, t('settings.restart')),
+        ),
+        dialogError ? h('p', { role: 'alert' }, dialogError) : null,
+      ) : null,
+      pendingBackup ? h(Modal, {
+        open: true, title: t('settings.restoreBackup'), closeLabel: t('settings.cancel'),
+        onClose: () => { if (!busy) setPendingBackup(null) },
+        description: t('settings.restoreDescription', { count: pendingBackup.books.length }),
+        footer: h(React.Fragment, null,
+          h(Button, { variant: 'outline', disabled: busy, onClick: () => setPendingBackup(null) }, t('settings.cancel')),
+          h(Button, { variant: 'primary', disabled, 'data-novel-restore-confirm': true,
+            onClick: () => { void runLibraryAction(async () => {
+              const result = await onRestoreBackup(pendingBackup)
+              setPendingBackup(null)
+              onSetNotice(t('settings.restoreDone', result))
+            }) },
+          }, t('settings.confirmRestore')),
+        ),
+      }, dialogError ? h('p', { role: 'alert' }, dialogError) : null) : null,
       bookInfoOpen ? h(Modal, {
         open: true, onClose: () => setBookInfoOpen(false), title: t('settings.bookInfo'), closeLabel: t('settings.close'),
       }, h('div', { className: 'novel-fish-book-info', 'data-novel-book-info': true },

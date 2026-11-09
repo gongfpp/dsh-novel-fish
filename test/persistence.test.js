@@ -20,7 +20,7 @@ test('IndexedDB stores metadata/settings separately from lazily-read passage rec
     assert.equal(await storage.getSegment(book.id, 0), null)
     assert.equal(await storage.getSegment(book.id, 1), null)
     await assert.rejects(storage.updateBook({ ...book, progress: 2 }), /找不到这本书/u)
-    assert.deepEqual(await storage.load(), { books: [], settings: { currentBookId: book.id } })
+    assert.deepEqual(await storage.load(), { books: [], settings: { currentBookId: null } })
   } finally {
     storage.close()
   }
