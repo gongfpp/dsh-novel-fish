@@ -6,15 +6,15 @@
 
 不写会话、不发给模型、不占上下文——等 AI 思考的空档，翻一页书。
 
-**已发布 v1.1.0** · DSH Web 插件 · 代码 MIT 许可 · 数据只存本地
+**v1.2.0** · DSH Web 插件 · 代码 MIT 许可 · 数据只存本地
 
-当前源码还含未发布的多页面一致性修复、进度调整与备份恢复，见 [CHANGELOG](CHANGELOG.md)。下面固定版本安装仍为已发布版，不包含这些更新。
+本版修复多页面进度与设置覆盖，新增进度调整与备份恢复，见 [CHANGELOG](CHANGELOG.md)。升级后请刷新所有旧页面。
 
 ## 效果
 
 ![真实 DSH v1.1.0 阅读区：AI 原文下方的分隔线与阿Q正文](docs/evidence/reading-demo-110.png)
 
-这是已发布版的真实阅读截图。下图为未发布源码在真实 DSH `0.2.2-rc.1` 页面里的设置区，使用公开测试书；隔离浏览器仅替换收到的插件 bundle，未安装或改变服务器上的旧版本。
+上图为 v1.1.0 的真实阅读区，本版沿用相同布局。下图为 v1.2.0 功能在真实 DSH `0.2.2-rc.1` 页面里的设置区，使用公开测试书；隔离浏览器仅替换收到的插件 bundle，未安装或改变服务器上的旧版本。
 
 ![真实 DSH 设置区：进度调整、导出备份与恢复备份](docs/evidence/settings-reliability.png)
 
@@ -30,8 +30,8 @@
 - 默认同一区域重复展开不跳段；打开「同一区域再次展开续读」后，收起再展开接着读下一段
 - 标题可自定义：主标题、补充文字都支持预设和自填
 - 书库、进度、设置都只存在你自己的浏览器里
-- 未发布源码：同源多页面共享进度与设置，导入完成后可一键切到新书；支持调整下一段、回退和从头开始
-- 未发布源码：导出 JSON 备份，可在其他浏览器合并恢复正文、进度、选书与阅读设置
+- v1.2.0：同源多页面共享进度与设置，导入完成后可一键切到新书；支持调整下一段、回退和从头开始
+- v1.2.0：导出 JSON 备份，可在其他浏览器合并恢复正文、进度、选书与阅读设置
 
 ## 开始读
 
@@ -61,7 +61,7 @@
 
 | 区域 | 能做什么 |
 | --- | --- |
-| 书库 | 导入、切换、删除书籍，查看分段进度；未发布源码另有调整进度、导出备份、恢复备份 |
+| 书库 | 导入、切换、删除书籍，查看分段进度；v1.2.0另有调整进度、导出备份、恢复备份 |
 | 聊天内阅读 | 总开关；勾选阅读区域类型；同一区域续读开关 |
 | 标题显示 | 调整主标题与补充文字（预设或自定义） |
 
@@ -72,13 +72,13 @@
 GitHub 固定版本安装：
 
 ```sh
-dsh plugin --profile web add github:gongfpp/dsh-novel-fish#v1.1.0
+dsh plugin --profile web add github:gongfpp/dsh-novel-fish#v1.2.0
 ```
 
-也可以从 [发布页](https://github.com/gongfpp/dsh-novel-fish/releases) 下载 `gongfpp-dsh-novel-fish-1.1.0.tgz` 后离线安装：
+也可以从 [发布页](https://github.com/gongfpp/dsh-novel-fish/releases) 下载 `gongfpp-dsh-novel-fish-1.2.0.tgz` 后离线安装：
 
 ```sh
-dsh plugin --profile web add ./gongfpp-dsh-novel-fish-1.1.0.tgz
+dsh plugin --profile web add ./gongfpp-dsh-novel-fish-1.2.0.tgz
 ```
 
 `web` 是 profile 名称，用别的 profile 时替换。
@@ -86,7 +86,7 @@ dsh plugin --profile web add ./gongfpp-dsh-novel-fish-1.1.0.tgz
 也可以从 npm 安装固定版本：
 
 ```sh
-dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.1.0
+dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.2.0
 ```
 
 ## 常见问题
@@ -98,14 +98,14 @@ dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.1.0
 不会。原文在上，小说在下，中间是分隔线。
 
 **书和进度存在哪里？**
-存在当前站点、当前浏览器的本地数据库里，服务端不保存。已发布 v1.1.0 不支持导出；未发布源码可在书库点「导出备份」，换浏览器后「恢复备份」。备份含完整正文，请私下保存，清理站点数据前先备份。
+存在当前站点、当前浏览器的本地数据库里，服务端不保存。v1.2.0 起可在书库点「导出备份」，换浏览器后「恢复备份」。备份含完整正文，请私下保存，清理站点数据前先备份。
 
 恢复先校验文件，再确认合并：不删除当前书籍；标题、格式和每段正文及章节信息完全一致的书复用现有副本并保留当前进度，新书保留备份进度。选书与阅读设置按备份恢复。不支持超过 64 MiB 的整库 JSON，恢复期间请避免在其他页面操作书库。
 
-**如何回退或重新读？（未发布源码）**
+**如何回退或重新读？（v1.2.0）**
 选书后点「调整进度」，填写下次要读的段落号（从 1 开始），或选「回退一段」「从头开始」，确认后生效。已读完仍可回退。确认会清空各页面暂存的小说片段，不影响 AI 原文；下次主动展开从新位置读。
 
-**同时开多个页面会抢进度吗？（未发布源码）**
+**同时开多个页面会抢进度吗？（v1.2.0）**
 同浏览器、同站点共享下一段，不会各自重写旧进度；普通切换不会改动已经显示的片段。其他浏览器和不同域名不能自动同步，要使用备份。升级后请刷新所有旧页面，避免旧版代码继续写库。
 
 **和别的阅读类插件冲突吗？**
@@ -124,7 +124,7 @@ dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.1.0
 
 ## 更多文档
 
-- [未发布修复与新增功能](CHANGELOG.md)
+- [更新记录](CHANGELOG.md)
 - [发布记录与安装验证](https://github.com/gongfpp/dsh-novel-fish/blob/main/docs/release.md)
 - [真实页面交互验收（点击 / 悬停 / 键盘 / 触屏 / 展示模式）](https://github.com/gongfpp/dsh-novel-fish/blob/main/docs/interaction-paths-020.md)
 - [宿主适配与插槽说明](https://github.com/gongfpp/dsh-novel-fish/blob/main/docs/host-adapter.md)
