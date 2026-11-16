@@ -36,6 +36,7 @@
     "locale/*.json",
     "docs/evidence/reading-demo-110.png",
     "docs/evidence/settings-reliability.png",
+    "screenshots.json",
     "samples/ebooks/**",
     "README.md",
     "CHANGELOG.md",
