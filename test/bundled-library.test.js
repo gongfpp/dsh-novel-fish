@@ -495,7 +495,13 @@ for (const failure of ['synchronous', 'abort']) {
       assert.deepEqual(await storage.load(), before)
       assert.deepEqual(await storage.getSegment(seed.removed.book.id, 0), seed.removed.segments[0])
       assert.deepEqual(await storage.getSegment(seed.aq.book.id, 7), seed.aq.segments[7])
-      await assert.rejects(store.setOption('enabled', false), /本地书库不可用/u)
+      // 首次读取失败只在这一次 hydrate 内生效：下一次写入会重试并自愈，不需要刷新页面。
+      await store.setOption('enabled', false)
+      assert.equal(store.getSnapshot().error, null)
+      assert.equal(store.getSettingsSnapshot().enabled, false)
+      assert.equal((await store.storage.load()).bundledCatalogVersion, 2)
+      assert.equal(store.getSnapshot().books.find(book => book.id === seed.aq.book.id).format, 'md')
+      assert.equal(await store.storage.getSegment(seed.removed.book.id, 0), null)
       store.dispose()
       store = new NovelStore(makeStorage(factory), seed.catalog)
       await store.ready

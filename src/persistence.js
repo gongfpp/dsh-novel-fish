@@ -318,8 +318,11 @@ export class IndexedDbStorage {
         idMap.set(entry.book.id, book.id)
         added++
       }
-      const settings = { ...stored.settings, ...backup.settings,
-        currentBookId: idMap.get(backup.settings.currentBookId) ?? null }
+      // 恢复只合并书籍：本机的阅读设置（开关、类型、标题、当前书）不被旧备份覆盖。
+      // 仅当本机还没有选中任何书时，才接上备份里的当前书，保证刚恢复就能继续读。
+      const settings = { ...stored.settings }
+      const current = idMap.get(backup.settings.currentBookId)
+      if (!settings.currentBookId && current) settings.currentBookId = current
       tx.objectStore('settings').put({ key: SETTINGS_KEY, value: settingsPatch(settings) })
       // Restoring an empty library must not trigger bundled provisioning on reload.
       tx.objectStore('settings').put({ key: BUNDLED_BOOKS_KEY, value: true })

@@ -100,3 +100,15 @@ test('unsupported file extensions fail clearly', async () => {
   await assert.rejects(store.importFile(textFile('novel.pdf', 'not supported')), /只支持 EPUB、TXT、MD/u)
   store.dispose()
 })
+
+test('an oversized text file is rejected before its bytes are read', async () => {
+  const storage = new MemoryStorage()
+  const store = new NovelStore(storage)
+  await store.ready
+  let reads = 0
+  const huge = { name: 'huge.txt', size: 8 * 1024 * 1024 + 1, arrayBuffer: async () => { reads += 1; return new ArrayBuffer(0) } }
+  await assert.rejects(store.importFile(huge), /不能超过 8 MiB/u)
+  assert.equal(reads, 0, 'must reject on the reported size, not after buffering the file')
+  assert.equal(storage.books.size, 0)
+  store.dispose()
+})

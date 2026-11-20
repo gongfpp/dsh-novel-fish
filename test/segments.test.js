@@ -180,3 +180,14 @@ test('invalid targets reject immediately rather than causing an infinite split l
     assert.throws(() => passages('正文', value), RangeError)
   }
 })
+
+test('a chapter far larger than one internal block keeps its label and loses no text', { timeout: 10000 }, () => {
+  const paragraph = `${'文'.repeat(180)}。\n`
+  const text = paragraph.repeat(4000) // ≈ 728 KB, spans several 256 KiB blocks
+  const segments = segmentChapters([{ title: '超长章', text }], 600)
+  assert.ok(segments.length > 900, `expected many segments, got ${segments.length}`)
+  assert.ok(segments.every(segment => segment.chapterTitle === '超长章'))
+  assert.ok(segments.every(segment => segment.chapterIndex === 0))
+  assert.equal(compact(segments.map(segment => segment.text).join('')), compact(text))
+  assert.ok(segments.every(segment => segment.text.length > 0 && displayUnits(segment.text) <= 800))
+})

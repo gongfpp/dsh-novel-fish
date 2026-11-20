@@ -105,7 +105,7 @@ test('seeking from finished book clears both tabs caches and validates before wr
   assert.equal((await a.load()).books[0].progress, 2)
 })
 
-test('backup round-trip preserves text, chapter metadata, progress and settings; restore is idempotent', async t => {
+test('backup round-trip preserves text, chapter metadata and progress; restore keeps local settings', async t => {
   const { first, second, a } = await setup(t, 3)
   await first.claimPassage('one')
   await first.setOption('mainTitle', '备份标题')
@@ -119,10 +119,13 @@ test('backup round-trip preserves text, chapter metadata, progress and settings;
   const book = target.getSnapshot().books[0]
   assert.notEqual(book.id, 'book')
   assert.equal(book.progress, 1)
-  assert.equal(target.getSettingsSnapshot().mainTitle, '备份标题')
+  assert.equal(target.getSettingsSnapshot().mainTitle, '', '恢复不覆盖本机阅读设置')
+  assert.equal(target.getSettingsSnapshot().currentBookId, book.id, '本机未选书时接上备份的当前书')
   assert.equal((await target.claimPassage('read')).index, 1)
+  await target.setOption('mainTitle', '本机标题')
   assert.deepEqual(await target.restoreBackup(backup), { added: 0, reused: 1 })
   assert.equal(target.getSnapshot().books[0].progress, 2, 'existing progress wins over old backup')
+  assert.equal(target.getSettingsSnapshot().mainTitle, '本机标题', '再次恢复仍保留本机设置')
   assert.equal((await storage.getSegment(book.id, 0)).chapterTitle, '测试章')
   await second.setOption('extraTitle', 'other tab')
   assert.equal((await a.load()).settings.extraTitle, 'other tab')

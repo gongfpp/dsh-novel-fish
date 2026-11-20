@@ -15,6 +15,12 @@ export const PASSAGE_STYLE = {
 export const SEPARATOR_STYLE = {
   border: 0, borderTop: '1px solid var(--dsw-alias-border-l2)', margin: '10px 0 8px',
 }
+// 标签是这一段小说的“书名行”，用更小字号 + 次级色与正文分开；正文仍保持
+// 三级色，不改变已批准的阅读对比度。
+export const LABEL_STYLE = {
+  fontSize: '12px', fontWeight: '500', letterSpacing: '0.01em',
+  color: 'var(--dsw-alias-label-secondary)', marginBottom: '4px',
+}
 
 export function novelContent(status, hasBook, t) {
   if (status.kind === 'ready') return {

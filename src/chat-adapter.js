@@ -1,11 +1,16 @@
 import { passageSnapshotKey } from './store.js'
-import { NOVEL_STYLE, PASSAGE_STYLE, SEPARATOR_STYLE, novelContent } from './novel-content.js'
+import { LABEL_STYLE, NOVEL_STYLE, PASSAGE_STYLE, SEPARATOR_STYLE, novelContent } from './novel-content.js'
 import { PG_NOTICE, PG_NOTICE_STYLE, PG_LICENSE_LABEL, PG_LICENSE_DOWNLOAD } from './pg-notice.js'
 
 const THOUGHT = '[data-chat-flow-kind="assistant-step"] [data-variant="think"]'
 const TOOL = '[data-chat-call-id] [data-tool], [data-chat-call-id] [data-sample="bash"]'
 const REGIONS = `${THOUGHT}, ${TOOL}`
 const EMPTY = Object.freeze({ kind: 'empty' })
+// Attributes a region identity is derived from; changing any of them invalidates
+// every cached identity, while streaming text and expansion state do not.
+const IDENTITY_ATTRIBUTES = ['data-chat-flow-kind', 'data-chat-node-key', 'data-chat-call-id', 'data-conversation-session', 'data-tool', 'data-sample']
+const IDENTITY_SET = new Set(IDENTITY_ATTRIBUTES)
+const OBSERVED_ATTRIBUTES = ['data-shimmer-text', 'aria-expanded', 'data-state', ...IDENTITY_ATTRIBUTES]
 
 /** DSH 0.2.1 窄适配：保留原生控件和正文，只改标题文字并追加本地纯文本。 */
 export function registerChatAdapter(ctx, store, React, locale, { getSampleLicenseHref } = {}) {
@@ -29,10 +34,23 @@ export function registerChatAdapter(ctx, store, React, locale, { getSampleLicens
       root.removeAttribute('data-novel-target')
       decorated.delete(root)
     }
+    // A region identity is a pure function of the host's own attributes plus the
+    // order of regions inside one step node, so it survives streaming text writes.
+    // Cache it per region and drop the whole cache whenever a mutation could change
+    // either input; otherwise every frame pays a DOM climb per historical row.
+    let identities = new WeakMap()
+    const identity = root => {
+      let cached = identities.get(root)
+      if (!cached) {
+        cached = identityOf(root)
+        if (cached) identities.set(root, cached)
+      }
+      return cached ?? null
+    }
     const refresh = () => {
       const settings = store.getSettingsSnapshot()
       for (const [toggle, intent] of pending) {
-        const id = identityOf(intent.root)
+        const id = identity(intent.root)
         if (!toggle.isConnected || !settings.enabled || settings.currentBookId !== intent.bookId
           || !isTarget(settings, id) || readingKey(id) !== intent.key || store.cacheGeneration !== intent.generation) {
           if (intent.frame !== null) view.cancelAnimationFrame(intent.frame)
@@ -40,12 +58,15 @@ export function registerChatAdapter(ctx, store, React, locale, { getSampleLicens
         }
       }
       for (const root of decorated.keys()) {
-        if (!root.isConnected || !settings.enabled || !isTarget(settings, identityOf(root))) restore(root)
+        if (!root.isConnected || !settings.enabled || !isTarget(settings, identity(root))) restore(root)
       }
+      // A disabled plugin restores its decorations and then does nothing else, even
+      // though the conversation keeps streaming underneath it.
+      if (!settings.enabled) return
       for (const root of document.querySelectorAll(REGIONS)) {
-        const id = identityOf(root)
+        const id = identity(root)
         const header = headerOf(root)
-        if (!header || !settings.enabled || !isTarget(settings, id)) continue
+        if (!header || !isTarget(settings, id)) continue
         let record = decorated.get(root)
         if (!record || record.header !== header) {
           restore(root)
@@ -150,9 +171,17 @@ export function registerChatAdapter(ctx, store, React, locale, { getSampleLicens
       if (view?.requestAnimationFrame) intent.frame = view.requestAnimationFrame(verify)
       else queueMicrotask(verify)
     }
-    const observer = new MutationObserver(scheduleRefresh)
+    const observer = new MutationObserver(records => {
+      for (const record of records) {
+        if (record.type === 'childList' || (record.type === 'attributes' && IDENTITY_SET.has(record.attributeName))) {
+          identities = new WeakMap()
+          break
+        }
+      }
+      scheduleRefresh()
+    })
     observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true,
-      attributeFilter: ['data-shimmer-text', 'aria-expanded', 'data-tool', 'data-state'] })
+      attributeFilter: OBSERVED_ATTRIBUTES })
     document.addEventListener('click', activate, true)
     document.addEventListener('keydown', activate, true)
     const stopSettings = store.subscribeSettings(refresh)
@@ -211,7 +240,7 @@ function createBody(React, getSampleLicenseHref) {
       h('div', { 'data-novel-original': true }, renderFactorySlot('conversation.chat.reasoning.content', { text, running })),
       model === null ? null : h('div', { 'data-novel-append': true, style: NOVEL_STYLE },
         h('hr', { style: SEPARATOR_STYLE }),
-        h('div', { 'data-novel-label': true }, model.chapter ? `${model.label} · ${model.chapter}` : model.label),
+        h('div', { 'data-novel-label': true, style: LABEL_STYLE }, model.chapter ? `${model.label} · ${model.chapter}` : model.label),
         model.projectGutenberg ? h('aside', { 'data-novel-pg-notice': true, style: PG_NOTICE_STYLE },
           h('p', { style: { margin: '0 0 6px' } }, PG_NOTICE),
           h('a', { href: getSampleLicenseHref?.(), download: PG_LICENSE_DOWNLOAD }, PG_LICENSE_LABEL)) : null,
@@ -226,6 +255,7 @@ function renderPlainAppend(element, model, getSampleLicenseHref) {
   Object.assign(divider.style, SEPARATOR_STYLE)
   const label = document.createElement('div')
   label.setAttribute('data-novel-label', '')
+  Object.assign(label.style, LABEL_STYLE)
   label.textContent = model.chapter ? `${model.label} · ${model.chapter}` : model.label
   const content = document.createElement('div')
   Object.assign(content.style, PASSAGE_STYLE)

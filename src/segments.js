@@ -50,11 +50,39 @@ export function segmentChapters(chapters, targetLength = DEFAULT_SEGMENT_LENGTH)
   const target = positiveInteger(targetLength)
   const segments = []
   chapters.forEach((chapter, chapterIndex) => {
-    for (const text of splitChapter(chapter.text, target)) {
-      segments.push({ text, chapterTitle: chapter.title, chapterIndex })
+    for (const block of chapterBlocks(chapter.text)) {
+      for (const text of splitChapter(block, target)) {
+        segments.push({ text, chapterTitle: chapter.title, chapterIndex })
+      }
     }
   })
   return segments
+}
+
+/**
+ * 切章按块进行：grapheme 数组只覆盖一块，几 MB 的无章节 TXT 不会在一次性
+ * 切分里同时保留全文的字符、宽度、偏移三份数组。块边界优先落在换行处，
+ * 因此段落不会被劈开，只有块尾可能多出一段较短的分段。
+ */
+const MAX_CHAPTER_BLOCK = 256 * 1024
+function chapterBlocks(text) {
+  const source = String(text)
+  if (source.length <= MAX_CHAPTER_BLOCK) return [source]
+  const blocks = []
+  let start = 0
+  while (start < source.length) {
+    let end = Math.min(start + MAX_CHAPTER_BLOCK, source.length)
+    if (end < source.length) {
+      const cut = source.lastIndexOf('\n', end)
+      if (cut > start + MAX_CHAPTER_BLOCK / 2) end = cut + 1
+      // 硬切时不能把一个代理对劈成两个孤立半区。
+      const code = source.charCodeAt(end - 1)
+      if (code >= 0xd800 && code <= 0xdbff) end -= 1
+    }
+    blocks.push(source.slice(start, end))
+    start = end
+  }
+  return blocks
 }
 
 /** Normalize a parsed text file into titled reading passages. */

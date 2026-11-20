@@ -84,7 +84,35 @@ test('图标跟随 DSH，标题使用原生菜单，自定义后才出现宿主 
     assert.deepEqual(model.options, [])
     await act(async () => menu(view, 'data-novel-preset', 'title').props.onSelect('__custom'))
     await act(async () => control(view, 'data-novel-title').props.onChange({ currentTarget: { value: '我的标题' } }))
+    assert.deepEqual(model.options, [], '停止输入前不写库')
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 320)) })
     assert.deepEqual(model.options.at(-1), ['mainTitle', '我的标题'])
+  } finally { await act(async () => view.unmount()) }
+})
+
+test('自定义标题连续输入只在停顿后写一次', async () => {
+  const model = setup(), view = await mount(model)
+  try {
+    await act(async () => menu(view, 'data-novel-preset', 'title').props.onSelect('__custom'))
+    const input = control(view, 'data-novel-title')
+    await act(async () => {
+      for (const value of ['我', '我的', '我的标', '我的标题']) input.props.onChange({ currentTarget: { value } })
+    })
+    assert.deepEqual(model.options, [], '连续输入期间不落盘')
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 320)) })
+    assert.deepEqual(model.options, [['mainTitle', '我的标题']], '停顿后只写最后一次的值')
+  } finally { await act(async () => view.unmount()) }
+})
+
+test('失焦立即提交还没等到停顿的标题', async () => {
+  const model = setup(), view = await mount(model)
+  try {
+    await act(async () => menu(view, 'data-novel-preset', 'title').props.onSelect('__custom'))
+    const input = control(view, 'data-novel-title')
+    await act(async () => input.props.onChange({ currentTarget: { value: '失焦标题' } }))
+    assert.deepEqual(model.options, [])
+    await act(async () => input.props.onBlur())
+    assert.deepEqual(model.options, [['mainTitle', '失焦标题']])
   } finally { await act(async () => view.unmount()) }
 })
 

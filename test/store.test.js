@@ -524,24 +524,30 @@ test('failed deselection persistence cancels the in-flight claim and allows a cl
   store.dispose()
 })
 
-test('failed canceled-progress restoration blocks later writes with an actionable error', async () => {
+test('failed canceled-progress restoration reports the error and a later write retries hydration', async () => {
   const { store, storage } = makeStore()
   await store.ready
   const gate = gateNextCall(storage, 'updateBook')
   const reading = store.claimPassage('pending')
   await gate.entered
   storage.updateBook = async () => { throw new Error('restore quota failure') }
-  const rejected = assert.rejects(store.setOption('enabled', false), /本地书库不可用/u)
+  const errors = []
+  const stop = store.subscribe(() => { const error = store.getSnapshot().error; if (error) errors.push(error) })
+  // 意图在入队时就取消了这次读取，随后排队中的设置写入在自愈后完成。
+  const disabling = store.setOption('enabled', false).catch(error => error)
   gate.release()
   const failed = await reading
   assert.equal(failed.kind, 'error')
   assert.match(failed.message, /restore quota failure/u)
-  await rejected
-  assert.match(store.getSnapshot().error, /恢复失败.*restore quota failure/u)
+  assert.match(errors.join('\n'), /恢复失败.*restore quota failure/u)
   assert.equal(store.getPassageStatus('book-a', 'pending').kind, 'empty')
-  assert.equal((await store.claimPassage('later')).kind, 'error')
-  await assert.rejects(store.setOption('mainTitle', '不要覆盖'), /本地书库不可用/u)
-  assert.equal(storage.settings.mainTitle, '')
+  await disabling
+  stop()
+  assert.equal(store.getSettingsSnapshot().enabled, false)
+  // 书库本身仍可读：写入前重试 hydrate 成功即自愈，不必刷新页面。
+  assert.equal(store.getSnapshot().error, null)
+  await store.setOption('mainTitle', '恢复后写入')
+  assert.equal(storage.settings.mainTitle, '恢复后写入')
   store.dispose()
 })
 

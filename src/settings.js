@@ -25,6 +25,11 @@ const STYLES = `
 .novel-fish-book-info{display:flex;flex-direction:column;gap:20px;max-height:60vh;overflow-y:auto;font-size:13px;line-height:1.6}
 .novel-fish-book-info .novel-fish-field{display:flex;flex-direction:column;gap:4px}
 .novel-fish-book-info p{margin:0}
+.novel-fish-license{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.novel-fish-help{position:relative;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-size:12px;line-height:1;cursor:help;user-select:none}
+.novel-fish-help:focus-visible{outline:2px solid var(--dsw-alias-label-secondary);outline-offset:2px}
+.novel-fish-help-tip{position:absolute;bottom:calc(100% + 8px);right:0;z-index:20;display:none;width:min(340px,72vw);max-height:min(45vh,320px);overflow-y:auto;padding:10px 12px;border-radius:8px;background:var(--dsw-alias-bg-primary,#fff);border:1px solid var(--dsw-alias-border-l2);box-shadow:0 8px 24px rgba(0,0,0,.16);color:var(--dsw-alias-label-primary);font-size:12px;line-height:1.6;white-space:normal;text-align:start}
+.novel-fish-help:hover .novel-fish-help-tip,.novel-fish-help:focus .novel-fish-help-tip,.novel-fish-help:focus-within .novel-fish-help-tip{display:block}
 `
 
 /** Embedded in this bundle's official configuration slot; never a reading page. */
@@ -53,9 +58,40 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
     })
   }
 
+  // 自由标题每按一次键都落盘，会让设置订阅把整段对话重扫一遍。合并成一次尾部
+  // 提交（停止输入 300ms、失焦或卸载时），输入框本身仍是非受控的，不会被
+  // 异步落盘的旧快照回退。
+  const TITLE_COMMIT_DELAY = 300
+
   function PresetField({ t, label, value, choices, disabled, onChange, testId }) {
     const [custom, setCustom] = React.useState(!choices.includes(value))
     const showCustom = custom || !choices.includes(value)
+    const pending = React.useRef(null)
+    const timer = React.useRef(null)
+    const saved = React.useRef(value)
+    saved.current = value
+    const change = React.useRef(onChange)
+    change.current = onChange
+    const flush = React.useCallback(() => {
+      if (timer.current !== null) { clearTimeout(timer.current); timer.current = null }
+      const next = pending.current
+      pending.current = null
+      if (next === null || next === saved.current) return
+      void change.current(next)
+    }, [])
+    const queue = event => {
+      pending.current = event.currentTarget.value
+      if (timer.current !== null) clearTimeout(timer.current)
+      timer.current = setTimeout(() => { timer.current = null; flush() }, TITLE_COMMIT_DELAY)
+    }
+    React.useEffect(() => () => {
+      if (timer.current === null) return
+      clearTimeout(timer.current)
+      timer.current = null
+      const next = pending.current
+      pending.current = null
+      if (next !== null && next !== saved.current) void change.current(next)
+    }, [])
     return h('div', { className: 'novel-fish-field' },
       h('span', null, label),
       h(SelectMenu, {
@@ -64,13 +100,13 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
         items: [...choices.map(choice => ({ id: choice, label: choice || t(testId === 'title' ? 'settings.nativeTitle' : 'settings.noExtra') })), { id: '__custom', label: t('settings.custom') }],
         onChange: next => {
           if (next === '__custom') setCustom(true)
-          else void onChange(next).then(saved => { if (saved) setCustom(false) })
+          else void onChange(next).then(savedValue => { if (savedValue) setCustom(false) })
         },
       }),
       showCustom ? h(Input, {
         className: 'novel-fish-input', defaultValue: value, disabled,
         'aria-label': t('settings.customField', { label }), [`data-novel-${testId}`]: true,
-        onChange: event => { void onChange(event.currentTarget.value) },
+        onChange: queue, onBlur: flush,
       }) : null,
     )
   }
@@ -303,16 +339,25 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
       }, dialogError ? h('p', { role: 'alert' }, dialogError) : null) : null,
       bookInfoOpen ? h(Modal, {
         open: true, onClose: () => setBookInfoOpen(false), title: t('settings.bookInfo'), closeLabel: t('settings.close'),
-      }, h('div', { className: 'novel-fish-book-info', 'data-novel-book-info': true },
+      },
+      h('div', { className: 'novel-fish-book-info', 'data-novel-book-info': true },
         ...sampleBooks.map(book => h('div', { key: book.id, className: 'novel-fish-field' },
           h('a', { href: book.source, target: '_blank', rel: 'noreferrer' }, book.title),
           h('span', null, book.author), h('span', null, book.license),
         )),
+      ),
+      // 许可行放在书单下方、滚动区之外：问号提示向上展开时不会被书单的滚动
+      // 容器裁掉，过长的声明在提示内部滚动。
+      h('div', { className: 'novel-fish-license' },
         h('a', { href: getSampleLicenseHref?.(), download: 'bundled-ebooks-notices.txt' }, t('settings.sampleLicense')),
-        h('p', { 'data-novel-sample-license': true }, t('settings.samplePgNotice'), ' ',
-          PG_NOTICE, ' ',
-          h('a', { href: 'https://www.gutenberg.org/policy/license.html', target: '_blank', rel: 'noreferrer' }, 'www.gutenberg.org'),
-        ),
+        // 书源许可与 Project Gutenberg 声明默认收起，只在悬停/聚焦问号时展开，
+        // 不把整页法务文本铺在设置里。
+        h('span', { className: 'novel-fish-help', role: 'button', tabIndex: 0,
+          'aria-label': t('settings.samplePgNotice'), 'data-novel-license-help': true },
+        '?',
+        h('span', { className: 'novel-fish-help-tip', role: 'tooltip', 'data-novel-sample-license': true },
+          t('settings.samplePgNotice'), ' ', PG_NOTICE, ' ',
+          h('a', { href: 'https://www.gutenberg.org/policy/license.html', target: '_blank', rel: 'noreferrer' }, 'www.gutenberg.org'))),
       )) : null,
       h(Modal, {
         open: Boolean(removeBook), onClose: closeRemove, title: t('settings.deleteBook'), closeLabel: t('settings.cancel'),

@@ -9,6 +9,9 @@ import { TARGET_TYPES, DEFAULT_SETTINGS, normalizeSettings } from './settings-da
 export { TARGET_TYPES, DEFAULT_SETTINGS } from './settings-data.js'
 
 const EMPTY_STATUS = Object.freeze({ kind: 'empty' })
+// 单个导入文件的上限。分块切章已把瞬时分段内存压到常数级，这里限制的是
+// IndexedDB 体积、64 MiB 备份上限以及一次性同步解析的耗时。
+const MAX_IMPORT_BYTES = 8 * 1024 * 1024
 
 export function passageSnapshotKey(bookId, stepKey) {
   return `${bookId}\u0000${stepKey}`
@@ -113,9 +116,14 @@ export class NovelStore {
 
   async importFile(file) {
     await this.ready
-    this.#assertWritable()
+    await this.#ensureWritable()
     const extension = String(file.name).split('.').at(-1)?.toLowerCase()
     if (!['epub', 'txt', 'md'].includes(extension)) throw new Error('只支持 EPUB、TXT、MD 文件')
+    if (Number.isFinite(file.size) && file.size > MAX_IMPORT_BYTES) {
+      throw new Error(`文件不能超过 ${MAX_IMPORT_BYTES / 1024 / 1024} MiB`)
+    }
+    // 先让“正在导入”的提示上屏，再做同步解析：大文件不会在无反馈的白屏里解析。
+    await new Promise(resolve => setTimeout(resolve, 0))
     const parsed = extension === 'epub'
       ? await parseEpub(file, DEFAULT_SEGMENT_LENGTH)
       : parseTextBook(decodeBookText(await file.arrayBuffer()), extension, DEFAULT_SEGMENT_LENGTH)
@@ -147,8 +155,10 @@ export class NovelStore {
         const book = this.state.books.find(item => item.id === bookId)
         if (!book || progress > book.segmentCount) throw new Error('段落位置无效或书籍已删除')
         const updated = await this.storage.updateBook({ ...book, progress, positionToken: randomId() }, { expectedRevision: book.revision ?? 0 })
-        await this.#refresh()
-        if (updated) { this.#clearPassages(); return }
+        if (!updated) { await this.#refresh(); continue }
+        this.#adoptBook(updated)
+        this.#clearPassages()
+        return
       }
       throw new Error('其他页面正在频繁更新进度，请稍后重试')
     })
@@ -246,7 +256,8 @@ export class NovelStore {
           expectedRevision: book.revision ?? 0, targetType,
         })
         if (!updated) { await this.#refresh(); continue }
-        await this.#refresh()
+        // CAS 已把这次写入的完整记录带回来，直接采纳即可，不必为一次翻页再读一遍全库。
+        this.#adoptBook(updated)
         if (!this.#canRead(generation, targetType)) {
           // Never undo a newer claim/seek in another tab when canceling this one.
           await this.#restore(() => this.storage.updateBook(book, { expectedRevision: updated.revision }))
@@ -320,6 +331,7 @@ export class NovelStore {
         stored = await this.storage.migrateBundledCatalog({ ...this.bundledCatalog, updates })
       }
       const books = stored.books ?? []
+      this.persistenceError = null
       this.#setState({ books, settings: normalizeSettings(stored.settings, books), hydrated: true, error: null })
     } catch (error) {
       this.persistenceError = error
@@ -380,13 +392,32 @@ export class NovelStore {
   #enqueueMutation(action) {
     const operation = this.mutationQueue.then(async () => {
       await this.ready
-      this.#assertWritable()
+      await this.#ensureWritable()
       const generationBeforeRefresh = this.cacheGeneration
       await this.#refresh()
       return action(generationBeforeRefresh)
     })
     this.mutationQueue = operation.catch(() => undefined)
     return operation
+  }
+
+  /** 采纳一次 CAS 写入返回的完整书籍记录，替代为它重读整个书库。 */
+  #adoptBook(book) {
+    const index = this.state.books.findIndex(item => item.id === book.id)
+    if (index < 0) return
+    const books = [...this.state.books]
+    books[index] = book
+    this.#setState({ books })
+  }
+
+  /**
+   * 首次读取失败不该让插件在刷新前永久只读：真正要写入时再重试一次 hydrate，
+   * 成功就恢复，仍失败才按原有错误拒绝。
+   */
+  async #ensureWritable() {
+    if (this.disposed) throw new Error('本地书库已关闭')
+    if (this.persistenceError) await this.#hydrate()
+    this.#assertWritable()
   }
 
   #assertWritable() {
