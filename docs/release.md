@@ -1,5 +1,17 @@
 # 公开发布记录
 
+## 1.2.0：多页一致性、进度调整、JSON 备份与阅读开销收敛（2026-11-20）
+
+- 范围：修复同站点多页面用旧快照覆盖进度、设置和删除结果（IndexedDB 事务 + revision 比较，BroadcastChannel 与页面激活同步）；新增「调整进度」；新增 JSON 备份导出与合并恢复（上限 64 MiB，恢复前校验，精确重复内容复用并保留进度）；导入后提供切到新书的按钮；修复 EPUB nav/NCX 位于子目录时的章节名相对路径。同一版本还收敛了审计发现的阅读开销与边界问题：阅读区域定位按节点缓存、停用后不再逐帧扫描；标题停顿 300ms 或失焦后提交一次；翻页直接采用事务返回的书籍记录；章节标签改为小字号次级色；PG 许可声明收进「?」提示；TXT/MD 导入上限 8 MiB 且超大章节分块；首次读库失败后写入前重试一次；恢复备份只合并书籍，不覆盖本机设置。
+- 发布前校验：`node scripts/build.mjs` 重建后 `lib/client.js` 与工作树一致（**1412133 字节**、SHA-256 `2bccc6cc3108e497c6a66549b8b06a466d610ce3175300675951e305637865b5`），`node --test test/*.test.js` 为 **183 项、182 通过、0 失败、1 跳过**。标签源码 CI（[runs/44758056811](https://github.com/gongfpp/dsh-novel-fish/actions/runs/44758056811)）`verify` 与 `host-contracts` 两项作业通过，契约宿主 `0.2.2-rc.1`。
+- [GitHub Release v1.2.0](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v1.2.0) 已于 `2026-11-20T14:56:35Z` 正式公开，非草稿/预发布；标签 `v1.2.0`（附注标签对象 `9ec44d15c669a70b9c63273e36e6b3f37f513afc`）固定源码提交 `b871fb46011e2fc81079abaee033ef2d1b6ec9c9`。
+- 安装包 `gongfpp-dsh-novel-fish-1.2.0.tgz`：881545 字节，SHA-256 `79ba046141f18b4dd46f8cc9a08ace906e22522305f1fdf797596dec72f4c4b7`，20 个文件；源码 ZIP `dsh-novel-fish-source-1.2.0.zip`：4285406 字节，SHA-256 `59d7f4fe4b4065dd9e0b23cdfc596cf48a4889df9071b03576fa1d84bf89159b`；`SHA256SUMS.txt` 199 字节。三个附件匿名下载均 HTTP 200，逐字节匹配。
+- 自建索引追加 1.2.0：`publishTimestamp` 1795186595 来自实际 Release 时间，`source.commit` 固定为 `b871fb46011e2fc81079abaee033ef2d1b6ec9c9`，`engines.dsh` 与包内声明一致（`>=0.2.1-rc.2 <0.3.0-0`）；历史条目不改写。
+- **npm 1.2.0 已公开发布**：发布的是 GitHub 的同一个冻结 tarball，registry 时间 `2026-11-20T15:01:49Z`，`latest` 已指向 1.2.0。匿名下载 881545 字节、SHA-256 与 GitHub 附件完全一致；`shasum`（SHA-1）`4a2a98ace4e88f977b3b84abc66ed83f73d6b70b`、`integrity` `sha512-aNLufvqNbOmdQzMvnae8NKGmtTb9kCpsfl0VG6JLylhcc7AA+wk8V15FbVfmGoFojThOIfAFhy6aw3/1WetB3g==` 均实算核对。
+- 在独立临时 `DSH_HOME` 的四个空 profile 中，用 npm 固定版本、README 的标签 spec、公开下载的 tarball、市场使用的完整 SHA 四条路线安装，均得到 1.2.0，浏览器 bundle SHA-256 全部等于 `2bccc6cc…`。不改日常 profile、不启动服务器或发起模型请求，不冒充市场卡片 GUI 验收。
+- 安装包在本节发布事实与新索引写入前打包，因此包内 `docs/**` 与 `index.json` 是标签提交的内容（索引仍到 1.1.0），这是有意避免伪造尚未发生的时间和自引用提交；实际对应关系以 SHA-256 为准。1.2.0 的审计修复在真实 GUI 上验证时使用开发版 bundle 临时替换日常 profile 的安装包，验证后已按 SHA-256 还原，测试消耗的阅读进度也重置为 0。
+- [结构化发布回执](<evidence/public-release-120-result.json>)。
+
 ## 1.1.0：两本离线样书与阅读分段（2026-11-07）
 
 - 当前内置英文 TXT《百万英镑及其他新故事》（1893 年完整合集，820 段）与中文 MD《阿Q正传》（完整九章繁体原作，新导入 100 段），共 **462708 字节**。英文下载不改字节；AQ 只在官方完整 TXT 前增加一个 Markdown 标题，原 68156 字节正文、声明与贡献者均可逐字节恢复，不冒称原站原生 MD。来源、固定哈希与独立许可见[电子书测试](<ebook-tests.md>)和[图书许可](<../samples/ebooks/LICENSE.md>)。

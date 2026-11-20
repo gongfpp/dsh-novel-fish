@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "version": "1.2.0",
+  "verifiedOn": "2026-11-20",
+  "repository": "https://github.com/gongfpp/dsh-novel-fish",
+  "sourceCommit": "b871fb46011e2fc81079abaee033ef2d1b6ec9c9",
+  "tag": "v1.2.0",
+  "annotatedTagObject": "9ec44d15c669a70b9c63273e36e6b3f37f513afc",
+  "release": {
+    "url": "https://github.com/gongfpp/dsh-novel-fish/releases/tag/v1.2.0",
+    "publishedAt": "2026-11-20T14:56:35Z",
+    "draft": false,
+    "prerelease": false
+  },
+  "indexEntry": {
+    "version": "1.2.0",
+    "publishTimestamp": 1795186595,
+    "sourceCommit": "b871fb46011e2fc81079abaee033ef2d1b6ec9c9",
+    "engines": { "dsh": ">=0.2.1-rc.2 <0.3.0-0" }
+  },
+  "artifacts": [
+    {
+      "name": "gongfpp-dsh-novel-fish-1.2.0.tgz",
+      "bytes": 881545,
+      "sha256": "79ba046141f18b4dd46f8cc9a08ace906e22522305f1fdf797596dec72f4c4b7",
+      "anonymousHttpStatus": 200,
+      "byteEqualToLocal": true,
+      "files": 20
+    },
+    {
+      "name": "dsh-novel-fish-source-1.2.0.zip",
+      "bytes": 4285406,
+      "sha256": "59d7f4fe4b4065dd9e0b23cdfc596cf48a4889df9071b03576fa1d84bf89159b",
+      "anonymousHttpStatus": 200,
+      "byteEqualToLocal": true,
+      "source": "git archive --format=zip --prefix=dsh-novel-fish-1.2.0/ v1.2.0"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "bytes": 199,
+      "sha256": "4dbd9618ff9e6f421e5b6f991e31b2e42c8ac662a5c45f4f77883c89ee55f87c",
+      "anonymousHttpStatus": 200,
+      "byteEqualToLocal": true
+    }
+  ],
+  "bundle": {
+    "bytes": 1412133,
+    "sha256": "2bccc6cc3108e497c6a66549b8b06a466d610ce3175300675951e305637865b5"
+  },
+  "tests": {
+    "total": 183,
+    "passed": 182,
+    "failed": 0,
+    "skipped": 1,
+    "sourceCiUrl": "https://github.com/gongfpp/dsh-novel-fish/actions/runs/44758056811",
+    "sourceCiConclusion": "success",
+    "sourceCiJobs": ["verify", "host-contracts"],
+    "ciContractHostVersion": "0.2.2-rc.1",
+    "buildReproducible": true
+  },
+  "installation": {
+    "isolatedHome": true,
+    "routesPassed": ["npm-fixed-version", "github-tag", "anonymous-release-tarball", "github-full-commit"],
+    "installedVersion": "1.2.0",
+    "allBundlesMatch": true,
+    "userProfileChanged": false,
+    "serverStarted": false,
+    "modelRequests": false
+  },
+  "npm": {
+    "status": "published",
+    "registryVerified": true,
+    "publishedAt": "2026-11-20T15:01:49Z",
+    "latest": "1.2.0",
+    "tarball": "https://registry.npmjs.org/@gongfpp/dsh-novel-fish/-/dsh-novel-fish-1.2.0.tgz",
+    "bytes": 881545,
+    "sha256": "79ba046141f18b4dd46f8cc9a08ace906e22522305f1fdf797596dec72f4c4b7",
+    "shasum": "4a2a98ace4e88f977b3b84abc66ed83f73d6b70b",
+    "integrity": "sha512-aNLufvqNbOmdQzMvnae8NKGmtTb9kCpsfl0VG6JLylhcc7AA+wk8V15FbVfmGoFojThOIfAFhy6aw3/1WetB3g==",
+    "anonymousHttpStatus": 200,
+    "byteEqualToGitHub": true,
+    "isolatedInstallationPassed": true
+  },
+  "boundaries": [
+    "The npm registry is a separate publication channel; GitHub success is not npm publication.",
+    "The frozen tag and tarball intentionally predate this receipt and the 1.2.0 public index entry; attachments were not replaced after publication.",
+    "GUI verification of the 1.2.0 audit fixes used a development bundle temporarily copied over the daily profile's installed package and then restored byte-for-byte; the test passage claim was reset to 0 and no marketplace-card screenshot was produced for this version.",
+    "CLI installation verification does not constitute a new marketplace-card GUI or full reading E2E run.",
+    "Restricted candidates, local test corpus and unredacted native captures are excluded from distributed source and package."
+  ]
+}
