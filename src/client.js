@@ -2,7 +2,7 @@ import { IndexedDbStorage } from './persistence.js'
 import { NovelStore } from './store.js'
 import { registerChatAdapter } from './chat-adapter.js'
 import { createSettingsRow } from './settings.js'
-import { sampleBooks, bundledCatalog, createSampleFile, getSampleLicenseHref } from './bundled-books.js'
+import { sampleBooks, bundledCatalog, createSampleFile } from './bundled-books.js'
 import { downloadBackup } from './download.js'
 import zh from '../locale/zh.json'
 import en from '../locale/en.json'
@@ -42,7 +42,6 @@ window.__ModuleLoader__.load({
           onReadBackup: file => store.readBackup(file),
           onRestoreBackup: backup => store.restoreBackup(backup),
           sampleBooks,
-          getSampleLicenseHref,
         }
 
         ctx.effect(() => ctx.locale.register(LOCALE, { zh: flatten(zh), en: flatten(en) }), 'novel-fish: locale')
@@ -59,7 +58,7 @@ window.__ModuleLoader__.load({
             ...settingsActions,
           }),
         }, SettingsRow))
-        registerChatAdapter(ctx, store, React, LOCALE, { getSampleLicenseHref })
+        registerChatAdapter(ctx, store, React, LOCALE)
       },
     }
   },

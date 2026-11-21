@@ -118,11 +118,14 @@ export class IndexedDbStorage {
   }
 
   /** Upgrade only identifiable defaults; metadata, deletion and marker commit together. */
-  async migrateBundledCatalog({ version, removedIds = [], updates = [] }) {
+  async migrateBundledCatalog({ version, removedIds = [], updates = [], refreshes = [] }) {
     if (!Number.isSafeInteger(version) || version < 1 || !Array.isArray(removedIds)
       || removedIds.some(id => typeof id !== 'string' || !id) || !Array.isArray(updates)
       || updates.some(update => !update?.id || !['txt', 'md'].includes(update.fromFormat)
-        || !['txt', 'md'].includes(update.format) || !Array.isArray(update.segments) || !update.segments.length)) {
+        || !['txt', 'md'].includes(update.format) || !Array.isArray(update.segments) || !update.segments.length)
+      || !Array.isArray(refreshes)
+      || refreshes.some(refresh => !refresh?.id || !['txt', 'md', 'epub'].includes(refresh.format)
+        || !Array.isArray(refresh.segments) || !refresh.segments.length)) {
       throw new Error('内置书目迁移数据无效')
     }
     const db = await this.#open()
@@ -142,6 +145,27 @@ export class IndexedDbStorage {
             const keys = await requestResult(segments.index('bookId').getAllKeys(this.keyRange.only(book.id)))
             keys.forEach(key => segments.delete(key))
             removedBookIds.add(book.id)
+            continue
+          }
+          const refresh = refreshes.find(refresh => owned(book, refresh.id))
+          if (refresh) {
+            // 内置样书内容变了：整本换正文，进度按比例落到新分段上，保留书名与导入时间。
+            const keys = await requestResult(segments.index('bookId').getAllKeys(this.keyRange.only(book.id)))
+            keys.forEach(key => segments.delete(key))
+            refresh.segments.forEach((segment, index) => {
+              segments.put({ ...segment, id: `${book.id}:${index}`, bookId: book.id, index })
+            })
+            const progress = book.segmentCount > 0
+              ? Math.min(refresh.segments.length, Math.round((book.progress / book.segmentCount) * refresh.segments.length))
+              : 0
+            books.put({
+              ...book,
+              format: refresh.format,
+              segmentCount: refresh.segments.length,
+              progress,
+              revision: (book.revision ?? 0) + 1,
+              positionToken: randomId(),
+            })
             continue
           }
           const update = updates.find(update => owned(book, update.id) && book.format === update.fromFormat)

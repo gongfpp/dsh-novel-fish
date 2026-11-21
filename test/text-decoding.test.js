@@ -21,11 +21,16 @@ test('UTF-16 LE and BE BOM are decoded without replacement characters', () => {
   for (const bigEndian of [false, true]) assert.equal(decodeBookText(utf16('中文😀', bigEndian)), '中文😀')
 })
 
-test('malformed UTF-8, truncated UTF-16 and GBK are rejected explicitly', () => {
+test('malformed UTF-8, truncated UTF-16 and stray bytes are rejected explicitly', () => {
   for (const bytes of [Uint8Array.of(0xef, 0xbb, 0xbf, 0xff), Uint8Array.of(0xc3),
-    Uint8Array.of(0xd6, 0xd0, 0xce, 0xc4), Uint8Array.of(0xff, 0xfe, 0x61), Uint8Array.of(0xfe, 0xff, 0xd8, 0)]) {
+    Uint8Array.of(0xff, 0xfe, 0x61), Uint8Array.of(0xfe, 0xff, 0xd8, 0), Uint8Array.of(0xff, 0xff, 0xff)]) {
     assert.throws(() => decodeBookText(bytes), /编码/u)
   }
+})
+
+test('GBK and GB18030 text files decode instead of failing', () => {
+  // 你好世界 in GBK
+  assert.equal(decodeBookText(Uint8Array.of(0xc4, 0xe3, 0xba, 0xc3, 0xca, 0xc0, 0xbd, 0xe7)), '你好世界')
 })
 
 test('XML supports UTF-16 byte signatures with and without BOM and matching declarations', () => {

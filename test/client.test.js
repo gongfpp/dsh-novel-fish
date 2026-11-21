@@ -18,7 +18,6 @@ test('构建产物只在本包详情注册设置，复用宿主 Switch 与原有
   await storage.addBook(book, [{ text: 'A' }, { text: 'B' }])
   await storage.saveSettings(settings)
   const manifest = JSON.parse(await readFile(new URL('../samples/ebooks/sources.json', import.meta.url), 'utf8'))
-  const notices = await readFile(new URL('../samples/ebooks/LICENSE.md', import.meta.url), 'utf8')
   const imports = [], effects = [], injections = [], registrations = [], decodedPayloads = []
   let module
   vm.runInNewContext(await readFile(new URL('../lib/client.js', import.meta.url), 'utf8'), {
@@ -87,19 +86,15 @@ test('构建产物只在本包详情注册设置，复用宿主 Switch 与原有
     assert.equal(saved.settings.mainTitle, settings.mainTitle)
     assert.equal(saved.books.find(entry => entry.id === book.id).progress, 1)
     assert.deepEqual(await storage.getSegment(book.id, 1), { text: 'B' })
-    const expectedSamples = manifest.books.map(({ id, title, author, format, bytes, source, license }) => ({ id, title, author, format, bytes, source, license }))
+    const expectedSamples = manifest.books.map(({ id, title, author, format, bytes }) => ({ id, title, author, format, bytes }))
     assert.deepEqual(JSON.parse(JSON.stringify(injected.sampleBooks)), expectedSamples)
     for (const sample of manifest.books) {
-      assert.ok(sample.license?.trim(), `Missing concise license for ${sample.id}`)
+      assert.deepEqual(Object.keys(sample).sort(), ['author', 'bytes', 'file', 'format', 'id', 'sha256', 'title'])
       assert.equal(sample.bytes, (await readFile(new URL(`../samples/ebooks/${sample.file}`, import.meta.url))).byteLength)
     }
+    assert.equal(injected.getSampleLicenseHref, undefined, '不再向宿主暴露许可链接')
     assert.equal(decodedPayloads.length, manifest.books.filter(book => book.format !== 'md').length, 'Initial hydration provisions all bundled books once')
     assert.equal(injected.onImportSample, undefined, 'No separate bundled import action')
-    const licenseHref = injected.getSampleLicenseHref()
-    assert.ok(licenseHref.startsWith('data:text/plain;charset=utf-8,'))
-    assert.equal(decodeURIComponent(licenseHref.slice(licenseHref.indexOf(',') + 1)), notices)
-    assert.equal(injected.getSampleLicenseHref(), licenseHref)
-    assert.equal(decodedPayloads.length, manifest.books.filter(book => book.format !== 'md').length, 'Offline notices must not decode another ebook')
     for (const sample of injected.sampleBooks) {
       const seeded = source.getSnapshot().books.find(entry => entry.bundledId === sample.id)
       assert.equal(seeded.id, `bundled:${sample.id}`)

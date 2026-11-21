@@ -1,5 +1,4 @@
 import { TARGET_TYPES } from './store.js'
-import { PG_NOTICE } from './pg-notice.js'
 
 const TYPE_LABELS = { reasoning: 'typeReasoning', 'tool-call': 'typeToolCall', 'read-file': 'typeReadFile', command: 'typeCommand', 'file-search': 'typeFileSearch' }
 const MAIN_TITLES = ['', '思考', '分析', '检查', 'Thinking']
@@ -25,11 +24,6 @@ const STYLES = `
 .novel-fish-book-info{display:flex;flex-direction:column;gap:20px;max-height:60vh;overflow-y:auto;font-size:13px;line-height:1.6}
 .novel-fish-book-info .novel-fish-field{display:flex;flex-direction:column;gap:4px}
 .novel-fish-book-info p{margin:0}
-.novel-fish-license{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.novel-fish-help{position:relative;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-size:12px;line-height:1;cursor:help;user-select:none}
-.novel-fish-help:focus-visible{outline:2px solid var(--dsw-alias-label-secondary);outline-offset:2px}
-.novel-fish-help-tip{position:absolute;bottom:calc(100% + 8px);right:0;z-index:20;display:none;width:min(340px,72vw);max-height:min(45vh,320px);overflow-y:auto;padding:10px 12px;border-radius:8px;background:var(--dsw-alias-bg-primary,#fff);border:1px solid var(--dsw-alias-border-l2);box-shadow:0 8px 24px rgba(0,0,0,.16);color:var(--dsw-alias-label-primary);font-size:12px;line-height:1.6;white-space:normal;text-align:start}
-.novel-fish-help:hover .novel-fish-help-tip,.novel-fish-help:focus .novel-fish-help-tip,.novel-fish-help:focus-within .novel-fish-help-tip{display:block}
 `
 
 /** Embedded in this bundle's official configuration slot; never a reading page. */
@@ -111,7 +105,7 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
     )
   }
 
-  function SettingsRow({ t, useNovelState, useNovelUi, onSetOption, onSetNotice, onSelectBook, onDeleteBook, onImportFile, onSetProgress, onExportBackup, onReadBackup, onRestoreBackup, sampleBooks = [], getSampleLicenseHref }) {
+  function SettingsRow({ t, useNovelState, useNovelUi, onSetOption, onSetNotice, onSelectBook, onDeleteBook, onImportFile, onSetProgress, onExportBackup, onReadBackup, onRestoreBackup, sampleBooks = [] }) {
     const state = useNovelState(value => value)
     const ui = useNovelUi(value => value)
     const [busy, setBusy] = React.useState(false)
@@ -240,7 +234,7 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
             max: selectedBook.segmentCount, 'aria-label': t('settings.readingProgress') }) : null,
         ),
         selectedBook ? h('div', { className: 'novel-fish-row' },
-          h('span', { className: 'novel-fish-hint', 'data-novel-progress': true }, t('settings.progressValue', { progress: selectedBook.progress, total: selectedBook.segmentCount, percent: Math.floor(selectedBook.progress / selectedBook.segmentCount * 100) })),
+          h('span', { className: 'novel-fish-hint', 'data-novel-progress': true }, t('settings.progressValue', { progress: selectedBook.progress, total: selectedBook.segmentCount, percent: Math.round(selectedBook.progress / selectedBook.segmentCount * 100) })),
           h(Button, { variant: 'outline', disabled, 'data-novel-jump': true, onClick: openJump }, t('settings.adjustProgress')),
           h(Button, { variant: 'ghost', disabled, 'data-novel-delete': true, onClick: () => { setRemoveError(null); setRemoveBook(selectedBook) } }, t('settings.deleteBook')),
         ) : h('p', { className: 'novel-fish-hint' }, t('settings.emptyLibrary')),
@@ -275,6 +269,7 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
             footer: [{ id: '__all', label: t(state.settings.targetTypes.length === TARGET_TYPES.length ? 'settings.clearTypes' : 'settings.allTypes') }],
             onChange: type => { void setTypes(type === '__all' ? (state.settings.targetTypes.length === TARGET_TYPES.length ? [] : [...TARGET_TYPES]) : TARGET_TYPES.filter(value => value === type ? !state.settings.targetTypes.includes(type) : state.settings.targetTypes.includes(value))) },
           }),
+          h('span', { className: 'novel-fish-hint' }, t('settings.typeHint')),
         ),
         h('div', { className: 'novel-fish-row' },
           h('span', null, t('settings.continueOnReopen')),
@@ -342,22 +337,9 @@ export function createSettingsRow(React, { Switch, Button, Input, Menu, Modal, I
       },
       h('div', { className: 'novel-fish-book-info', 'data-novel-book-info': true },
         ...sampleBooks.map(book => h('div', { key: book.id, className: 'novel-fish-field' },
-          h('a', { href: book.source, target: '_blank', rel: 'noreferrer' }, book.title),
-          h('span', null, book.author), h('span', null, book.license),
+          h('strong', null, book.title),
+          h('span', null, `${book.author} · ${book.format.toUpperCase()} · ${book.bytes ? Math.round(book.bytes / 1024) : 0} KB`),
         )),
-      ),
-      // 许可行放在书单下方、滚动区之外：问号提示向上展开时不会被书单的滚动
-      // 容器裁掉，过长的声明在提示内部滚动。
-      h('div', { className: 'novel-fish-license' },
-        h('a', { href: getSampleLicenseHref?.(), download: 'bundled-ebooks-notices.txt' }, t('settings.sampleLicense')),
-        // 书源许可与 Project Gutenberg 声明默认收起，只在悬停/聚焦问号时展开，
-        // 不把整页法务文本铺在设置里。
-        h('span', { className: 'novel-fish-help', role: 'button', tabIndex: 0,
-          'aria-label': t('settings.samplePgNotice'), 'data-novel-license-help': true },
-        '?',
-        h('span', { className: 'novel-fish-help-tip', role: 'tooltip', 'data-novel-sample-license': true },
-          t('settings.samplePgNotice'), ' ', PG_NOTICE, ' ',
-          h('a', { href: 'https://www.gutenberg.org/policy/license.html', target: '_blank', rel: 'noreferrer' }, 'www.gutenberg.org'))),
       )) : null,
       h(Modal, {
         open: Boolean(removeBook), onClose: closeRemove, title: t('settings.deleteBook'), closeLabel: t('settings.cancel'),

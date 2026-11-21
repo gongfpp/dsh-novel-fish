@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "version": "1.2.1",
+  "capturedAt": "2026-11-22T04:24:00+08:00",
+  "environment": {
+    "kind": "fresh-profile",
+    "dshHome": "temporary directory created for this capture; plugin installed from the local 1.2.1 tarball",
+    "pluginVersion": "1.2.1",
+    "bundle": {
+      "path": "profiles/web/node_modules/@gongfpp/dsh-novel-fish/lib/client.js",
+      "bytes": 1412133,
+      "sha256": "2346dd3cc62b3ad18b327adc3fb4f518ef99e103ae53e931f0ec49d4d4a898ca"
+    },
+    "library": "empty IndexedDB, seeded from the packaged samples on first load",
+    "defaultBook": "阿Q正傳 · MD · 72 段 · 9 章",
+    "viewport": "778×1081"
+  },
+  "steps": [
+    {
+      "file": "docs/evidence/reading-box-121.png",
+      "progress": "第 1 / 72 段",
+      "chapter": "第一章　序",
+      "action": "展开一个思考区域，阅读方框随即出现"
+    },
+    {
+      "file": "docs/evidence/reading-box-121-2.png",
+      "progress": "第 2 / 72 段",
+      "chapter": "第一章　序",
+      "action": "点方框右上角「下一段」"
+    },
+    {
+      "file": "docs/evidence/reading-box-121-3.png",
+      "progress": "第 3 / 72 段",
+      "chapter": "第一章　序",
+      "action": "再点一次「下一段」"
+    }
+  ],
+  "settings": {
+    "file": "docs/evidence/settings-121.png",
+    "shows": [
+      "书籍 阿Q正傳 · MD",
+      "已读 3 / 72 段 · 4%",
+      "调整进度",
+      "删除当前书籍",
+      "导出备份",
+      "恢复备份"
+    ],
+    "size": "778×930"
+  },
+  "notes": [
+    "同一会话、同一次安装里连续翻三页，进度条随翻页递增。",
+    "方框里只有书名、章节、进度、正文与「下一段」，没有目录或其它前置段落。",
+    "设置页截图裁掉了底部的安装来源信息。"
+  ]
+}

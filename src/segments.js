@@ -5,13 +5,15 @@ export const DEFAULT_SEGMENT_LENGTH = 800
 const TXT_CHAPTER = /^\s*(?:第[0-9０-９零〇一二三四五六七八九十百千万两壹贰叁肆伍陆柒捌玖拾佰仟]{1,24}[章节卷篇回部](?:[\t \u3000]+[^。！？!?，,；;\r\n]{1,80})?|chapter\s+(?:\d+|[ivxlcdm]+)(?:[\t ]+[^.!?\r\n]{1,80})?|(?:序章|楔子|前言|尾声|后记|附录)(?:[\t \u3000]+[^。！？!?，,；;\r\n]{1,80})?)\s*$/iu
 const MD_HEADING = /^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$/u
 const WIDE = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Extended_Pictographic}\u3000-\u303f\uff01-\uff60\uffe0-\uffe6]/u
+const CJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u
 const CLOSING = /^[”’"'」』】）)\]]+$/u
+const PARAGRAPH_BREAK_UNITS = 28
 
 /** Split plain text into chapter groups while retaining paragraph breaks. */
 export function textToChapters(text, format = 'txt') {
   const lines = String(text).replace(/^\uFEFF/u, '').replace(/\r\n?/gu, '\n').split('\n')
   const chapters = []
-  let title = '正文'
+  let title = ''
   let body = []
   let sawHeading = false
 
@@ -21,29 +23,62 @@ export function textToChapters(text, format = 'txt') {
     body = []
   }
 
-  for (const line of lines) {
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index]
     const heading = format === 'md' ? line.match(MD_HEADING) : line.match(TXT_CHAPTER)
-    if (!heading) {
+    if (!heading && !(format === 'txt' && isCapsHeading(lines, index))) {
       body.push(line)
       continue
     }
     flush()
-    title = format === 'md' ? heading[2].trim() : line.trim()
+    title = heading ? (format === 'md' ? heading[2].trim() : line.trim()) : line.trim()
     sawHeading = true
   }
   flush()
   if (!chapters.length && !sawHeading) {
     const content = lines.join('\n').trim()
-    if (content) chapters.push({ title: '正文', text: content })
+    if (content) chapters.push({ title: '', text: content })
   }
   return chapters
+}
+
+/** 英文 TXT 常用一行全大写做篇名：前后空行、无小写字母、无句末标点。 */
+function isCapsHeading(lines, index) {
+  const line = lines[index].trim()
+  if (line.length < 3 || line.length > 80) return false
+  if (CJK.test(line)) return false
+  if (/[a-z]/u.test(line) || !/[A-Z]{3}/u.test(line)) return false
+  // 信件抬头、引文和收尾标记不是篇名：它们以引号/逗号/破折号结尾，或只有一个词。
+  if (/[.,;:!?。！？…，、；：—–-]$/u.test(line)) return false
+  if (/^[‘“'"]/u.test(line)) return false
+  if (!/\s/u.test(line)) return false
+  const before = lines[index - 1]
+  const after = lines[index + 1]
+  return (before === undefined || before.trim() === '') && (after === undefined || after.trim() === '')
+}
+
+/** 硬换行文本里段落内的单个换行只是版面折行，合并成一个空格；中文段落仍按行断开。 */
+function unwrapSoftBreaks(text) {
+  const lines = String(text).replace(/\r\n?/gu, '\n').split('\n')
+  const out = []
+  for (const line of lines) {
+    const previous = out.at(-1)
+    const trimmed = line.trim()
+    if (previous && previous.trim() && trimmed
+      && !CJK.test(previous.trim().slice(-1)) && !CJK.test(trimmed[0])) {
+      out[out.length - 1] = `${previous.trimEnd()} ${trimmed}`
+      continue
+    }
+    out.push(line)
+  }
+  return out.join('\n')
 }
 
 /**
  * Segment new imports only; stored passages/progress are not read or rewritten.
  * targetLength is a positive-integer soft display-width budget (half-width units).
  * Paragraph/sentence boundaries may extend it to floor(targetLength * 1.25).
- * Newlines cost 40 units (a conservative wrap/blank-line allowance). A single
+ * Paragraph breaks cost one unit: soft-wrapped lines are unwrapped before counting. A single
  * indivisible grapheme may exceed the hard budget rather than being corrupted.
  */
 export function segmentChapters(chapters, targetLength = DEFAULT_SEGMENT_LENGTH) {
@@ -94,7 +129,7 @@ export function parseTextBook(text, format = 'txt', targetLength = DEFAULT_SEGME
 }
 
 function splitChapter(text, target) {
-  const source = String(text).replace(/\r\n?/gu, '\n').split(/\n\s*\n+/u)
+  const source = unwrapSoftBreaks(text).split(/\n\s*\n+/u)
     .map(value => value.trim()).filter(Boolean).join('\n\n')
   if (!source) return []
   const parts = graphemes(source)
@@ -183,7 +218,9 @@ function boundaryPriority(parts, end, sentenceEnd) {
 }
 
 function displayWidth(part) {
-  if (part === '\n') return 40
+  // A paragraph break is a visible gap, not a character: price it at about half a
+  // line so dialogue-heavy chapters do not turn one passage into fifty lines.
+  if (part === '\n') return PARAGRAPH_BREAK_UNITS
   if (part === '\t') return 4
   return WIDE.test(part) || /\p{Regional_Indicator}/u.test(part) ? 2 : 1
 }

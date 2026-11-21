@@ -1,6 +1,7 @@
 import { passageSnapshotKey } from './store.js'
-import { LABEL_STYLE, NOVEL_STYLE, PASSAGE_STYLE, SEPARATOR_STYLE, novelContent } from './novel-content.js'
-import { PG_NOTICE, PG_NOTICE_STYLE, PG_LICENSE_LABEL, PG_LICENSE_DOWNLOAD } from './pg-notice.js'
+import {
+  BOX_STYLE, CHAPTER_STYLE, HEADER_STYLE, META_STYLE, NEXT_STYLE, PASSAGE_STYLE, TITLE_STYLE, novelContent,
+} from './novel-content.js'
 
 const THOUGHT = '[data-chat-flow-kind="assistant-step"] [data-variant="think"]'
 const TOOL = '[data-chat-call-id] [data-tool], [data-chat-call-id] [data-sample="bash"]'
@@ -13,12 +14,12 @@ const IDENTITY_SET = new Set(IDENTITY_ATTRIBUTES)
 const OBSERVED_ATTRIBUTES = ['data-shimmer-text', 'aria-expanded', 'data-state', ...IDENTITY_ATTRIBUTES]
 
 /** DSH 0.2.1 窄适配：保留原生控件和正文，只改标题文字并追加本地纯文本。 */
-export function registerChatAdapter(ctx, store, React, locale, { getSampleLicenseHref } = {}) {
+export function registerChatAdapter(ctx, store, React, locale) {
   const t = ctx.locale?.bind(locale) ?? (key => key)
   ctx.slots.inject('conversation.chat.reasoning.body', () => ctx.slots.register({
     name: 'conversation.chat.reasoning.body', priority: -10, locale,
-    inject: () => ({ hooks: { novelSettings: store.settingsSource, novelPassages: store.passageSource } }),
-  }, createBody(React, getSampleLicenseHref)))
+    inject: () => ({ hooks: { novelState: store.stateSource, novelSettings: store.settingsSource, novelPassages: store.passageSource } }),
+  }, createBody(React, store)))
 
   ctx.effect(() => {
     const decorated = new Map()
@@ -103,7 +104,8 @@ export function registerChatAdapter(ctx, store, React, locale, { getSampleLicens
             continue
           }
           const status = store.getPassageStatus(settings.currentBookId, readingKey(id))
-          const model = novelContent(status, Boolean(settings.currentBookId), t)
+          const book = store.getSnapshot().books.find(item => item.id === settings.currentBookId)
+          const model = novelContent(status, book, t)
           const signature = JSON.stringify(model)
           const container = root.matches('[data-sample="bash"]') ? root.parentElement : root
           if (!record.append || !container.contains(record.append)) {
@@ -113,7 +115,9 @@ export function registerChatAdapter(ctx, store, React, locale, { getSampleLicens
             record.signature = null
           }
           if (signature !== record.signature) {
-            renderPlainAppend(record.append, model, getSampleLicenseHref)
+            renderPlainAppend(record.append, model, () => {
+              void store.continuePassage(readingKey(id), id.type)
+            }, t)
             record.signature = signature
           }
         }
@@ -225,38 +229,66 @@ function writeText(node, value) {
 }
 function restoreText(node, text) { if (readText(node) === text.shown) writeText(node, text.native) }
 
-function createBody(React, getSampleLicenseHref) {
+function createBody(React, store) {
   const h = React.createElement
-  return function NovelBody({ text, running, sessionId, useNovelSettings, useNovelPassages, renderFactorySlot, t }) {
+  return function NovelBody({ text, running, sessionId, useNovelSettings, useNovelPassages, useNovelState, renderFactorySlot, t }) {
     const ref = React.useRef(null)
     const [identity, setIdentity] = React.useState(null)
     const settings = useNovelSettings(value => value)
     React.useEffect(() => { setIdentity(identityOf(ref.current)) }, [sessionId])
     const selected = settings.enabled && isTarget(settings, identity)
+    const book = useNovelState(snapshot => snapshot.books.find(item => item.id === settings.currentBookId) ?? null)
     const key = settings.currentBookId && identity ? passageSnapshotKey(settings.currentBookId, readingKey(identity)) : null
     const status = useNovelPassages(snapshot => key ? snapshot[key] : undefined) ?? EMPTY
-    const model = selected ? novelContent(status, Boolean(settings.currentBookId), t) : null
+    const model = selected ? novelContent(status, book, t) : null
     return h('div', { ref },
       h('div', { 'data-novel-original': true }, renderFactorySlot('conversation.chat.reasoning.content', { text, running })),
-      model === null ? null : h('div', { 'data-novel-append': true, style: NOVEL_STYLE },
-        h('hr', { style: SEPARATOR_STYLE }),
-        h('div', { 'data-novel-label': true, style: LABEL_STYLE }, model.chapter ? `${model.label} · ${model.chapter}` : model.label),
-        model.projectGutenberg ? h('aside', { 'data-novel-pg-notice': true, style: PG_NOTICE_STYLE },
-          h('p', { style: { margin: '0 0 6px' } }, PG_NOTICE),
-          h('a', { href: getSampleLicenseHref?.(), download: PG_LICENSE_DOWNLOAD }, PG_LICENSE_LABEL)) : null,
+      model === null ? null : h('div', { 'data-novel-append': true, style: BOX_STYLE },
+        h('div', { style: HEADER_STYLE },
+          h('span', { 'data-novel-label': true, style: TITLE_STYLE }, model.label),
+          model.chapter ? h('span', { 'data-novel-chapter': true, style: CHAPTER_STYLE }, model.chapter) : null,
+          model.meta ? h('span', { 'data-novel-progress': true, style: META_STYLE }, model.meta) : null,
+          model.canContinue ? h('button', {
+            type: 'button', 'data-novel-next': true, style: NEXT_STYLE,
+            onClick: () => { void store.continuePassage(readingKey(identity), identity.type) },
+          }, t('chat.next')) : null),
         h('div', { 'data-novel-passage': model.index, role: model.role, style: PASSAGE_STYLE,
-          tabIndex: model.index ? 0 : undefined, 'aria-label': model.index ? model.label : undefined }, model.text)),
+          tabIndex: model.index ? 0 : undefined, 'aria-label': model.label }, model.text)),
     )
   }
 }
-function renderPlainAppend(element, model, getSampleLicenseHref) {
-  Object.assign(element.style, NOVEL_STYLE)
-  const divider = document.createElement('hr')
-  Object.assign(divider.style, SEPARATOR_STYLE)
-  const label = document.createElement('div')
+function renderPlainAppend(element, model, onNext, t) {
+  Object.assign(element.style, BOX_STYLE)
+  const header = document.createElement('div')
+  Object.assign(header.style, HEADER_STYLE)
+  const label = document.createElement('span')
   label.setAttribute('data-novel-label', '')
-  Object.assign(label.style, LABEL_STYLE)
-  label.textContent = model.chapter ? `${model.label} · ${model.chapter}` : model.label
+  Object.assign(label.style, TITLE_STYLE)
+  label.textContent = model.label
+  header.append(label)
+  if (model.chapter) {
+    const chapter = document.createElement('span')
+    chapter.setAttribute('data-novel-chapter', '')
+    Object.assign(chapter.style, CHAPTER_STYLE)
+    chapter.textContent = model.chapter
+    header.append(chapter)
+  }
+  if (model.meta) {
+    const meta = document.createElement('span')
+    meta.setAttribute('data-novel-progress', '')
+    Object.assign(meta.style, META_STYLE)
+    meta.textContent = model.meta
+    header.append(meta)
+  }
+  if (model.canContinue) {
+    const next = document.createElement('button')
+    next.type = 'button'
+    next.setAttribute('data-novel-next', '')
+    Object.assign(next.style, NEXT_STYLE)
+    next.textContent = t('chat.next')
+    next.addEventListener('click', () => onNext?.())
+    header.append(next)
+  }
   const content = document.createElement('div')
   Object.assign(content.style, PASSAGE_STYLE)
   if (model.index) {
@@ -266,22 +298,7 @@ function renderPlainAppend(element, model, getSampleLicenseHref) {
   }
   if (model.role) content.setAttribute('role', model.role)
   content.textContent = model.text
-  const notice = []
-  if (model.projectGutenberg) {
-    const aside = document.createElement('aside')
-    aside.setAttribute('data-novel-pg-notice', '')
-    Object.assign(aside.style, PG_NOTICE_STYLE)
-    const statement = document.createElement('p')
-    statement.style.margin = '0 0 6px'
-    statement.textContent = PG_NOTICE
-    const license = document.createElement('a')
-    license.href = getSampleLicenseHref?.() ?? ''
-    license.download = PG_LICENSE_DOWNLOAD
-    license.textContent = PG_LICENSE_LABEL
-    aside.append(statement, license)
-    notice.push(aside)
-  }
-  element.replaceChildren(divider, label, ...notice, content)
+  element.replaceChildren(header, content)
 }
 function identityOf(element) {
   const root = element?.closest('[data-variant="think"], [data-tool], [data-sample="bash"]')

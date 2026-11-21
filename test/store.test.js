@@ -582,14 +582,14 @@ test('end of book does not wrap and target settings contain no passage binding',
   assert.equal(Object.hasOwn(storage.settings, 'targets'), false)
 })
 
-test('续读设置默认关闭、按布尔归一化，未知设置项仍被拒绝', async () => {
+test('续读设置默认开启、按布尔归一化，未知设置项仍被拒绝', async () => {
   const { store } = makeStore()
   await store.ready
-  assert.equal(store.getSettingsSnapshot().continueOnReopen, false)
-  await store.setOption('continueOnReopen', 'yes')
   assert.equal(store.getSettingsSnapshot().continueOnReopen, true)
   await store.setOption('continueOnReopen', 0)
   assert.equal(store.getSettingsSnapshot().continueOnReopen, false)
+  await store.setOption('continueOnReopen', 'yes')
+  assert.equal(store.getSettingsSnapshot().continueOnReopen, true)
   await assert.rejects(() => store.setOption('unknown', true), /未知设置项/u)
   store.dispose()
 })

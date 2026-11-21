@@ -1,6 +1,6 @@
 {
   "name": "@gongfpp/dsh-novel-fish",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/gongfpp/dsh-novel-fish.git"
@@ -34,8 +34,8 @@
     "lib/client.js",
     "assets/icon.png",
     "locale/*.json",
-    "docs/evidence/reading-demo-110.png",
-    "docs/evidence/settings-reliability.png",
+    "docs/evidence/reading-box-121.png",
+    "docs/evidence/settings-121.png",
     "screenshots.json",
     "samples/ebooks/**",
     "README.md",

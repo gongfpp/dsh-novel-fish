@@ -2,34 +2,33 @@
 
 <img src="assets/icon.png" width="80" height="80" alt="小说摸鱼图标" />
 
-在 DSH 真实对话的思考、工具区域里读本地小说。展开行时，AI 的原始内容保持不变，下方用一条分隔线接上章节名和一段正文。
+在 DSH 真实对话的思考、工具区域里读本地小说。展开行时，AI 的原始内容保持不变，下方出现一个方框：书名、章节、进度和一段正文都在框里。
 
 不写会话、不发给模型、不占上下文——等 AI 思考的空档，翻一页书。
 
-**v1.2.0** · DSH Web 插件 · 代码 MIT 许可 · 数据只存本地
+**v1.2.1** · DSH Web 插件 · 数据只存本地
 
-本版修复多页面进度与设置覆盖，新增进度调整与备份恢复，见 [CHANGELOG](CHANGELOG.md)。升级后请刷新所有旧页面。
+本版重做了阅读方框与内置样书：打开就是正文，不再出现目录页；章节、进度和「下一段」都在方框里，见 [CHANGELOG](CHANGELOG.md)。升级后请刷新所有旧页面。
 
 ## 效果
 
-![真实 DSH v1.1.0 阅读区：AI 原文下方的分隔线与阿Q正文](docs/evidence/reading-demo-110.png)
+![真实 DSH 阅读区：思考原文下方的阅读方框，框内是书名、章节、进度与正文](docs/evidence/reading-box-121.png)
 
-上图为 v1.1.0 的真实阅读区，本版沿用相同布局。下图为 v1.2.0 功能在真实 DSH `0.2.2-rc.1` 页面里的设置区，使用公开测试书；隔离浏览器仅替换收到的插件 bundle，未安装或改变服务器上的旧版本。
+上图为 v1.2.1 在全新 profile 里的真实阅读区。下图为同一环境的设置区。
 
-![真实 DSH 设置区：进度调整、导出备份与恢复备份](docs/evidence/settings-reliability.png)
+![真实 DSH 设置区：书库、阅读类型与标题](docs/evidence/settings-121.png)
 
-原始完整动图与历史验证资料保留在 GitHub，安装包只带这两张核心预览，避免把历史测试素材全部装进浏览器 profile。
-
-[完整界面动图](https://github.com/gongfpp/dsh-novel-fish/blob/main/docs/evidence/reading-two-expansions-110.gif)由真实运行窗口的操作前后帧按顺序合成，压缩等待时间，不是连续桌面录像；遮挡了侧栏私密信息，未改写思考或小说。实拍保留已有用户导入的 AQ TXT，未重置进度；内置 MD 的验证另见[测试报告](https://github.com/gongfpp/dsh-novel-fish/blob/main/docs/ebook-tests.md)。
+两图来自同一次真实运行，连读的第 [2 页](docs/evidence/reading-box-121-2.png)与第 [3 页](docs/evidence/reading-box-121-3.png)也一并保留；安装版本、窗口尺寸与每页进度记在 [release-121-screenshots.json](docs/evidence/release-121-screenshots.json)。
 
 ## 它能做什么
 
 - 支持 **EPUB / TXT / MD**，导入后自动分段，记住当前读到第几段；单个 TXT / MD 上限 8 MiB
-- 按中英文显示宽度、句段边界和换行量分段；小说正文限制最大展开高度，超出可滚动，原始思考与工具输出不受影响。已导入书籍不重分段、不重置进度
+- 按中英文显示宽度、句段边界和换行量分段；正文在方框里滚动，原始思考与工具输出不受影响。已导入书籍不重分段、不重置进度
 - 阅读区域可以选：思考、工具调用、打开文件、运行命令、文件搜索，可全选也可只挑一类
-- 默认同一区域重复展开不跳段；打开「同一区域再次展开续读」后，收起再展开接着读下一段
+- 默认同一区域收起再展开就接着读下一段；也可以关掉续读，让每个区域固定显示第一次读到的那段
 - 标题可自定义：主标题、补充文字都支持预设和自填；输入停顿或失焦后才保存一次
 - 书库、进度、设置都只存在你自己的浏览器里
+- v1.2.1：方框右上角「下一段」直接翻页，不用换区域；章节名与进度跟随正文
 - v1.2.0：同源多页面共享进度与设置，导入完成后可一键切到新书；支持调整下一段、回退和从头开始
 - v1.2.0：导出 JSON 备份，可在其他浏览器合并恢复正文、进度、选书与阅读设置；恢复只合并书籍，不覆盖本机阅读设置
 
@@ -37,8 +36,8 @@
 
 1. 打开 **插件 → 小说摸鱼**，在选书菜单切换内置书，或导入自己的 EPUB / TXT / MD
 2. 在「阅读区域类型」里勾选想读的区域（默认只勾「思考」）
-3. 回到任意会话，点开一个思考或工具区域——原文下面就是分隔线、章节名和一段小说
-4. 想继续读：默认换一个区域会接着下一段；也可以打开「同一区域再次展开续读」，同一区域收起再展开就继续
+3. 回到任意会话，点开一个思考或工具区域——原文下面就是阅读方框，书名、章节、进度和正文都在里面
+4. 想继续读：点方框右上角的「下一段」；收起再展开同一区域也会接着读，换一个区域同样接着往下
 
 自动展开、或恢复展开的行保留原文但不会读小说，需要先收起，再主动展开。空选和关闭阅读都不消耗进度。
 
@@ -46,16 +45,12 @@
 
 下列两本直接显示在原有选书菜单，与自己导入的书统一切换、阅读和删除：
 
-| 书名 / 版本范围 | 作者 | 格式 | 原文件大小 |
+| 书名 | 作者 | 格式 | 大小 |
 | --- | --- | --- | --- |
-| [百万英镑及其他新故事（英文）](samples/ebooks/million-pound-bank-note-pg61522.txt) | Mark Twain | TXT | 385.3 KiB |
-| [阿Q正传（完整九章）](samples/ebooks/aq-zheng-zhuan-wikisource.md) | 鲁迅 | 中文 MD | 66.6 KiB |
+| [阿Q正傳（完整九章）](samples/ebooks/aq-zheng-zhuan.md) | 鲁迅 | 中文 MD | 62.8 KiB |
+| [百万英镑及其他新故事（英文）](samples/ebooks/million-pound-bank-note.txt) | Mark Twain | TXT | 357.5 KiB |
 
-两个文件共 **462708 字节（451.9 KiB）**，首次离线加入书库；删除后刷新不恢复。升级会移除旧版默认《山海经》，将默认《阿Q正传》改为 MD 并保留进度，自己导入的副本不受影响。
-
-英文 TXT 为 1893 年故事集，含《百万英镑》全文及另外八篇；《阿Q正传》MD 在维基文库完整九章导出前加一个 Markdown 标题，保留全部正文、贡献者和声明。
-
-书源及独立许可收在选书菜单的「书籍信息」，Project Gutenberg 声明收在旁边的「?」提示里，鼠标悬停或键盘聚焦时展开。PG 英文书的每个阅读片段还会显示许可要求的完整声明，并可直接离线下载完整许可；中文《阿Q正传》不增加这段 PG 声明。详见 [来源清单](samples/ebooks/sources.json)、[图书许可](samples/ebooks/LICENSE.md) 和 [测试报告](https://github.com/gongfpp/dsh-novel-fish/blob/main/docs/ebook-tests.md)。
+两本都是纯正文加篇名/章名，首次离线加入书库；删除后刷新不恢复。默认书是中文《阿Q正傳》，打开第一页就是「第一章　序」。选书菜单的「书籍信息」显示书名、作者、格式和大小。
 
 ## 设置
 
@@ -72,13 +67,13 @@
 GitHub 固定版本安装：
 
 ```sh
-dsh plugin --profile web add github:gongfpp/dsh-novel-fish#v1.2.0
+dsh plugin --profile web add github:gongfpp/dsh-novel-fish#v1.2.1
 ```
 
-也可以从 [发布页](https://github.com/gongfpp/dsh-novel-fish/releases) 下载 `gongfpp-dsh-novel-fish-1.2.0.tgz` 后离线安装：
+也可以从 [发布页](https://github.com/gongfpp/dsh-novel-fish/releases) 下载 `gongfpp-dsh-novel-fish-1.2.1.tgz` 后离线安装：
 
 ```sh
-dsh plugin --profile web add ./gongfpp-dsh-novel-fish-1.2.0.tgz
+dsh plugin --profile web add ./gongfpp-dsh-novel-fish-1.2.1.tgz
 ```
 
 `web` 是 profile 名称，用别的 profile 时替换。
@@ -86,7 +81,7 @@ dsh plugin --profile web add ./gongfpp-dsh-novel-fish-1.2.0.tgz
 也可以从 npm 安装固定版本：
 
 ```sh
-dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.2.0
+dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.2.1
 ```
 
 ## 常见问题
@@ -95,7 +90,7 @@ dsh plugin --profile web add @gongfpp/dsh-novel-fish@1.2.0
 不会。插件只在浏览器里往已展开的原生行追加文本，不改会话内容，也不发起任何模型请求。
 
 **会覆盖 AI 的思考原文吗？**
-不会。原文在上，小说在下，中间是分隔线。
+不会。原文在上，阅读方框在下。
 
 **书和进度存在哪里？**
 存在当前站点、当前浏览器的本地数据库里，服务端不保存。v1.2.0 起可在书库点「导出备份」，换浏览器后「恢复备份」。备份含完整正文，请私下保存，清理站点数据前先备份。
@@ -148,7 +143,3 @@ pnpm verify   # 构建浏览器 bundle 并跑全量测试
 `scripts/test-browser-samples.mjs` 用真实 bundle、真实 IndexedDB 和双页面验证阅读、迁移、进度与恢复，原语为测试替身；通过 `PLAYWRIGHT_MODULE`、`REACT_DOM_MODULE` 指向已有依赖，不自动安装浏览器。
 
 `scripts/test-browser-host.mjs` 是手动开启的真实页面验收：设置 `GUI_URL`、`INSTALLED_PLUGIN_ROOT`、`PLAYWRIGHT_MODULE`，可用 `CHROME_EXECUTABLE` 指定浏览器。它只在独立浏览器中替换该插件的网络响应，不安装插件、不重启、不发模型消息。受认证保护的页面可指定 `AGENT_CDP_URL` 复用已登录 agent 浏览器的当前 GUI Cookie（仅内存，不输出或保存）；书库使用全新的隔离数据库。`CAPTURE_HOST` 可指定设置区截图路径。
-
-## 许可
-
-插件代码采用 MIT，见 [LICENSE](LICENSE)。随包图书保留各自的 Project Gutenberg、CC BY-SA 等许可，见 [图书许可说明](samples/ebooks/LICENSE.md)；代码许可不覆盖图书。

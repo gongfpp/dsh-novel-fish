@@ -9,6 +9,8 @@ dist/
 *.log
 *.pem
 *.key
+# Local working material: raw exports, captures and drafts never ship.
+dev/
 # Local acquisition drafts, including editions not cleared for redistribution.
 # Only samples/ebooks/ is the reviewed, packaged corpus.
 samples/ebooks-next/

@@ -5,12 +5,7 @@ import React from 'react'
 import TestRenderer, { act } from 'react-test-renderer'
 import { passageSnapshotKey } from '../src/store.js'
 import { registerChatAdapter } from '../src/chat-adapter.js'
-import { PG_NOTICE, PG_LICENSE_DOWNLOAD } from '../src/pg-notice.js'
-import { readFile } from 'node:fs/promises'
-
-const fullLicense = await readFile(new URL('../samples/ebooks/LICENSE.md', import.meta.url), 'utf8')
-const licenseHref = `data:text/plain;charset=utf-8,${encodeURIComponent(fullLicense)}`
-const getSampleLicenseHref = () => licenseHref
+const book = { id: 'book', title: '书甲', segmentCount: 12 }
 
 // Mirrors CURRENT 0.2.1-rc.2 DisclosureRow/TextShimmer nesting, not a replacement
 // renderer. Trusted events below are handler-contract probes, NOT browser evidence.
@@ -49,7 +44,8 @@ function adapterFixture(content = thought('node-a'), session = 'session-a') {
   let settingsChanged
   const store = {
     cacheGeneration: 0,
-    settingsSource: {}, passageSource: {}, getSettingsSnapshot: () => settings,
+    stateSource: {}, settingsSource: {}, passageSource: {}, getSettingsSnapshot: () => settings,
+    getSnapshot: () => ({ books: [book] }),
     subscribeSettings: fn => { settingsChanged = fn; return () => {} },
     subscribePassages: callback => { passagesChanged = callback; return () => {} },
     getPassageStatus: (_book, key) => statuses.get(key) ?? ({ kind: 'empty' }),
@@ -58,7 +54,7 @@ function adapterFixture(content = thought('node-a'), session = 'session-a') {
   }
   const ctx = { slots: { inject: (_key, fn) => fn(), register: () => () => {} }, effect: fn => { effects.push(fn()) } }
   return {
-    dom, claims, continues, types, actions, start: () => registerChatAdapter(ctx, store, React, 'novel', { getSampleLicenseHref }),
+    dom, claims, continues, types, actions, start: () => registerChatAdapter(ctx, store, React, 'novel'),
     passage: (key, status) => { statuses.set(key, status); passagesChanged() },
     invalidate: () => { store.cacheGeneration += 1 },
     settings: patch => { settings = { ...settings, ...patch }; settingsChanged() },
@@ -245,9 +241,11 @@ function bodyFixture() {
   const marker = dom.window.document.createElement('div')
   dom.window.document.querySelector('[data-variant="think"]').append(marker)
   let Body
+  const continues = []
+  const store = { continuePassage: (key, type) => { continues.push([key, type]); return Promise.resolve() } }
   const ctx = { slots: { inject: (_key, fn) => fn(), register: (_options, component) => { Body = component; return () => {} } }, effect: () => {} }
-  registerChatAdapter(ctx, {}, React, 'novel', { getSampleLicenseHref })
-  return { dom, marker, Body }
+  registerChatAdapter(ctx, store, React, 'novel')
+  return { dom, marker, Body, continues }
 }
 
 test('纯文本小说和章节位于原思考后的分隔线下；重挂载和流式更新不读取', async () => {
@@ -260,6 +258,7 @@ test('纯文本小说和章节位于原思考后的分隔线下；重挂载和�
     text: 'ORIGINAL MODEL THOUGHT', running: true, sessionId: 'session-a',
     useNovelSettings: selector => selector(settings),
     useNovelPassages: selector => selector({ [passageSnapshotKey('book', readingKey('session-a', '14:assistant-step1:1'))]: status }),
+    useNovelState: selector => selector({ books: [book] }),
     renderFactorySlot: (name, input) => { forwarded.push({ name, ...input }); return React.createElement('p', null, input.text) }, t: key => key,
     onClaimPassage: () => { claims += 1 },
   }
@@ -269,12 +268,16 @@ test('纯文本小说和章节位于原思考后的分隔线下；重挂载和�
     assert.equal(view.root.findByProps({ 'data-novel-original': true }).findByType('p').children.join(''), props.text)
     assert.equal(view.root.findByProps({ 'data-novel-passage': 1 }).children.join(''), 'A cached passage')
     const passage = view.root.findByProps({ 'data-novel-passage': 1 })
-    assert.equal(passage.props.style.maxHeight, 'min(40vh, 20.8em)')
+    assert.equal(passage.props.style.maxHeight, 'min(60vh, 32em)')
     assert.equal(passage.props.style.overflowY, 'auto')
     assert.equal(passage.props.tabIndex, 0, '溢出的完整正文支持键盘滚动')
     assert.equal(view.root.findByProps({ 'data-novel-original': true }).props.style, undefined, '不约束宿主原始正文')
-    assert.equal(view.root.findByProps({ 'data-novel-label': true }).children.join(''), 'chat.novel · 第一章')
-    assert.equal(view.root.findAllByType('hr').length, 1)
+    assert.equal(view.root.findByProps({ 'data-novel-label': true }).children.join(''), '书甲')
+    assert.equal(view.root.findByProps({ 'data-novel-chapter': true }).children.join(''), '第一章')
+    assert.equal(view.root.findByProps({ 'data-novel-progress': true }).children.join(''), 'chat.progress')
+    assert.equal(view.root.findByProps({ 'data-novel-next': true }).children.join(''), 'chat.next')
+    assert.equal(view.root.findAllByType('hr').length, 0, '方框内不再有分隔线')
+    assert.equal(view.root.findAllByType('a').length, 0, '阅读区不出现任何链接或版权文字')
     assert.equal(view.toJSON().children[0].props['data-novel-original'], true)
     assert.equal(view.toJSON().children[1].props['data-novel-append'], true)
     assert.equal(view.toJSON().children[1].props.style.whiteSpace, 'pre-wrap')
@@ -336,11 +339,12 @@ test('五类区域独立定位，工具原正文保持且分隔线下只追加�
     await settle()
     assert.equal(document.querySelectorAll('[data-novel-append]').length, 4, '思考正文由其原生body slot负责')
     for (const append of document.querySelectorAll('[data-novel-append]')) {
-      assert.equal(append.querySelectorAll('hr').length, 1)
+      assert.equal(append.querySelectorAll('hr').length, 0)
       assert.ok(append.previousElementSibling.hasAttribute('data-native-output'), '小说位于原生工具正文之后')
-      assert.match(append.querySelector('[data-novel-label]').textContent, /章节甲/u)
+      assert.equal(append.querySelector('[data-novel-label]').textContent, '书甲')
+      assert.match(append.querySelector('[data-novel-chapter]').textContent, /章节甲/u)
       assert.equal(append.lastElementChild.textContent, literal)
-      assert.equal(append.lastElementChild.style.maxHeight, 'min(40vh, 20.8em)')
+      assert.equal(append.lastElementChild.style.maxHeight, 'min(60vh, 32em)')
       assert.equal(append.lastElementChild.style.overflowY, 'auto')
       assert.equal(append.lastElementChild.tabIndex, 0)
       assert.equal(append.querySelector('a, img, script, pre, h1'), null)
@@ -382,7 +386,8 @@ test('native thought remains visible when its DOM identity is unavailable', asyn
     await act(async () => { view = TestRenderer.create(React.createElement(Body, {
       text: 'REAL THOUGHT BEFORE IDENTITY', running: false,
       useNovelSettings: select => select({ enabled: true, targetTypes: ['reasoning'] }),
-      useNovelPassages: select => select({}), renderFactorySlot: (_name, input) => input.text, t: key => key,
+      useNovelPassages: select => select({}), useNovelState: select => select({ books: [] }),
+      renderFactorySlot: (_name, input) => input.text, t: key => key,
     }), { createNodeMock: () => null }) })
     assert.match(JSON.stringify(view.toJSON()), /REAL THOUGHT BEFORE IDENTITY/u)
     assert.equal(view.root.findAllByProps({ 'data-novel-append': true }).length, 0)
@@ -446,45 +451,41 @@ test('流式文本和属性变更在同一帧内只合并成一次重扫', async
   } finally { f.close() }
 })
 
-test('PG reasoning has a full readable §1.E.1 notice and offline license outside the clipped passage', async () => {
-  const { dom, marker, Body } = bodyFixture()
-  const settings = { enabled: true, currentBookId: 'legacy-arbitrary-id', targetTypes: ['reasoning'] }
-  let status = { kind: 'ready', index: 12, projectGutenberg: true, passage: { text: 'PG prose <img src=x> $100' } }
+test('阅读方框显示书名、章节、进度和下一段按钮，正文保持纯文本', async () => {
+  const { dom, marker, Body, continues } = bodyFixture()
+  const settings = { enabled: true, currentBookId: 'book', targetTypes: ['reasoning'] }
+  let status = { kind: 'ready', index: 12, passage: { text: 'PG prose <img src=x> $100', chapterTitle: '第一章' } }
   const props = {
     text: 'REAL HOST THOUGHT', running: true, sessionId: 'session-a',
     useNovelSettings: select => select(settings),
     useNovelPassages: select => select({ [passageSnapshotKey(settings.currentBookId, readingKey('session-a', '14:assistant-step1:1'))]: status }),
+    useNovelState: select => select({ books: [book] }),
     renderFactorySlot: (_name, input) => React.createElement('p', null, input.text), t: key => key,
   }
   let view
   try {
     await act(async () => { view = TestRenderer.create(React.createElement(Body, props), { createNodeMock: () => marker }) })
-    const notice = view.root.findByProps({ 'data-novel-pg-notice': true })
+    const append = view.root.findByProps({ 'data-novel-append': true })
+    assert.equal(append.props.style.borderRadius, '10px')
+    assert.equal(append.props.style.border, '1px solid var(--dsw-alias-border-l2)')
     const passage = view.root.findByProps({ 'data-novel-passage': 13 })
-    assert.equal(notice.parent, passage.parent, 'notice is a sibling, never inside the scroll viewport')
-    assert.equal(notice.findByType('p').children.join(''), PG_NOTICE)
-    assert.equal(notice.props.style.maxHeight, undefined)
-    assert.equal(notice.props.style.overflowY, undefined)
-    assert.equal(notice.props.style.whiteSpace, 'normal')
-    assert.equal(view.root.findAllByType('details').length, 0)
-    const license = notice.findByType('a')
-    assert.equal(license.props.href, licenseHref)
-    assert.equal(license.props.download, PG_LICENSE_DOWNLOAD)
-    assert.equal(decodeURIComponent(license.props.href.split(',').slice(1).join(',')), fullLicense)
     assert.equal(passage.children.join(''), status.passage.text, 'novel stays literal text')
     assert.equal(view.root.findAllByType('img').length, 0)
-    assert.equal(view.root.findByProps({ 'data-novel-original': true }).findByType('p').children.join(''), props.text)
-    for (const next of [{ ...status, projectGutenberg: false }, { kind: 'loading' }, { kind: 'end' }, { kind: 'error' }]) {
+    assert.equal(view.root.findAllByType('a').length, 0, '阅读区不出现任何链接或版权文字')
+    assert.doesNotMatch(JSON.stringify(view.toJSON()), /Gutenberg|License|许可/u)
+    await act(async () => view.root.findByProps({ 'data-novel-next': true }).props.onClick())
+    assert.deepEqual(continues, [[readingKey('session-a', '14:assistant-step1:1'), 'reasoning']])
+    for (const next of [{ kind: 'loading' }, { kind: 'end' }, { kind: 'error' }]) {
       status = next
       await act(async () => view.update(React.createElement(Body, props)))
-      assert.equal(view.root.findAllByProps({ 'data-novel-pg-notice': true }).length, 0)
-      assert.equal(view.root.findAllByType('a').length, 0, 'AQ/unrelated books and status messages have no PG notice')
+      assert.equal(view.root.findAllByProps({ 'data-novel-next': true }).length, 0, '状态消息没有下一段按钮')
+      assert.equal(view.root.findAllByType('a').length, 0)
     }
   } finally { await act(async () => view?.unmount()); dom.window.close() }
 })
 
-test('PG tool append exposes identical full notice/offline license without touching host output', async () => {
-  const f = adapterFixture(toolRow('read', 'read', 'pg-call') + commandRow())
+test('工具阅读方框与思考方框一致：纯文本、无链接、下一段按钮续读同一区域', async () => {
+  const f = adapterFixture(toolRow('read', 'read', 'call-a') + commandRow())
   try {
     f.start(); f.settings({ targetTypes: ['read-file', 'command'] })
     const outputs = [...document.querySelectorAll('[data-native-output]')]
@@ -493,26 +494,24 @@ test('PG tool append exposes identical full notice/offline license without touch
       f.actions.click(trustedClick(header)); header.setAttribute('aria-expanded', 'true')
     }
     await settle()
-    for (const key of f.claims) f.passage(key, { kind: 'ready', index: 3, projectGutenberg: true, passage: { text: 'Literal PG <script> & prose' } })
+    for (const [index, key] of f.claims.entries()) f.passage(key, { kind: 'ready', index, passage: { text: 'Literal <script> & prose', chapterTitle: '第二章' } })
     await settle()
-    assert.equal(document.querySelectorAll('[data-novel-pg-notice]').length, 2)
+    assert.equal(document.querySelectorAll('[data-novel-append]').length, 2)
     for (const append of document.querySelectorAll('[data-novel-append]')) {
-      const notice = append.querySelector('[data-novel-pg-notice]')
-      const passage = append.querySelector('[data-novel-passage]')
-      assert.equal(notice.parentElement, passage.parentElement)
-      assert.equal(notice.querySelector('p').textContent, PG_NOTICE)
-      assert.equal(notice.style.maxHeight, '')
-      assert.equal(notice.style.overflowY, '')
-      assert.equal(append.querySelector('details, script'), null)
-      assert.equal(notice.querySelector('a').getAttribute('href'), licenseHref)
-      assert.equal(notice.querySelector('a').download, PG_LICENSE_DOWNLOAD)
-      assert.equal(passage.textContent, 'Literal PG <script> & prose')
+      assert.equal(append.querySelector('a, img, script, details'), null)
+      assert.equal(append.querySelector('[data-novel-label]').textContent, '书甲')
+      assert.equal(append.querySelector('[data-novel-chapter]').textContent, '第二章')
+      assert.ok(append.querySelector('[data-novel-progress]').textContent)
+      assert.equal(append.querySelector('[data-novel-passage]').textContent, 'Literal <script> & prose')
+      assert.ok(append.querySelector('[data-novel-next]'))
     }
+    const before = f.continues.length
+    document.querySelector('[data-novel-next]').dispatchEvent(new f.dom.window.MouseEvent('click', { bubbles: true }))
+    assert.equal(f.continues.length, before + 1, '下一段按钮请求下一段而不是重新claim')
     assert.deepEqual(outputs.map(node => node.outerHTML), originalOutputs)
     f.settings({ mainTitle: 'New title' })
-    assert.equal(document.querySelectorAll('[data-novel-pg-notice]').length, 2, 'refresh never duplicates notices')
-    for (const key of f.claims) f.passage(key, { kind: 'ready', index: 4, projectGutenberg: false, passage: { text: 'AQ or unrelated prose' } })
-    assert.equal(document.querySelector('[data-novel-pg-notice], [data-novel-append] a'), null)
-    assert.deepEqual(outputs.map(node => node.outerHTML), originalOutputs)
+    assert.equal(document.querySelectorAll('[data-novel-append]').length, 2, '刷新不会重复方框')
+    f.settings({ targetTypes: ['reasoning'] })
+    assert.equal(document.querySelectorAll('[data-novel-append]').length, 0)
   } finally { f.close() }
 })

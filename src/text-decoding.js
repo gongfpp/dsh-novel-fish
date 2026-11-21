@@ -1,4 +1,5 @@
-// 只接受可确定的 Unicode 编码，避免把损坏或传统编码文本静默替换后保存。
+// 中文 TXT 常见 GBK/GB18030，英文与 EPUB 是 UTF-8/UTF-16。UTF-8 解码失败时按
+// GB18030 再试一次（它是 GBK 的超集），两者都失败才报错，不做静默替换。
 export function decodeBookText(input, { xml = false } = {}) {
   const bytes = input instanceof Uint8Array ? input : new Uint8Array(input)
   let encoding = 'utf-8'
@@ -13,7 +14,18 @@ export function decodeBookText(input, { xml = false } = {}) {
   try {
     text = new TextDecoder(encoding, { fatal: true }).decode(bytes)
   } catch {
-    throw new Error('文本编码无效：请使用 UTF-8 或带 BOM 的 UTF-16 文件')
+    // GB18030 covers GBK/GB2312; only for plain text, never for XML parts.
+    if (xml || encoding !== 'utf-8') throw new Error('文本编码无效：请使用 UTF-8、GB18030 或带 BOM 的 UTF-16 文件')
+    try {
+      text = new TextDecoder('gb18030', { fatal: true }).decode(bytes)
+    } catch {
+      throw new Error('文本编码无效：请使用 UTF-8、GB18030 或带 BOM 的 UTF-16 文件')
+    }
+    // 无 BOM 的 UTF-16 偶尔也能被 GB18030 解成文字，但只会散落一两个汉字；
+    // 真正的 GBK 中文正文不会只有一两个汉字。
+    if ((text.match(/\p{Script=Han}/gu)?.length ?? 0) < 2) {
+      throw new Error('文本编码无效：请使用 UTF-8、GB18030 或带 BOM 的 UTF-16 文件')
+    }
   }
   if (text.includes('\u0000')) throw new Error('不支持的文本编码：请转换为 UTF-8 或带 BOM 的 UTF-16')
   if (xml) {

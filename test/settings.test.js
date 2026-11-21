@@ -186,10 +186,9 @@ test('原生导入按钮触发隐藏文件选择；导入失败清空文件值�
   } finally { await act(async () => view.unmount()) }
 })
 
-test('书籍统一选择和删除，默认无说明块，书源许可只在菜单次级弹窗内', async () => {
+test('书籍统一选择和删除，默认无说明块，书籍信息只展示书名作者格式与大小', async () => {
   const model = setup()
   model.props.sampleBooks = manifest.books
-  model.props.getSampleLicenseHref = () => 'data:text/plain;charset=utf-8,Combined%20licenses%20and%20attribution'
   model.state.books.push(...manifest.books.map(book => ({ ...book, id: `bundled:${book.id}`, bundledId: book.id, progress: 0, segmentCount: 8 })))
   const view = await mount(model)
   try {
@@ -213,10 +212,13 @@ test('书籍统一选择和删除，默认无说明块，书源许可只在菜�
     assert.deepEqual(model.books, [id], 'Information is not a book selection')
     const info = view.root.findAllByType(HostModal).find(modal => modal.props.title === t('settings.bookInfo'))
     assert.equal(info.props.open, true)
-    const links = view.root.findAllByType('a')
-    assert.equal(links.find(link => link.props.download)?.props.href, model.props.getSampleLicenseHref())
-    for (const book of manifest.books) assert.equal(links.find(link => link.props.href === book.source)?.children.join(''), book.title)
-    assert.match(control(view, 'data-novel-sample-license').children.join(''), /This eBook/u)
+    assert.equal(view.root.findAllByType('a').length, 0, '书籍信息不再有来源或许可链接')
+    assert.doesNotMatch(JSON.stringify(view.toJSON()), /Gutenberg|License|许可|公有领域/u)
+    const infoText = JSON.stringify(view.toJSON())
+    for (const book of manifest.books) {
+      assert.match(infoText, new RegExp(book.title.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&'), 'u'))
+      assert.match(infoText, new RegExp(`${Math.round(book.bytes / 1024)} KB`, 'u'))
+    }
     await act(async () => info.props.onClose())
     assert.equal(view.root.findAllByType('a').length, 0)
   } finally { await act(async () => view.unmount()) }
@@ -313,16 +315,16 @@ test('书库未就绪或出错时原生控件禁用，不写设置', async () =>
   }
 })
 
-test('同一区域续读是默认关闭的设置项，开启后写入 continueOnReopen', async () => {
+test('同一区域续读默认开启，关掉后写入 continueOnReopen', async () => {
   const model = setup()
   const view = await mount(model)
   try {
     const toggle = view.root.findByProps({ 'aria-label': t('settings.continueOnReopen') })
-    assert.equal(toggle.props['aria-checked'], false)
+    assert.equal(toggle.props['aria-checked'], true)
     assert.equal(view.root.findAllByType(HostSwitch).length, 2)
     await act(async () => toggle.props.onClick())
-    assert.deepEqual(model.options.at(-1), ['continueOnReopen', true])
-    assert.equal(model.state.settings.continueOnReopen, true)
+    assert.deepEqual(model.options.at(-1), ['continueOnReopen', false])
+    assert.equal(model.state.settings.continueOnReopen, false)
   } finally { await act(async () => view.unmount()) }
 })
 
@@ -397,5 +399,10 @@ test('中英文设置文案键一致，不再含位置选择翻译', () => {
   for (const key of ['bookInfo', 'close', 'readingProgress']) assert.ok(zh.settings[key] && en.settings[key])
   assert.equal(zh.settings.sampleHint, undefined)
   assert.equal(en.settings.sampleHint, undefined)
-  assert.match(en.settings.samplePgNotice, /only to the English collection.*not to the other bundled books/u)
+  for (const key of ['sampleLicense', 'sampleSources', 'samplePgNotice']) {
+    assert.equal(zh.settings[key], undefined, `产品文案不再包含 ${key}`)
+    assert.equal(en.settings[key], undefined, `产品文案不再包含 ${key}`)
+  }
+  assert.equal(typeof zh.settings.typeHint, 'string')
+  assert.equal(typeof en.settings.typeHint, 'string')
 })

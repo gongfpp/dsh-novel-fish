@@ -2,7 +2,6 @@ import { parseEpub } from './epub.js'
 import { randomId } from './random-id.js'
 import { DEFAULT_SEGMENT_LENGTH, parseTextBook } from './segments.js'
 import { decodeBookText } from './text-decoding.js'
-import { hasProjectGutenbergReference } from './pg-notice.js'
 
 import { BACKUP_FORMAT, MAX_BACKUP_BYTES, validateBackup } from './backup.js'
 import { TARGET_TYPES, DEFAULT_SETTINGS, normalizeSettings } from './settings-data.js'
@@ -36,9 +35,6 @@ export class NovelStore {
     this.uiSource = Object.freeze({ getSnapshot: this.getUiSnapshot, subscribe: this.subscribeUi })
     this.passageSource = Object.freeze({ getSnapshot: this.getPassageSnapshot, subscribe: this.subscribePassages })
     this.pendingReads = new Map()
-    // Page-only provenance, keyed by stored identity (including adopted legacy IDs).
-    // No library rewrite/migration and no dependence on mutable titles or filenames.
-    this.projectGutenbergBooks = new Map()
     this.cacheGeneration = 0
     this.disposed = false
     this.persistenceError = null
@@ -70,7 +66,6 @@ export class NovelStore {
     this.passageStates.clear()
     this.passageSnapshot = Object.freeze({})
     this.pendingReads.clear()
-    this.projectGutenbergBooks.clear()
     this.listeners.clear()
     this.settingsListeners.clear()
     this.uiListeners.clear()
@@ -141,7 +136,6 @@ export class NovelStore {
       if (!this.state.books.some(item => item.id === bookId)) return
       // Deletion and fallback selection are one transaction, including across tabs.
       await this.storage.deleteBook(bookId)
-      this.projectGutenbergBooks.delete(bookId)
       await this.#refresh()
     })
   }
@@ -191,7 +185,6 @@ export class NovelStore {
     this.#cancelPendingReads()
     return this.#enqueueMutation(async () => {
       const result = await this.storage.restoreLibrary(validated)
-      this.projectGutenbergBooks.clear()
       this.#clearPassages()
       await this.#refresh()
       return result
@@ -244,13 +237,6 @@ export class NovelStore {
         const passage = await this.storage.getSegment(bookId, index)
         if (!passage?.text) throw new Error('当前段落为空或已损坏')
         if (!this.#canRead(generation, targetType)) return EMPTY_STATUS
-        if (!this.projectGutenbergBooks.has(bookId)) {
-          const first = index === 0 ? passage : await this.storage.getSegment(bookId, 0)
-          if (!this.#canRead(generation, targetType)) return EMPTY_STATUS
-          if (!first?.text) throw new Error('书籍首段为空或已损坏')
-          this.projectGutenbergBooks.set(bookId, hasProjectGutenbergReference(first.text))
-        }
-        const projectGutenberg = this.projectGutenbergBooks.get(bookId)
         // Compare-and-swap inside IndexedDB, not an unsafe page-local read/put.
         const updated = await this.storage.updateBook({ ...book, progress: index + 1 }, {
           expectedRevision: book.revision ?? 0, targetType,
@@ -264,7 +250,7 @@ export class NovelStore {
           await this.#refresh()
           return EMPTY_STATUS
         }
-        const result = { kind: 'ready', bookId, index, passage, projectGutenberg }
+        const result = { kind: 'ready', bookId, index, passage }
         return this.#writePassageStatus(bookId, stepKey, result)
       }
       throw new Error('其他页面正在频繁更新进度，请稍后重试')
@@ -318,17 +304,17 @@ export class NovelStore {
       }
       if (stored.bundledBooksInitialized && this.bundledCatalog
         && (stored.bundledCatalogVersion ?? 0) < this.bundledCatalog.version) {
-        const updates = []
-        for (const update of this.bundledCatalog.updates ?? []) {
-          // An empty/partially deleted library does not need to parse removed
-          // defaults. The atomic migration rechecks identity and current content.
-          if (!(stored.books ?? []).some(book => (book.bundledId === update.id || book.id === `bundled:${update.id}`)
-            && book.format === update.fromFormat)) continue
-          const file = await update.createFile()
-          const parsed = parseTextBook(decodeBookText(await file.arrayBuffer()), update.fromFormat, DEFAULT_SEGMENT_LENGTH)
-          updates.push({ id: update.id, fromFormat: update.fromFormat, format: update.format, segments: parsed.segments })
+        const refreshes = []
+        for (const refresh of this.bundledCatalog.refreshes ?? []) {
+          // 只刷新仍然存在的内置默认书；用户删掉的默认书不复活，手工导入的同名书不被认领。
+          if (!(stored.books ?? []).some(book => book.bundledId === refresh.id || book.id === `bundled:${refresh.id}`)) continue
+          const file = await refresh.createFile()
+          const parsed = refresh.format === 'epub'
+            ? await parseEpub(file, DEFAULT_SEGMENT_LENGTH)
+            : parseTextBook(decodeBookText(await file.arrayBuffer()), refresh.format, DEFAULT_SEGMENT_LENGTH)
+          refreshes.push({ id: refresh.id, format: refresh.format, segments: parsed.segments })
         }
-        stored = await this.storage.migrateBundledCatalog({ ...this.bundledCatalog, updates })
+        stored = await this.storage.migrateBundledCatalog({ ...this.bundledCatalog, refreshes })
       }
       const books = stored.books ?? []
       this.persistenceError = null

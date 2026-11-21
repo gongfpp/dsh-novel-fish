@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Novel Fish",
-    "description": "Append local novel text below a separator after real content when actively expanding selected native regions."
+    "description": "Append local novel text in a box below real content when actively expanding selected native regions."
   },
   "chat": {
     "novel": "Novel",
@@ -15,13 +15,13 @@
     "loading": "Loading…",
     "readError": "The passage could not be loaded; progress did not change.",
     "end": "The book is finished.",
-    "retry": "Collapse and actively expand this region to retry.",
-    "chapter": "Chapter {number} · {title}",
-    "passage": "Passage {number}"
+    "next": "Next passage",
+    "progress": "Passage {index} / {total}",
+    "retry": "Collapse and actively expand this region to retry."
   },
   "settings": {
     "title": "Novel Fish",
-    "description": "Import a book and select one or more native region types. Active expansion keeps real content and appends plain novel text below a separator; nothing is sent to the model.",
+    "description": "Import a book and select one or more native region types. Active expansion keeps real content and appends plain novel text in a box below; nothing is sent to the model.",
     "storageLoading": "Opening the local library…",
     "enabled": "Enable reading in chat",
     "targetType": "Reading region type",
@@ -33,17 +33,14 @@
     "selectedTypes": "{count} / {total} types selected",
     "allTypes": "Select all",
     "clearTypes": "Deselect all",
-    "typeHint": "A different region’s first active expansion continues reading. Select none to stop reading.",
+    "typeHint": "Only actively expanded regions are read; selecting none stops reading.",
     "continueOnReopen": "Continue in the same region",
-    "continueOnReopenHint": "When on, collapsing and actively reopening the same region reads the next passage; when off, reopening only shows the passage already there.",
+    "continueOnReopenHint": "When on, collapsing and reopening the same region continues with the next passage.",
     "books": "Books",
     "importBook": "Import book",
     "bookInfo": "Book information",
     "close": "Close",
     "readingProgress": "Reading progress",
-    "sampleLicense": "Full offline licenses and attribution notices (TXT)",
-    "sampleSources": "Sources, authors and licenses:",
-    "samplePgNotice": "The following Project Gutenberg statement applies only to the English collection The Million Pound Bank Note and Other New Stories, not to the other bundled books:",
     "reading": "Reading in chat",
     "appearance": "Titles",
     "cancel": "Cancel",

@@ -64,20 +64,19 @@ for (const extension of ['txt', 'md']) {
 }
 
 for (const extension of ['txt', 'md']) {
-  test(`unsupported GBK ${extension} bytes fail clearly without importing or replacing selection`, async () => {
+  test(`GBK ${extension} bytes decode as GB18030 and import like any other text`, async () => {
     const storage = new MemoryStorage()
     const store = new NovelStore(storage)
     await store.ready
     try {
       const existing = await store.importFile(textFile('existing.txt', '原来的正文。'))
-      const beforeSettings = { ...storage.settings }
       // GBK encoding of 中文, deliberately not valid UTF-8.
-      await assert.rejects(store.importFile(bytesFile(`novel.${extension}`, [0xd6, 0xd0, 0xce, 0xc4])), /编码|UTF/u)
-      assert.equal(storage.books.size, 1)
-      assert.equal(store.getSnapshot().books.length, 1)
-      assert.equal(store.getSettingsSnapshot().currentBookId, existing.id)
-      assert.deepEqual(storage.settings, beforeSettings)
-      assert.equal((await store.claimPassage('original')).passage.text, '原来的正文。')
+      const imported = await store.importFile(bytesFile(`novel.${extension}`, [0xd6, 0xd0, 0xce, 0xc4]))
+      assert.equal(imported.format, extension)
+      assert.equal(storage.books.size, 2)
+      assert.equal(store.getSettingsSnapshot().currentBookId, existing.id, '已有选书时导入不打断当前阅读')
+      assert.equal((await storage.getSegment(imported.id, 0)).text, '中文')
+      assert.equal((await storage.getSegment(existing.id, 0)).text, '原来的正文。', '原有书不受影响')
     } finally {
       store.dispose()
     }

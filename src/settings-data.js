@@ -1,7 +1,7 @@
 export const TARGET_TYPES = Object.freeze(['reasoning', 'tool-call', 'read-file', 'command', 'file-search'])
 export const DEFAULT_SETTINGS = Object.freeze({
   enabled: true, currentBookId: null, targetTypes: Object.freeze(['reasoning']),
-  mainTitle: '', extraTitle: '', continueOnReopen: false,
+  mainTitle: '', extraTitle: '', continueOnReopen: true,
 })
 
 // Remove obsolete step bindings without destroying unrelated persisted metadata.
@@ -23,6 +23,6 @@ export function normalizeSettings(value = {}, books = []) {
       ? [...new Set(value.targetTypes.filter(type => TARGET_TYPES.includes(type)))] : [...DEFAULT_SETTINGS.targetTypes]),
     mainTitle: typeof value.mainTitle === 'string' ? value.mainTitle : '',
     extraTitle: typeof value.extraTitle === 'string' ? value.extraTitle : '',
-    continueOnReopen: value.continueOnReopen === true,
+    continueOnReopen: typeof value.continueOnReopen === 'boolean' ? value.continueOnReopen : DEFAULT_SETTINGS.continueOnReopen,
   }
 }

@@ -59,7 +59,7 @@ const compact = text => text.replace(/\s/gu, '')
 const passages = (text, target) => segmentChapters([{ title: 'Sample', text }], target).map(segment => segment.text)
 function displayUnits(text) {
   return Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text), ({ segment }) => {
-    if (segment === '\n') return 40
+    if (segment === '\n') return 28
     if (segment === '\t') return 4
     return /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Extended_Pictographic}\p{Regional_Indicator}\u3000-\u303f\uff01-\uff60\uffe0-\uffe6]/u.test(segment) ? 2 : 1
   }).reduce((sum, value) => sum + value, 0)
