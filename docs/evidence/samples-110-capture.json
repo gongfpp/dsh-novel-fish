@@ -8,25 +8,6 @@
   "privacy": "Only cropped plugin/main content published. Raw window captures remain temporary local files and are not packaged.",
   "images": [
     {
-      "file": "settings-110.png",
-      "rawWindowSize": [
-        1567,
-        983
-      ],
-      "rawSha256": "3175166a12cc9482d400dc68799f200ab0807a12aa36b79eea62bc91fc84211e",
-      "cropLeftTopRightBottom": [
-        403,
-        111,
-        1455,
-        916
-      ],
-      "size": [
-        1052,
-        805
-      ],
-      "sha256": "996968d3933a7e788f2d4d9fc2030b3c7c37d64e7667ccf918871c4f0d633a08"
-    },
-    {
       "file": "reading-demo-110.png",
       "rawWindowSize": [
         1567,
