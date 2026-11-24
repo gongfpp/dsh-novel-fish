@@ -8,7 +8,7 @@
     "pluginVersion": "1.2.1",
     "bundle": {
       "path": "profiles/web/node_modules/@gongfpp/dsh-novel-fish/lib/client.js",
-      "bytes": 1412133,
+      "bytes": 1341687,
       "sha256": "2346dd3cc62b3ad18b327adc3fb4f518ef99e103ae53e931f0ec49d4d4a898ca"
     },
     "library": "empty IndexedDB, seeded from the packaged samples on first load",

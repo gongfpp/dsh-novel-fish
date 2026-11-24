@@ -1,5 +1,17 @@
 # 公开发布记录
 
+## 1.2.1：阅读方框与纯正文样书（2026-11-24）
+
+- 范围：把阅读区改成方框——书名、章节、进度和「下一段」都在框里，正文 14px/1.8、最高 60vh、框内滚动；展开行时原生内容保持不变，方框追加在原文下方。内置样书换成纯正文版：中文《阿Q正傳》九章为默认书，英文《百万英镑及其他新故事》按全大写篇名识别十二章；原始导出移出仓库，由 `scripts/build-samples.mjs` 可重跑生成。分段上先归一化段内硬换行再计宽、段落空行按 28 单位计价、无章节时不再兜底「正文」。交互默认「同一区域再次展开续读」，进度百分比四舍五入，书籍信息只显示书名、作者、格式和大小。导入文本支持 GB18030/GBK。内置书升级到 `bundledCatalog` v3，旧库按新内容重建分段并按比例保留进度。
+- 发布前校验：`pnpm verify`（build + 全量测试）**165 项、164 通过、0 失败、1 跳过**；`lib/client.js` **1341687 字节**、SHA-256 `2346dd3cc62b3ad18b327adc3fb4f518ef99e103ae53e931f0ec49d4d4a898ca`，提交后无重建漂移。标签源码 CI（[runs/45427871831](https://github.com/gongfpp/dsh-novel-fish/actions/runs/45427871831)）`verify` 与 `host-contracts` 两项作业通过，契约宿主 `0.2.2-rc.1`。
+- [GitHub Release v1.2.1](https://github.com/gongfpp/dsh-novel-fish/releases/tag/v1.2.1) 已于 `2026-11-24T15:41:19Z` 正式公开，非草稿/预发布；标签 `v1.2.1`（附注标签）固定源码提交 `08b038886d3fa9ee938a9222a44a6cdd3d9eb15c`。
+- 安装包 `gongfpp-dsh-novel-fish-1.2.1.tgz`：824277 字节，SHA-256 `65537e0f947cab2b300bc5ea129a63256046d8a34a63b16d63e8b81e29e78e54`，18 个文件；源码 ZIP `dsh-novel-fish-source-1.2.1.zip`：4381563 字节，SHA-256 `37d97ff7af332910c2f8ccb42e7f543a52abcfd8df60355068cca745eb4330b9`；`SHA256SUMS.txt` 197 字节，SHA-256 `eaf88cb9653cab09c6648185626368ad9d7ad86f5036fa21f3504009f71646fd`。三个附件匿名下载均 HTTP 200、逐字节匹配。
+- 自建索引追加 1.2.1：`publishTimestamp` 1795534879 来自实际 Release 时间，`source.commit` 固定为 `08b038886d3fa9ee938a9222a44a6cdd3d9eb15c`，`engines.dsh` 与包内声明一致；历史条目不改写。
+- **npm 1.2.1 已公开发布**：发布的是 GitHub 的同一个冻结 tarball，registry 时间 `2026-11-24T15:44:38.847Z`，`latest` 已指向 1.2.1。匿名下载 824277 字节、SHA-256 与 GitHub 附件完全一致；`shasum`（SHA-1）`3e3f296d0d35791107e2efe90e3c89167c0be012`、`integrity` `sha512-T/b1ce79zu9pRpqhpy8/+juHfTkiKryJxOIQVwi0VlyZqqWLv03rA5HK5TBHeP62aAizwTYcPtqT953nycrWDQ==`、18 个文件、解包 2112340 字节。
+- 在独立临时 `DSH_HOME` 的四个空 profile 中，用 npm 固定版本、README 的标签 spec、公开下载的 tarball、固定提交 SHA 四条路线安装，均得到 1.2.1，浏览器 bundle 字节与 SHA-256 全部等于 `2346dd3c…`。不改日常 profile、不启动服务器、不发起模型请求。
+- 本版在真实 GUI 的验收用全新 profile：安装本包后空书库首开即中文默认书，连读三页进度 1→2→3，设置页显示 `已读 3 / 72 段 · 4%`；截图与运行记录见 [结构化回执](<evidence/release-121-screenshots.json>) 和 [发布结果](<evidence/public-release-121-result.json>)。
+- 市场侧：仓库 `screenshots.json` 改为这四张真机截图，市场索引重建后卡片改用新图；旧版设置页截图已从仓库移除。
+
 ## 1.2.0：多页一致性、进度调整、JSON 备份与阅读开销收敛（2026-11-20）
 
 - 范围：修复同站点多页面用旧快照覆盖进度、设置和删除结果（IndexedDB 事务 + revision 比较，BroadcastChannel 与页面激活同步）；新增「调整进度」；新增 JSON 备份导出与合并恢复（上限 64 MiB，恢复前校验，精确重复内容复用并保留进度）；导入后提供切到新书的按钮；修复 EPUB nav/NCX 位于子目录时的章节名相对路径。同一版本还收敛了审计发现的阅读开销与边界问题：阅读区域定位按节点缓存、停用后不再逐帧扫描；标题停顿 300ms 或失焦后提交一次；翻页直接采用事务返回的书籍记录；章节标签改为小字号次级色；TXT/MD 导入上限 8 MiB 且超大章节分块；首次读库失败后写入前重试一次；恢复备份只合并书籍，不覆盖本机设置。

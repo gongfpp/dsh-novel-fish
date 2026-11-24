@@ -35,6 +35,18 @@
       },
       "versions": [
         {
+          "version": "1.2.1",
+          "publishTimestamp": 1795534879,
+          "engines": {
+            "dsh": ">=0.2.1-rc.2 <0.3.0-0"
+          },
+          "source": {
+            "type": "git",
+            "url": "https://github.com/gongfpp/dsh-novel-fish",
+            "commit": "08b038886d3fa9ee938a9222a44a6cdd3d9eb15c"
+          }
+        },
+        {
           "version": "1.2.0",
           "publishTimestamp": 1795186595,
           "engines": {

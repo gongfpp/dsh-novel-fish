@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "version": "1.2.1",
+  "publishedAt": "2026-11-24T15:41:19Z",
+  "tag": {
+    "name": "v1.2.1",
+    "commit": "08b038886d3fa9ee938a9222a44a6cdd3d9eb15c",
+    "annotated": true
+  },
+  "ci": {
+    "runId": 45427871831,
+    "jobs": {
+      "verify": "success",
+      "host-contracts": "success"
+    },
+    "hostContractVersion": "0.2.2-rc.1"
+  },
+  "assets": [
+    {
+      "name": "gongfpp-dsh-novel-fish-1.2.1.tgz",
+      "bytes": 824277,
+      "sha256": "65537e0f947cab2b300bc5ea129a63256046d8a34a63b16d63e8b81e29e78e54",
+      "anonymousDownload": "200"
+    },
+    {
+      "name": "dsh-novel-fish-source-1.2.1.zip",
+      "bytes": 4381563,
+      "sha256": "37d97ff7af332910c2f8ccb42e7f543a52abcfd8df60355068cca745eb4330b9",
+      "anonymousDownload": "200"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "bytes": 197,
+      "sha256": "eaf88cb9653cab09c6648185626368ad9d7ad86f5036fa21f3504009f71646fd",
+      "anonymousDownload": "200"
+    }
+  ],
+  "npm": {
+    "package": "@gongfpp/dsh-novel-fish",
+    "version": "1.2.1",
+    "latest": true,
+    "publishedAt": "2026-11-24T15:44:38.847Z",
+    "shasum": "3e3f296d0d35791107e2efe90e3c89167c0be012",
+    "integrity": "sha512-T/b1ce79zu9pRpqhpy8/+juHfTkiKryJxOIQVwi0VlyZqqWLv03rA5HK5TBHeP62aAizwTYcPtqT953nycrWDQ==",
+    "fileCount": 18,
+    "unpackedSize": 2112340,
+    "tarballMatchesGithubAsset": true
+  },
+  "bundle": {
+    "bytes": 1341687,
+    "sha256": "2346dd3cc62b3ad18b327adc3fb4f518ef99e103ae53e931f0ec49d4d4a898ca"
+  },
+  "tests": {
+    "total": 165,
+    "pass": 164,
+    "fail": 0,
+    "skipped": 1
+  },
+  "indexEntry": {
+    "publishTimestamp": 1795534879,
+    "sourceCommit": "08b038886d3fa9ee938a9222a44a6cdd3d9eb15c",
+    "enginesDsh": ">=0.2.1-rc.2 <0.3.0-0"
+  },
+  "installRoutes": [
+    {
+      "route": "npm:@gongfpp/dsh-novel-fish@1.2.1",
+      "version": "1.2.1",
+      "bundleSha256": "2346dd3c…"
+    },
+    {
+      "route": "github:gongfpp/dsh-novel-fish#v1.2.1",
+      "version": "1.2.1",
+      "bundleSha256": "2346dd3c…"
+    },
+    {
+      "route": "local tarball gongfpp-dsh-novel-fish-1.2.1.tgz",
+      "version": "1.2.1",
+      "bundleSha256": "2346dd3c…"
+    },
+    {
+      "route": "github:gongfpp/dsh-novel-fish#08b038886d3fa9ee938a9222a44a6cdd3d9eb15c",
+      "version": "1.2.1",
+      "bundleSha256": "2346dd3c…"
+    }
+  ],
+  "guiAcceptance": {
+    "kind": "fresh-profile",
+    "defaultBook": "阿Q正傳 · MD · 72 段 · 9 章",
+    "pages": [
+      "第 1 / 72 段",
+      "第 2 / 72 段",
+      "第 3 / 72 段"
+    ],
+    "settings": "已读 3 / 72 段 · 4%",
+    "evidence": "docs/evidence/release-121-screenshots.json",
+    "note": "安装本包后在空书库首开即中文默认书；连读三页进度递增；页面内无额外前置段落。"
+  },
+  "boundaries": [
+    "未在本轮更新日常 profile 的已安装版本。",
+    "真实 GUI 验收在全新临时 profile 中进行，测试数据未写回日常书库。",
+    "市场卡片的新截图取决于市场索引重建，本回执不声称已生效。"
+  ]
+}
